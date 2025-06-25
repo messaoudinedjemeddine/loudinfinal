@@ -15,11 +15,51 @@ import {
   Mail, 
   Shield,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Check
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
+
+// User credentials for all roles
+const userCredentials = [
+  {
+    role: 'Super Admin',
+    email: 'superadmin@example.com',
+    password: 'super123',
+    description: 'Full system access and user management'
+  },
+  {
+    role: 'Admin',
+    email: 'admin@example.com',
+    password: 'admin123',
+    description: 'Complete store management and analytics'
+  },
+  {
+    role: 'Call Center',
+    email: 'callcenter@example.com',
+    password: 'call123',
+    description: 'Customer order management and communications'
+  },
+  {
+    role: 'Order Confirmation',
+    email: 'orderconfirmation@example.com',
+    password: 'order123',
+    description: 'Order processing and delivery preparation'
+  },
+  {
+    role: 'Delivery Agent',
+    email: 'delivery@example.com',
+    password: 'delivery123',
+    description: 'Delivery tracking and customer interactions'
+  }
+]
 
 export default function AdminLoginPage() {
   const [mounted, setMounted] = useState(false)
@@ -29,6 +69,8 @@ export default function AdminLoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [showCredentials, setShowCredentials] = useState(false)
+  const [copiedUser, setCopiedUser] = useState<string | null>(null)
 
   const router = useRouter()
   const { setAuth, isAuthenticated } = useAuthStore()
@@ -110,6 +152,24 @@ export default function AdminLoginPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fillCredentials = (userEmail: string, userPassword: string) => {
+    setEmail(userEmail)
+    setPassword(userPassword)
+    setErrors({}) // Clear any existing errors
+    toast.success('Credentials filled! Click Sign In to continue.')
+  }
+
+  const copyCredentials = async (userEmail: string, userPassword: string) => {
+    try {
+      await navigator.clipboard.writeText(`Email: ${userEmail}\nPassword: ${userPassword}`)
+      setCopiedUser(userEmail)
+      toast.success('Credentials copied to clipboard!')
+      setTimeout(() => setCopiedUser(null), 2000)
+    } catch (err) {
+      toast.error('Failed to copy credentials')
     }
   }
 
@@ -253,13 +313,82 @@ export default function AdminLoginPage() {
               </Button>
             </form>
 
-            {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30">
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">Demo Credentials:</h4>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p><strong>Email:</strong> admin@example.com</p>
-                <p><strong>Password:</strong> admin123</p>
-              </div>
+            {/* User Credentials Section */}
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => setShowCredentials(!showCredentials)}
+                className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30 hover:bg-muted/70 transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <Users className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Test User Credentials
+                  </span>
+                </div>
+                {showCredentials ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+
+              {showCredentials && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-3 space-y-2"
+                >
+                  {userCredentials.map((user, index) => (
+                    <motion.div
+                      key={user.email}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="p-3 bg-white rounded-lg border border-muted-foreground/20 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <Badge variant="outline" className="text-xs">
+                              {user.role}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2">{user.description}</p>
+                          <div className="text-xs space-y-1">
+                            <p><strong>Email:</strong> {user.email}</p>
+                            <p><strong>Password:</strong> {user.password}</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-1 ml-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => fillCredentials(user.email, user.password)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            Fill
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => copyCredentials(user.email, user.password)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            {copiedUser === user.email ? (
+                              <Check className="w-3 h-3" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
             </div>
 
             {/* Footer Links */}
