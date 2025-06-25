@@ -147,7 +147,7 @@ export function CallCenterDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Call Center Dashboard</h1>
+        <h1 className="text-3xl font-bold">Call Center - Loudim Dashboard</h1>
         <p className="text-muted-foreground">
           Manage customer orders and communications. Track order status and customer interactions.
         </p>
@@ -264,7 +264,7 @@ export function CallCenterDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {order.items.length} items • ${order.total} • {new Date(order.createdAt).toLocaleString()}
+                          {order.items.length} items • {order.total.toLocaleString()} DA • {new Date(order.createdAt).toLocaleString()}
                         </div>
                         {order.notes && (
                           <div className="mt-2 text-sm bg-muted p-2 rounded">
@@ -333,7 +333,7 @@ export function CallCenterDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {order.items.length} items • ${order.total}
+                          {order.items.length} items • {order.total.toLocaleString()} DA
                         </div>
                       </div>
                       <div className="flex space-x-2">
@@ -397,7 +397,7 @@ export function CallCenterDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {order.items.length} items • ${order.total}
+                          {order.items.length} items • {order.total.toLocaleString()} DA
                         </div>
                       </div>
                       <div className="flex space-x-2">

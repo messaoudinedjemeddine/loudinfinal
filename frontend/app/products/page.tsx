@@ -25,9 +25,9 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Navbar } from '@/components/navbar'
-import { useCartStore } from '@/lib/store'
+import { useCartStore, useWishlistStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
+import { toast } from 'sonner'
 
 // Define Product type
 interface Product {
@@ -81,6 +81,7 @@ export default function ProductsPage() {
   })
 
   const addItem = useCartStore((state) => state.addItem)
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore()
   const { t, isRTL } = useLocaleStore()
 
   // Fetch products and categories
@@ -100,7 +101,9 @@ export default function ProductsPage() {
         // Fetch categories
         const categoriesRes = await fetch('/api/categories')
         const categoriesData = await categoriesRes.json()
-        setCategories(categoriesData)
+        // Ensure categories is always an array
+        const categoriesArray = Array.isArray(categoriesData) ? categoriesData : []
+        setCategories(categoriesArray)
         
       } catch (error) {
         console.error('Failed to fetch data:', error)
@@ -267,7 +270,7 @@ export default function ProductsPage() {
         }}
         className="group relative h-full"
       >
-        <Card className="overflow-hidden border-0 bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
           {/* Product Image */}
           <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
             <Link href={`/products/${product.slug}`} className="block w-full h-full">
@@ -299,9 +302,29 @@ export default function ProductsPage() {
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
+                    const isCurrentlyWishlisted = isInWishlist(product.id)
+                    
+                    if (isCurrentlyWishlisted) {
+                      removeFromWishlist(product.id)
+                      toast.success(isRTL ? 'تم إزالة من المفضلة' : 'Removed from wishlist')
+                    } else {
+                      addToWishlist({
+                        id: product.id,
+                        name: product.name,
+                        nameAr: product.nameAr,
+                        price: product.price,
+                        oldPrice: product.oldPrice,
+                        image: product.image,
+                        rating: product.rating,
+                        isOnSale: product.isOnSale,
+                        stock: product.stock,
+                        slug: product.slug
+                      })
+                      toast.success(isRTL ? 'تم الإضافة للمفضلة' : 'Added to wishlist')
+                    }
                   }}
                 >
-                  <Heart className="w-4 h-4" />
+                  <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>
               </div>
               
@@ -362,8 +385,8 @@ export default function ProductsPage() {
           </div>
           
           {/* Product Info */}
-          <CardContent className="p-6 flex-1 flex flex-col">
-            <div className="space-y-4 flex-1 flex flex-col">
+          <CardContent className="p-4 flex-1 flex flex-col min-h-0">
+            <div className="space-y-3 flex-1 flex flex-col">
               {/* Category */}
               <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                 <Badge variant="outline" className="text-xs font-medium text-center">
@@ -385,16 +408,16 @@ export default function ProductsPage() {
               </div>
 
               {/* Product Name */}
-              <Link href={`/products/${product.slug}`} className="block flex-1">
-                <h3 className="font-semibold text-lg leading-tight line-clamp-2 hover:text-primary transition-colors group-hover:text-primary text-center min-h-[3.5rem] flex items-center justify-center">
+              <Link href={`/products/${product.slug}`} className="block flex-1 min-h-0">
+                <h3 className="font-semibold text-base leading-tight line-clamp-2 hover:text-primary transition-colors group-hover:text-primary text-center min-h-[2.5rem] flex items-center justify-center">
                   {isRTL ? product.nameAr || product.name : product.name}
                 </h3>
               </Link>
 
               {/* Sizes Preview */}
               {sizeStrings.length > 0 && (
-                <div className="flex flex-wrap gap-1 justify-center min-h-[2rem]">
-                  {sizeStrings.slice(0, 4).map((size: string, sizeIndex: number) => (
+                <div className="flex flex-wrap gap-1 justify-center min-h-[1.5rem]">
+                  {sizeStrings.slice(0, 3).map((size: string, sizeIndex: number) => (
                     <span 
                       key={size || sizeIndex} 
                       className="text-xs bg-muted px-2 py-1 rounded-full font-medium text-center"
@@ -402,9 +425,9 @@ export default function ProductsPage() {
                       {size || '-'}
                     </span>
                   ))}
-                  {sizeStrings.length > 4 && (
+                  {sizeStrings.length > 3 && (
                     <span className="text-xs text-muted-foreground">
-                      +{sizeStrings.length - 4}
+                      +{sizeStrings.length - 3}
                     </span>
                   )}
                 </div>
@@ -414,7 +437,7 @@ export default function ProductsPage() {
               <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'} mt-auto`}>
                 <div className="space-y-1 text-center flex-1">
                   <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-center`}>
-                    <span className="text-xl font-bold text-primary">
+                    <span className="text-lg font-bold text-primary">
                       {product.price.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
                     </span>
                     {product.oldPrice && (
@@ -436,7 +459,7 @@ export default function ProductsPage() {
 
               {/* Add to Cart Button */}
               <Button
-                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-center mt-4"
+                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-center mt-3 h-10"
                 onClick={() => handleAddToCart(product)}
                 disabled={product.stock === 0}
               >
@@ -450,14 +473,217 @@ export default function ProductsPage() {
     )
   }
 
+  const ProductListCard = ({ product, index }: { product: Product, index: number }) => {
+    // Convert sizes to string array for rendering
+    const sizeStrings = Array.isArray(product.sizes) && product.sizes.length > 0
+      ? typeof product.sizes[0] === 'string' 
+        ? product.sizes as string[]
+        : (product.sizes as Array<{id: string; size: string; stock: number}>).map(s => s.size)
+      : [];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: isRTL ? 50 : -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ 
+          duration: 0.6, 
+          delay: index * 0.1,
+          ease: [0.25, 0.46, 0.45, 0.94]
+        }}
+        whileHover={{ 
+          x: isRTL ? -5 : 5,
+          transition: { duration: 0.3, ease: "easeOut" }
+        }}
+        className="group"
+      >
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 h-64">
+          <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} h-full`}>
+            {/* Product Image */}
+            <div className="relative w-64 h-full overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
+              <Link href={`/products/${product.slug}`} className="block w-full h-full">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className="relative w-full h-full"
+                >
+                  <Image
+                    src={product.image && product.image.trim() !== '' ? product.image : '/placeholder.svg'}
+                    alt={isRTL ? product.nameAr || product.name : product.name}
+                    fill
+                    className="object-cover transition-transform duration-500"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder.svg';
+                    }}
+                  />
+                </motion.div>
+              </Link>
+              
+              {/* Badges */}
+              <div className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} space-y-2`}>
+                {product.isOnSale && (
+                  <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-lg text-xs">
+                    <Sparkles className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    {isRTL ? 'تخفيض' : 'Sale'}
+                  </Badge>
+                )}
+                {product.stock <= 5 && product.stock > 0 && (
+                  <Badge className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white border-0 shadow-lg text-xs">
+                    {isRTL ? 'مخزون قليل' : 'Low Stock'}
+                  </Badge>
+                )}
+                {product.stock === 0 && (
+                  <Badge className="bg-gradient-to-r from-gray-500 to-gray-600 text-white border-0 shadow-lg text-xs">
+                    {isRTL ? 'غير متوفر' : 'Out of Stock'}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            {/* Product Info */}
+            <div className="flex-1 p-6 flex flex-col justify-between h-full">
+              <div className="space-y-3 flex-1">
+                {/* Header */}
+                <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className="flex-1 min-w-0">
+                    <Badge variant="outline" className="text-xs font-medium mb-2">
+                      {isRTL 
+                        ? (typeof product.category === 'string' 
+                            ? (product.categoryAr || product.category) 
+                            : (product.category.nameAr || product.category.name))
+                        : (typeof product.category === 'string' 
+                            ? product.category 
+                            : product.category.name)
+                      }
+                    </Badge>
+                    <Link href={`/products/${product.slug}`} className="block">
+                      <h3 className="font-semibold text-lg leading-tight hover:text-primary transition-colors group-hover:text-primary line-clamp-2">
+                        {isRTL ? product.nameAr || product.name : product.name}
+                      </h3>
+                    </Link>
+                  </div>
+                  <div className={`flex items-center space-x-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'} flex-shrink-0 ml-3`}>
+                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                    <span className="text-sm text-muted-foreground">
+                      {product.rating?.toFixed(1) || '0.0'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sizes */}
+                {sizeStrings.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {isRTL ? 'المقاسات:' : 'Sizes:'}
+                    </span>
+                    {sizeStrings.slice(0, 4).map((size: string, sizeIndex: number) => (
+                      <span 
+                        key={size || sizeIndex} 
+                        className="text-xs bg-muted px-2 py-1 rounded-full font-medium"
+                      >
+                        {size || '-'}
+                      </span>
+                    ))}
+                    {sizeStrings.length > 4 && (
+                      <span className="text-xs text-muted-foreground">
+                        +{sizeStrings.length - 4} {isRTL ? 'أكثر' : 'more'}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Price */}
+                <div className={`flex items-center space-x-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <div className="space-y-1">
+                    <div className={`flex items-center space-x-3 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                      <span className="text-xl font-bold text-primary">
+                        {product.price.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
+                      </span>
+                      {product.oldPrice && (
+                        <span className="text-base text-muted-foreground line-through">
+                          {product.oldPrice.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
+                        </span>
+                      )}
+                    </div>
+                    {product.oldPrice && (
+                      <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <TrendingUp className="w-3 h-3 text-green-500" />
+                        <span className="text-xs text-green-600 font-medium">
+                          {Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}% {isRTL ? 'توفير' : 'off'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions - Always visible at bottom */}
+              <div className={`flex items-center space-x-3 ${isRTL ? 'flex-row-reverse' : 'flex-row'} pt-4 border-t border-gray-200 dark:border-gray-700 mt-auto`}>
+                <Button
+                  className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 h-10"
+                  onClick={() => handleAddToCart(product)}
+                  disabled={product.stock === 0}
+                >
+                  <ShoppingCart className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {product.stock === 0 ? (isRTL ? 'غير متوفر' : 'Out of Stock') : (isRTL ? 'أضيفي للسلة' : 'Add to Cart')}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full w-10 h-10 p-0 border-2 hover:border-primary hover:bg-primary/10 flex-shrink-0"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const isCurrentlyWishlisted = isInWishlist(product.id)
+                    
+                    if (isCurrentlyWishlisted) {
+                      removeFromWishlist(product.id)
+                      toast.success(isRTL ? 'تم إزالة من المفضلة' : 'Removed from wishlist')
+                    } else {
+                      addToWishlist({
+                        id: product.id,
+                        name: product.name,
+                        nameAr: product.nameAr,
+                        price: product.price,
+                        oldPrice: product.oldPrice,
+                        image: product.image,
+                        rating: product.rating,
+                        isOnSale: product.isOnSale,
+                        stock: product.stock,
+                        slug: product.slug
+                      })
+                      toast.success(isRTL ? 'تم الإضافة للمفضلة' : 'Added to wishlist')
+                    }
+                  }}
+                >
+                  <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full w-10 h-10 p-0 border-2 hover:border-primary hover:bg-primary/10 flex-shrink-0"
+                  asChild
+                >
+                  <Link href={`/products/${product.slug}`}>
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
-      <Navbar />
-      
+    <div className="min-h-screen bg-gradient-to-br from-warm-100 via-cream-50 to-warm-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 dark:from-primary/20 dark:via-primary/10 dark:to-secondary/20">
+      <div className="relative overflow-hidden bg-gradient-to-r from-camel-200 via-camel-300 to-camel-400 dark:from-camel-700 dark:via-camel-600 dark:to-camel-500">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="max-w-7xl mx-auto px-4 py-16 relative">
+        <div className="max-w-6xl mx-auto px-4 py-16 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -489,7 +715,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} flex-col lg:flex-row gap-8`}>
           {/* Filters Sidebar */}
           <motion.div
@@ -527,7 +753,7 @@ export default function ProductsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="All" className="text-center">{isRTL ? 'الكل' : 'All'}</SelectItem>
-                      {categories.map((category) => (
+                      {Array.isArray(categories) && categories.map((category) => (
                         <SelectItem key={category.id} value={category.name} className="text-center">
                           {isRTL ? category.nameAr || category.name : category.name}
                         </SelectItem>
@@ -730,12 +956,16 @@ export default function ProductsPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className={viewMode === 'grid' 
-                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                     : "space-y-4"
                   }
                 >
                   {filteredProducts.map((product, index) => (
-                    <ProductCard key={product.id} product={product} index={index} />
+                    viewMode === 'grid' ? (
+                      <ProductCard key={product.id} product={product} index={index} />
+                    ) : (
+                      <ProductListCard key={product.id} product={product} index={index} />
+                    )
                   ))}
                 </motion.div>
               )}

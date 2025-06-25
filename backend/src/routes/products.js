@@ -185,4 +185,130 @@ router.get('/slug/:slug', async (req, res) => {
   }
 });
 
+// Update product by ID
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Update the product
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: updateData,
+      include: {
+        category: true,
+        images: true,
+        sizes: true
+      }
+    });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Product update error:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+// Update product by slug
+router.put('/slug/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const updateData = req.body;
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { slug }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Update the product
+    const updatedProduct = await prisma.product.update({
+      where: { slug },
+      data: updateData,
+      include: {
+        category: true,
+        images: true,
+        sizes: true
+      }
+    });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Product update by slug error:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+// Partial update product by ID
+router.patch('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Update the product
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: updateData,
+      include: {
+        category: true,
+        images: true,
+        sizes: true
+      }
+    });
+
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error('Product partial update error:', error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
+// Delete product by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Soft delete by setting isActive to false
+    await prisma.product.update({
+      where: { id },
+      data: { isActive: false }
+    });
+
+    res.json({ message: 'Product deleted successfully' });
+  } catch (error) {
+    console.error('Product delete error:', error);
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+
 module.exports = router;

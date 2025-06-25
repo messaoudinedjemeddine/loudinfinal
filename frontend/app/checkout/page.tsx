@@ -27,9 +27,8 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
 import { useCartStore } from '@/lib/store'
+import { useLocaleStore } from '@/lib/locale-store'
 import { api } from '@/lib/api'
 import { yalidineAPI, type Wilaya, type Commune, type Center, type ShippingFees } from '@/lib/yalidine-api'
 import { toast } from 'sonner'
@@ -41,6 +40,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const { items, getTotalPrice, clearCart } = useCartStore()
+  const { isRTL } = useLocaleStore()
   
   // Yalidine data states
   const [yalidineStatus, setYalidineStatus] = useState<{ configured: boolean; message: string } | null>(null)
@@ -147,7 +147,6 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
         <div className="pt-16 container mx-auto px-4 py-16 text-center">
           <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
             <ShoppingCart className="w-12 h-12 text-muted-foreground" />
@@ -158,7 +157,6 @@ export default function CheckoutPage() {
             <Link href="/products">Continue Shopping</Link>
           </Button>
         </div>
-        <Footer />
       </div>
     )
   }
@@ -270,31 +268,34 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      
       <div className="pt-16">
         {/* Header */}
-        <div className="bg-muted/30 py-8">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold">Checkout</h1>
-                <p className="text-muted-foreground">Complete your order</p>
-              </div>
-              <Button variant="outline" asChild>
-                <Link href="/products">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Continue Shopping
-                </Link>
-              </Button>
-            </div>
+        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 dark:from-primary/20 dark:via-primary/10 dark:to-secondary/20">
+          <div className="container mx-auto px-4 py-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center"
+            >
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                {isRTL ? 'إتمام الطلب' : 'Checkout'}
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                {isRTL 
+                  ? 'أكمل طلبك بسهولة وأمان'
+                  : 'Complete your order safely and easily'
+                }
+              </p>
+            </motion.div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        {/* Checkout Form */}
+        <div className="container mx-auto px-4 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2">
+            {/* Order Summary */}
+            <div className="lg:col-span-2 space-y-8">
               {/* Progress Steps */}
               <div className="flex items-center justify-between mb-8">
                 {steps.map((step, index) => (
@@ -741,8 +742,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }

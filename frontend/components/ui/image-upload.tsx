@@ -46,10 +46,9 @@ export function ImageUpload({
       const authData = localStorage.getItem('auth-storage');
       if (authData) {
         try {
-          const { state } = JSON.parse(authData);
-          if (state?.token) {
-            authToken = state.token;
-          }
+          const parsedData = JSON.parse(authData);
+          // Zustand persist stores data in a 'state' property
+          authToken = parsedData?.state?.token || parsedData?.token;
         } catch (error) {
           console.warn('Failed to parse auth token:', error);
         }

@@ -8,11 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { ShoppingCart, Star, Truck, Shield, Headphones, CreditCard, Play, Pause } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
 import { useCartStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
-import { ScrollToTopButton } from '@/components/scroll-to-top-button'
 
 // Define types
 interface Product {
@@ -169,9 +166,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-warm-50 to-cream-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Hero Section with Video */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-r from-camel-100 via-camel-200 to-camel-300 dark:from-camel-800 dark:via-camel-700 dark:to-camel-600">
         {/* Video Background */}
         <video
           id="hero-video"
@@ -202,14 +199,6 @@ export default function HomePage() {
         
         {/* Video Overlay */}
         <div className="absolute inset-0 video-overlay" />
-        
-        {/* Navbar absolutely positioned over the video */}
-        <div className="absolute top-0 left-0 right-0 z-50">
-          <Navbar />
-        </div>
-        
-        {/* Video Controls */}
-        {/* (Play/Stop button removed as requested) */}
         
         {/* Hero Content */}
         <div className={`relative z-10 text-center text-white max-w-4xl mx-auto px-4 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -305,7 +294,7 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-20">
+      <section className="py-20 bg-gradient-to-br from-warm-100 via-cream-50 to-warm-200 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -326,10 +315,10 @@ export default function HomePage() {
           </motion.div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, index) => (
+            <div className="flex justify-center items-center space-x-8">
+              {[...Array(3)].map((_, index) => (
                 <div key={index} className="animate-pulse">
-                  <div className="h-64 bg-gray-200 rounded-lg mb-4"></div>
+                  <div className="w-48 h-48 bg-gray-200 rounded-full mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded mb-2"></div>
                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
@@ -340,52 +329,153 @@ export default function HomePage() {
               <p className="text-red-500">{error}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {categories.map((category, index) => (
+            <div className="max-w-6xl mx-auto relative">
+              {/* Navigation Arrows */}
+              <motion.button
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="absolute -left-16 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+                onClick={() => {
+                  const container = document.getElementById('categories-container');
+                  if (container) {
+                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                  }
+                }}
+              >
                 <motion.div
-                  key={category.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
+                  className="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors"
+                  whileHover={{ x: -2 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <Link href={`/products?category=${category.slug}`}>
-                    <Card className="group cursor-pointer hover:shadow-xl transition-all duration-500 overflow-hidden elegant-hover border-0 bg-gradient-to-br from-white to-cream-50 dark:from-gray-800 dark:to-gray-900">
-                      <div className="relative h-64 overflow-hidden">
-                        <Image
-                          src={category.image || '/placeholder.svg'}
-                          alt={isRTL ? category.nameAr || category.name : category.name}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          onError={(e) => {
-                            console.log('Category image failed to load:', category.image);
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/placeholder.svg';
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:from-black/40 transition-all duration-500" />
-                        <div className="absolute inset-0 flex items-end justify-center p-6">
-                          <div className="text-center text-white">
-                            <h3 className="text-2xl font-bold mb-2">
-                              {isRTL ? category.nameAr || category.name : category.name}
-                            </h3>
-                            <p className="text-sm opacity-90">
-                              {category.productCount} {isRTL ? 'قطعة' : 'pieces'}
-                            </p>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </motion.div>
+              </motion.button>
+
+              <motion.button
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="absolute -right-16 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+                onClick={() => {
+                  const container = document.getElementById('categories-container');
+                  if (container) {
+                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <motion.div
+                  className="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors"
+                  whileHover={{ x: 2 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </motion.div>
+              </motion.button>
+
+              {/* Categories Container */}
+              <div 
+                id="categories-container"
+                className="flex space-x-8 overflow-x-auto scrollbar-hide py-4"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {categories.map((category, index) => (
+                  <motion.div
+                    key={category.id}
+                    initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                    whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ 
+                      duration: 0.8, 
+                      delay: index * 0.2,
+                      ease: [0.25, 0.46, 0.45, 0.94]
+                    }}
+                    viewport={{ once: true }}
+                    whileHover={{ 
+                      scale: 1.1,
+                      rotate: 5,
+                      transition: { duration: 0.3, ease: "easeOut" }
+                    }}
+                    className="flex-shrink-0"
+                  >
+                    <Link href={`/products?category=${category.slug}`}>
+                      <div className="group cursor-pointer relative">
+                        {/* Circle Container */}
+                        <div className="w-48 h-48 rounded-full overflow-hidden bg-gradient-to-br from-white via-cream-50 to-warm-50 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 relative">
+                          <Image
+                            src={category.image || '/placeholder.svg'}
+                            alt={isRTL ? category.nameAr || category.name : category.name}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                            onError={(e) => {
+                              console.log('Category image failed to load:', category.image);
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/placeholder.svg';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:from-black/40 transition-all duration-500" />
+                          
+                          {/* Category Info */}
+                          <div className="absolute inset-0 flex items-end justify-center p-6">
+                            <div className="text-center text-white">
+                              <motion.h3 
+                                className="text-xl font-bold mb-2"
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                {isRTL ? category.nameAr || category.name : category.name}
+                              </motion.h3>
+                              <motion.p 
+                                className="text-sm opacity-90"
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                {category.productCount} {isRTL ? 'قطعة' : 'pieces'}
+                              </motion.p>
+                            </div>
                           </div>
                         </div>
+                        
+                        {/* Hover Ring Effect */}
+                        <motion.div
+                          className="absolute inset-0 rounded-full border-4 border-transparent group-hover:border-primary/30 transition-all duration-500"
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ duration: 0.3 }}
+                        />
                       </div>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Dots Indicator */}
+              <div className="flex justify-center mt-8 space-x-2">
+                {Array.from({ length: Math.ceil(categories.length / 3) }, (_, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 1 + index * 0.1, duration: 0.3 }}
+                    className="w-3 h-3 rounded-full bg-gray-300 hover:bg-primary transition-colors cursor-pointer"
+                    onClick={() => {
+                      const container = document.getElementById('categories-container');
+                      if (container) {
+                        container.scrollTo({ left: index * 300, behavior: 'smooth' });
+                      }
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-20 bg-gradient-to-br from-cream-50 to-warm-100 dark:from-gray-900 dark:to-gray-800">
+      <section className="py-20 bg-gradient-to-br from-cream-200 via-warm-100 to-cream-300 dark:from-gray-900 dark:via-gray-800 dark:to-gray-700">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -406,8 +496,8 @@ export default function HomePage() {
           </motion.div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(3)].map((_, index) => (
                 <div key={index} className="animate-pulse">
                   <div className="h-80 bg-gray-200 rounded-lg mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -421,187 +511,148 @@ export default function HomePage() {
               <p className="text-red-500">{error}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product, index) => {
-                const sizeStrings = getSizeStrings(product.sizes)
-                
-                return (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ 
-                      duration: 0.6, 
-                      delay: index * 0.1,
-                      ease: [0.25, 0.46, 0.45, 0.94]
-                    }}
-                    viewport={{ once: true }}
-                    whileHover={{ 
-                      y: -8,
-                      transition: { duration: 0.3, ease: "easeOut" }
-                    }}
-                    whileTap={{ 
-                      scale: 0.98,
-                      transition: { duration: 0.1 }
-                    }}
-                  >
-                    <Link href={`/products/${product.slug}`} className="block">
-                      <Card className="group cursor-pointer overflow-hidden border-0 bg-white dark:bg-gray-800 relative h-full">
-                        {/* Hover overlay effect */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-                          initial={{ opacity: 0 }}
-                          whileHover={{ opacity: 1 }}
-                        />
-                        
-                                                  <div className="relative">
-                          <div className="relative h-80 overflow-hidden">
-                            <motion.div
-                              whileHover={{ scale: 1.05 }}
-                              transition={{ duration: 0.4, ease: "easeOut" }}
-                              className="relative h-full w-full"
-                            >
-                              <Image
-                                src={product.image || '/placeholder.svg'}
-                                alt={isRTL ? product.nameAr || product.name : product.name}
-                                fill
-                                className="object-cover transition-transform duration-500"
-                              />
-                            </motion.div>
-                            {product.isOnSale && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.8, x: -20 }}
-                                animate={{ opacity: 1, scale: 1, x: 0 }}
-                                transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
-                              >
-                                <Badge className={`absolute top-4 bg-red-500 hover:bg-red-600 ${isRTL ? 'right-4' : 'left-4'} shadow-lg`}>
-                                  {isRTL ? 'تخفيض' : 'Sale'}
-                                </Badge>
-                              </motion.div>
-                            )}
-                          </div>
+            <div className="max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.slice(0, 4).map((product, index) => {
+                  const sizeStrings = getSizeStrings(product.sizes)
+                  
+                  return (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ 
+                        duration: 0.6, 
+                        delay: index * 0.1,
+                        ease: [0.25, 0.46, 0.45, 0.94]
+                      }}
+                      viewport={{ once: true }}
+                      whileHover={{ 
+                        y: -8,
+                        transition: { duration: 0.3, ease: "easeOut" }
+                      }}
+                      whileTap={{ 
+                        scale: 0.98,
+                        transition: { duration: 0.1 }
+                      }}
+                      className="h-full"
+                    >
+                      <Link href={`/products/${product.slug}`} className="block h-full">
+                        <Card className="group cursor-pointer overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 relative h-full flex flex-col">
+                          {/* Hover overlay effect */}
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                            initial={{ opacity: 0 }}
+                            whileHover={{ opacity: 1 }}
+                          />
                           
-                          <CardContent className="p-6">
-                            <motion.h3 
-                              className="font-semibold text-lg mb-2 line-clamp-2 hover:text-primary transition-colors"
-                              whileHover={{ color: 'hsl(var(--primary))' }}
-                            >
-                              {isRTL ? product.nameAr || product.name : product.name}
-                            </motion.h3>
+                          <div className="relative flex-1 flex flex-col">
+                            <div className="relative h-80 overflow-hidden flex-shrink-0">
+                              <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                                className="relative h-full w-full"
+                              >
+                                <Image
+                                  src={product.image || '/placeholder.svg'}
+                                  alt={isRTL ? product.nameAr || product.name : product.name}
+                                  fill
+                                  className="object-cover transition-transform duration-500"
+                                />
+                              </motion.div>
+                              {product.isOnSale && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.8, x: -20 }}
+                                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                                  transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
+                                >
+                                  <Badge className={`absolute top-4 bg-red-500 hover:bg-red-600 ${isRTL ? 'right-4' : 'left-4'} shadow-lg`}>
+                                    {isRTL ? 'تخفيض' : 'Sale'}
+                                  </Badge>
+                                </motion.div>
+                              )}
+                            </div>
                             
-                            <motion.div 
-                              className={`flex items-center mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
-                            >
-                              <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                {[...Array(5)].map((_, i) => (
-                                  <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.5 + index * 0.1 + i * 0.1, duration: 0.3 }}
-                                  >
-                                    <Star
-                                      className={`w-4 h-4 ${
-                                        i < Math.floor(product.rating || 0)
-                                          ? 'text-yellow-400 fill-current'
-                                          : 'text-gray-300'
-                                      }`}
-                                    />
-                                  </motion.div>
-                                ))}
-                                <span className={`text-sm text-muted-foreground ${isRTL ? 'mr-1' : 'ml-1'}`}>
-                                  ({product.rating || 0})
-                                </span>
-                              </div>
-                            </motion.div>
-
-                            {/* Available Sizes */}
-                            {sizeStrings.length > 0 && (
+                            <CardContent className="p-6 flex-1 flex flex-col text-center">
+                              <motion.h3 
+                                className="font-semibold text-lg mb-2 line-clamp-2 hover:text-primary transition-colors text-center"
+                                whileHover={{ color: 'hsl(var(--primary))' }}
+                              >
+                                {isRTL ? product.nameAr || product.name : product.name}
+                              </motion.h3>
+                              
                               <motion.div 
-                                className="mb-4"
+                                className="flex items-center justify-center mb-3"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 + index * 0.1, duration: 0.4 }}
+                              >
+                                <div className="flex items-center">
+                                  {[...Array(5)].map((_, i) => (
+                                    <motion.div
+                                      key={i}
+                                      initial={{ opacity: 0, scale: 0 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      transition={{ delay: 0.5 + index * 0.1 + i * 0.1, duration: 0.3 }}
+                                    >
+                                      <Star
+                                        className={`w-4 h-4 ${
+                                          i < Math.floor(product.rating || 0)
+                                            ? 'text-yellow-400 fill-current'
+                                            : 'text-gray-300'
+                                        }`}
+                                      />
+                                    </motion.div>
+                                  ))}
+                                  <span className="text-sm text-muted-foreground ml-2">
+                                    ({product.rating || 0})
+                                  </span>
+                                </div>
+                              </motion.div>
+                              
+                              <motion.div 
+                                className="flex items-center justify-center mb-4"
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.6 + index * 0.1, duration: 0.4 }}
                               >
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  {isRTL ? 'المقاسات المتوفرة:' : 'Available sizes:'}
-                                </p>
-                                <div className={`flex flex-wrap gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                  {sizeStrings.slice(0, 4).map((size, sizeIndex) => (
-                                    <motion.span 
-                                      key={size} 
-                                      className="text-xs bg-muted px-2 py-1 rounded"
-                                      initial={{ opacity: 0, scale: 0.8 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      transition={{ delay: 0.7 + index * 0.1 + sizeIndex * 0.05, duration: 0.3 }}
-                                      whileHover={{ scale: 1.1, backgroundColor: 'hsl(var(--accent))' }}
-                                    >
-                                      {size}
-                                    </motion.span>
-                                  ))}
-                                  {sizeStrings.length > 4 && (
-                                    <span className="text-xs text-muted-foreground">
-                                      +{sizeStrings.length - 4} {isRTL ? 'أكثر' : 'more'}
+                                <div className="flex items-center">
+                                  <span className="text-lg font-bold text-primary">
+                                    {product.price.toLocaleString('en-US')} {isRTL ? 'د.ج' : 'DA'}
+                                  </span>
+                                  {product.oldPrice && (
+                                    <span className="text-sm text-muted-foreground line-through ml-2">
+                                      {product.oldPrice.toLocaleString('en-US')} {isRTL ? 'د.ج' : 'DA'}
                                     </span>
                                   )}
                                 </div>
                               </motion.div>
-                            )}
-
-                            <motion.div 
-                              className={`flex items-center justify-between mb-4 ${isRTL ? 'flex-row-reverse' : ''}`}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
-                            >
-                              <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
-                                <span className="text-xl font-bold text-primary">
-                                  {product.price.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
-                                </span>
-                                {product.oldPrice && (
-                                  <motion.span 
-                                    className="text-sm text-muted-foreground line-through"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.9 + index * 0.1, duration: 0.4 }}
-                                  >
-                                    {product.oldPrice.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
-                                  </motion.span>
-                                )}
-                              </div>
-                            </motion.div>
-
-                            <motion.div
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 1 + index * 0.1, duration: 0.4 }}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Button
-                                className="w-full elegant-gradient hover:shadow-lg transition-all duration-300 font-medium"
-                                onClick={(e) => {
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  handleAddToCart(product)
-                                }}
-                                disabled={product.stock === 0}
+                              
+                              <motion.div 
+                                className="mt-auto"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
                               >
-                                <ShoppingCart className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                                {product.stock === 0 ? (isRTL ? 'غير متوفر' : 'Out of Stock') : (isRTL ? 'أضيفي للسلة' : 'Add to Cart')}
-                              </Button>
-                            </motion.div>
-                          </CardContent>
-                        </div>
-                      </Card>
-                    </Link>
-                  </motion.div>
-                )
-              })}
+                                <Button 
+                                  className="w-full group-hover:bg-primary/90 transition-all duration-300"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleAddToCart(product);
+                                  }}
+                                >
+                                  <ShoppingCart className="w-4 h-4 mr-2 group-hover:animate-bounce" />
+                                  {isRTL ? 'أضف إلى السلة' : 'Add to Cart'}
+                                </Button>
+                              </motion.div>
+                            </CardContent>
+                          </div>
+                        </Card>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -616,7 +667,7 @@ export default function HomePage() {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-20 bg-gradient-to-r from-camel-400 via-camel-500 to-camel-600 text-white">
+      <section className="py-20 bg-gradient-to-r from-camel-500 via-camel-600 to-camel-700 dark:from-camel-600 dark:via-camel-700 dark:to-camel-800 text-white">
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -647,11 +698,6 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-
-      <Footer />
-
-      {/* Scroll to Top Button */}
-      <ScrollToTopButton />
     </div>
   )
 }

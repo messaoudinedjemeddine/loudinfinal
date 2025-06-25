@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -20,9 +21,14 @@ import {
   Truck,
   Phone,
   FileText,
-  MapPin
+  MapPin,
+  Sun,
+  Moon,
+  User
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
+import { useTheme } from 'next-themes'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
 // Role-based navigation configuration
 const getNavigationByRole = (role: string) => {
@@ -32,6 +38,7 @@ const getNavigationByRole = (role: string) => {
       return [
         { name: 'Dashboard', href: '/admin/dashboard/admin', icon: LayoutDashboard },
         { name: 'Products', href: '/admin/products', icon: Package },
+        { name: 'Inventory', href: '/admin/inventory', icon: Package },
         { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
         { name: 'Shipping', href: '/admin/shipping', icon: Truck },
         { name: 'Categories', href: '/admin/categories', icon: Tag },
@@ -97,6 +104,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout, isAuthenticated } = useAuthStore()
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     setMounted(true)
@@ -119,6 +127,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const handleLogout = () => {
     logout()
     router.push('/admin/login')
+  }
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
   }
 
   if (!mounted) return null
@@ -153,12 +165,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <div className={`flex flex-col h-full ${className}`}>
       {/* Logo */}
       <div className="flex items-center px-6 py-4 border-b">
-        <Link href={`/admin/dashboard/${user.role.toLowerCase()}`} className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">E</span>
+        <Link href={`/admin/dashboard/${user.role.toLowerCase()}`} className="flex items-center space-x-3">
+          <div className="relative w-10 h-10">
+            <Image
+              src={theme === 'dark' ? '/logos/logo-light.png' : '/logos/logo-dark.png'}
+              alt="Loudim Logo"
+              fill
+              className="object-contain"
+            />
           </div>
           <div>
-            <span className="text-xl font-bold">E-Shop Admin</span>
+            <span className="text-xl font-bold">Loudim Dashboard</span>
             <p className="text-xs text-muted-foreground">{roleDisplayName}</p>
           </div>
         </Link>
@@ -245,8 +262,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b">
+        {/* Mobile Menu Button - Only visible on mobile */}
+        <div className="lg:hidden p-4 border-b">
           <Button
             variant="ghost"
             size="sm"
@@ -254,18 +271,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          
-          <Link href={`/admin/dashboard/${user.role.toLowerCase()}`} className="flex items-center space-x-2">
-            <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xs">E</span>
-            </div>
-            <div>
-              <span className="font-bold">Admin</span>
-              <p className="text-xs text-muted-foreground">{roleDisplayName}</p>
-            </div>
-          </Link>
-          
-          <div className="w-10" /> {/* Spacer */}
         </div>
 
         {/* Page Content */}

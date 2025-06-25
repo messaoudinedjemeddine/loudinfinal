@@ -19,6 +19,7 @@ import {
 import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { toast } from 'sonner'
+import { api } from '@/lib/api'
 
 interface Product {
   id: string;
@@ -65,18 +66,25 @@ export default function EditProductPage({ params }: EditProductPageProps) {
 
   const fetchProduct = useCallback(async () => {
     try {
-      const response = await fetch(`/api/admin/products/${params.id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch product')
+      const data = await api.admin.getProduct(params.id) as any
+      // Transform the API response to match our Product interface
+      const transformedData: Product = {
+        id: data.id,
+        name: data.name,
+        nameAr: data.nameAr || '',
+        description: data.description || '',
+        descriptionAr: data.descriptionAr || '',
+        price: data.price,
+        oldPrice: data.oldPrice || 0,
+        category: data.category?.name || data.category || '',
+        reference: data.reference || '',
+        stock: data.stock,
+        isOnSale: data.isOnSale || false,
+        isActive: data.isActive !== false,
+        images: data.images || [],
+        slug: data.slug || ''
       }
-
-      const data = await response.json()
-      setProductData(data.product)
+      setProductData(transformedData)
     } catch (error) {
       console.error('Failed to fetch product:', error)
       toast.error('Failed to load product')
@@ -106,32 +114,21 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       // Generate slug from name if not provided
       const slug = productData.slug || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
-      const response = await fetch(`/api/admin/products/${params.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          name: productData.name,
-          nameAr: productData.nameAr,
-          description: productData.description,
-          descriptionAr: productData.descriptionAr,
-          price: productData.price,
-          oldPrice: productData.oldPrice,
-          category: productData.category,
-          reference: productData.reference,
-          stock: productData.stock,
-          isOnSale: productData.isOnSale,
-          isActive: productData.isActive,
-          slug: slug,
-          images: productData.images
-        })
+      await api.admin.updateProduct(params.id, {
+        name: productData.name,
+        nameAr: productData.nameAr,
+        description: productData.description,
+        descriptionAr: productData.descriptionAr,
+        price: productData.price,
+        oldPrice: productData.oldPrice,
+        category: productData.category,
+        reference: productData.reference,
+        stock: productData.stock,
+        isOnSale: productData.isOnSale,
+        isActive: productData.isActive,
+        slug: slug,
+        images: productData.images
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to update product')
-      }
 
       toast.success('Product updated successfully!')
       router.push('/admin/products')

@@ -19,17 +19,39 @@ import {
   Truck,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  User,
+  Mail,
+  CreditCard,
+  FileText,
+  Download
 } from 'lucide-react'
 import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface OrderItem {
+  id: string
   name: string
+  nameAr?: string
   quantity: number
   price: number
+  size?: string
+  product: {
+    id: string
+    name: string
+    nameAr?: string
+    image?: string
+  }
 }
 
 interface Order {
@@ -37,14 +59,25 @@ interface Order {
   orderNumber: string
   customerName: string
   customerPhone: string
-  customerEmail: string
+  customerEmail?: string
   total: number
+  subtotal: number
+  deliveryFee: number
   deliveryType: 'HOME_DELIVERY' | 'PICKUP'
   deliveryAddress?: string
-  city: string
+  city: {
+    name: string
+    nameAr?: string
+  }
+  deliveryDesk?: {
+    name: string
+    nameAr?: string
+  }
   callCenterStatus: 'NEW' | 'CONFIRMED' | 'CANCELED' | 'NO_RESPONSE'
   deliveryStatus: 'NOT_READY' | 'READY' | 'IN_TRANSIT' | 'DONE'
   createdAt: string
+  updatedAt: string
+  notes?: string
   items: OrderItem[]
 }
 
@@ -74,6 +107,20 @@ const deliveryStatusIcons = {
   READY: Package,
   IN_TRANSIT: Truck,
   DONE: CheckCircle
+}
+
+const getStatusLabel = (status: string) => {
+  const labels: Record<string, string> = {
+    NEW: 'New',
+    CONFIRMED: 'Confirmed',
+    CANCELED: 'Canceled',
+    NO_RESPONSE: 'No Response',
+    NOT_READY: 'Not Ready',
+    READY: 'Ready',
+    IN_TRANSIT: 'In Transit',
+    DONE: 'Delivered'
+  }
+  return labels[status] || status
 }
 
 export default function AdminOrdersPage() {
@@ -112,7 +159,8 @@ export default function AdminOrdersPage() {
       filtered = filtered.filter(order =>
         order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customerPhone.includes(searchQuery)
+        order.customerPhone.includes(searchQuery) ||
+        order.customerEmail?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 
@@ -128,7 +176,7 @@ export default function AdminOrdersPage() {
 
     // City filter
     if (cityFilter !== 'all') {
-      filtered = filtered.filter(order => order.city === cityFilter)
+      filtered = filtered.filter(order => order.city.name === cityFilter)
     }
 
     setFilteredOrders(filtered)
@@ -162,21 +210,46 @@ export default function AdminOrdersPage() {
     }
   }
 
-  const cities = Array.from(new Set(orders.map(order => order.city)))
+  const handleExportOrders = async () => {
+    try {
+      toast.loading('Exporting orders...')
+      const csvData = await api.admin.exportOrders()
+      
+      // Create and download the file
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `orders-${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      toast.dismiss()
+      toast.success('Orders exported successfully')
+    } catch (error) {
+      console.error('Failed to export orders:', error)
+      toast.dismiss()
+      toast.error('Failed to export orders')
+    }
+  }
+
+  const cities = Array.from(new Set(orders.map(order => order.city.name)))
 
   if (loading) {
     return (
       <AdminLayout>
         <div className="space-y-8">
           <div>
-            <h1 className="text-3xl font-bold">Orders</h1>
+            <h1 className="text-3xl font-bold">Orders Management</h1>
             <p className="text-muted-foreground">
-              Manage customer orders and track delivery status
+              Manage customer orders, track delivery status, and handle order confirmations
             </p>
           </div>
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Loading orders...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading orders...</p>
           </div>
         </div>
       </AdminLayout>
@@ -188,10 +261,18 @@ export default function AdminOrdersPage() {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Orders</h1>
-          <p className="text-muted-foreground">
-            Manage customer orders and track delivery status
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold">Orders Management</h1>
+              <p className="text-muted-foreground">
+                Manage customer orders, track delivery status, and handle order confirmations
+              </p>
+            </div>
+            <Button onClick={handleExportOrders} className="flex items-center space-x-2">
+              <Download className="w-4 h-4" />
+              <span>Export Orders</span>
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -209,7 +290,7 @@ export default function AdminOrdersPage() {
               <CardContent>
                 <div className="text-2xl font-bold">{orders.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  +23% from last month
+                  All time orders
                 </p>
               </CardContent>
             </Card>
@@ -272,7 +353,7 @@ export default function AdminOrdersPage() {
                   {orders.reduce((sum, o) => sum + o.total, 0).toLocaleString()} DA
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  This month
+                  All time revenue
                 </p>
               </CardContent>
             </Card>
@@ -292,7 +373,7 @@ export default function AdminOrdersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
-                  placeholder="Search orders..."
+                  placeholder="Search orders, customers..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -321,7 +402,7 @@ export default function AdminOrdersPage() {
                   <SelectItem key="NOT_READY" value="NOT_READY">Not Ready</SelectItem>
                   <SelectItem key="READY" value="READY">Ready</SelectItem>
                   <SelectItem key="IN_TRANSIT" value="IN_TRANSIT">In Transit</SelectItem>
-                  <SelectItem key="DONE" value="DONE">Done</SelectItem>
+                  <SelectItem key="DONE" value="DONE">Delivered</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -342,128 +423,170 @@ export default function AdminOrdersPage() {
           </CardContent>
         </Card>
 
-        {/* Orders List */}
+        {/* Orders Table */}
         <Card>
           <CardHeader>
             <CardTitle>Orders ({filteredOrders.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {filteredOrders.map((order, index) => {
-                const CallCenterIcon = callCenterStatusIcons[order.callCenterStatus as keyof typeof callCenterStatusIcons]
-                const DeliveryIcon = deliveryStatusIcons[order.deliveryStatus as keyof typeof deliveryStatusIcons]
-
-                return (
-                  <motion.div
-                    key={order.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border rounded-lg p-6 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-4 mb-3">
-                          <h3 className="font-semibold text-lg">{order.orderNumber}</h3>
-                          <Badge className={callCenterStatusColors[order.callCenterStatus as keyof typeof callCenterStatusColors]}>
-                            <CallCenterIcon className="w-3 h-3 mr-1" />
-                            {order.callCenterStatus}
-                          </Badge>
-                          <Badge className={deliveryStatusColors[order.deliveryStatus as keyof typeof deliveryStatusColors]}>
-                            <DeliveryIcon className="w-3 h-3 mr-1" />
-                            {order.deliveryStatus}
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Phone className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-medium">{order.customerName}</span>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order #</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Call Center</TableHead>
+                    <TableHead>Delivery</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order) => {
+                    const CallCenterIcon = callCenterStatusIcons[order.callCenterStatus as keyof typeof callCenterStatusIcons]
+                    const DeliveryIcon = deliveryStatusIcons[order.deliveryStatus as keyof typeof deliveryStatusIcons]
+                    
+                    return (
+                      <TableRow key={order.id}>
+                        <TableCell>
+                          <div className="font-mono font-medium">
+                            {order.orderNumber}
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium">{order.customerName}</div>
+                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                              <Phone className="w-3 h-3" />
+                              <span>{order.customerPhone}</span>
                             </div>
-                            <p className="text-sm text-muted-foreground ml-6">
-                              {order.customerPhone}
-                            </p>
                             {order.customerEmail && (
-                              <p className="text-sm text-muted-foreground ml-6">
-                                {order.customerEmail}
-                              </p>
+                              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                <Mail className="w-3 h-3" />
+                                <span>{order.customerEmail}</span>
+                              </div>
                             )}
                           </div>
-
-                          <div>
-                            <div className="flex items-center space-x-2 mb-2">
-                              <MapPin className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-medium">{order.city}</span>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="space-y-1">
+                            {order.items.map((item, index) => (
+                              <div key={item.id} className="text-sm">
+                                <div className="font-medium">
+                                  {item.quantity}x {item.product.name}
+                                </div>
+                                {item.size && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Size: {item.size}
+                                  </div>
+                                )}
+                                {index < order.items.length - 1 && (
+                                  <div className="border-t my-1"></div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-bold text-primary">
+                              {order.total.toLocaleString()} DA
                             </div>
-                            <p className="text-sm text-muted-foreground ml-6">
-                              {order.deliveryType === 'HOME_DELIVERY' ? order.deliveryAddress : 'Pickup from desk'}
-                            </p>
+                            <div className="text-xs text-muted-foreground">
+                              Subtotal: {order.subtotal.toLocaleString()} DA
+                            </div>
+                            {order.deliveryFee > 0 && (
+                              <div className="text-xs text-muted-foreground">
+                                Delivery: {order.deliveryFee.toLocaleString()} DA
+                              </div>
+                            )}
                           </div>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-4">
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Select
+                            value={order.callCenterStatus}
+                            onValueChange={(value) => handleUpdateCallCenterStatus(order.id, value)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NEW">New</SelectItem>
+                              <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                              <SelectItem value="CANCELED">Canceled</SelectItem>
+                              <SelectItem value="NO_RESPONSE">No Response</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Select
+                            value={order.deliveryStatus}
+                            onValueChange={(value) => handleUpdateDeliveryStatus(order.id, value)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="NOT_READY">Not Ready</SelectItem>
+                              <SelectItem value="READY">Ready</SelectItem>
+                              <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
+                              <SelectItem value="DONE">Delivered</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium">{order.city.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {order.deliveryType === 'HOME_DELIVERY' 
+                                ? (order.deliveryAddress || 'Home Delivery')
+                                : (order.deliveryDesk?.name || 'Pickup')
+                              }
+                            </div>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium">
                               {new Date(order.createdAt).toLocaleDateString()}
-                            </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(order.createdAt).toLocaleTimeString()}
+                            </div>
                           </div>
-                          <div className="text-lg font-bold text-primary">
-                            {order.total.toLocaleString()} DA
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/admin/orders/${order.id}`}>
+                                <Eye className="w-4 h-4" />
+                              </Link>
+                            </Button>
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col space-y-2 lg:w-48">
-                        <Select
-                          value={order.callCenterStatus}
-                          onValueChange={(value) => handleUpdateCallCenterStatus(order.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem key={`${order.id}-NEW`} value="NEW">New</SelectItem>
-                            <SelectItem key={`${order.id}-CONFIRMED`} value="CONFIRMED">Confirmed</SelectItem>
-                            <SelectItem key={`${order.id}-CANCELED`} value="CANCELED">Canceled</SelectItem>
-                            <SelectItem key={`${order.id}-NO_RESPONSE`} value="NO_RESPONSE">No Response</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        <Select
-                          value={order.deliveryStatus}
-                          onValueChange={(value) => handleUpdateDeliveryStatus(order.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem key={`${order.id}-NOT_READY`} value="NOT_READY">Not Ready</SelectItem>
-                            <SelectItem key={`${order.id}-READY`} value="READY">Ready</SelectItem>
-                            <SelectItem key={`${order.id}-IN_TRANSIT`} value="IN_TRANSIT">In Transit</SelectItem>
-                            <SelectItem key={`${order.id}-DONE`} value="DONE">Done</SelectItem>
-                          </SelectContent>
-                        </Select>
-
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/orders/${order.id}`}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )
-              })}
-
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+              
               {filteredOrders.length === 0 && (
                 <div className="text-center py-8">
                   <ShoppingCart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No orders found</h3>
                   <p className="text-muted-foreground">
-                    Try adjusting your filters
+                    Try adjusting your filters or search terms
                   </p>
                 </div>
               )}

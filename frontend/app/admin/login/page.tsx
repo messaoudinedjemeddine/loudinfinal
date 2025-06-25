@@ -206,10 +206,10 @@ export default function AdminLoginPage() {
             </motion.div>
 
             <CardTitle className="text-2xl font-bold text-foreground mb-2">
-              Admin Portal
+              Loudim Dashboard
             </CardTitle>
             <p className="text-muted-foreground">
-              Sign in to manage Algerian Elegance
+              Sign in to manage your store
             </p>
           </CardHeader>
 

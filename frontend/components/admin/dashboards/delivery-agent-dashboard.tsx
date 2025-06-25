@@ -150,7 +150,7 @@ export function DeliveryAgentDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Delivery Agent Dashboard</h1>
+        <h1 className="text-3xl font-bold">Delivery Management - Loudim Dashboard</h1>
         <p className="text-muted-foreground">
           Manage deliveries and track order status. Handle customer communications and navigation.
         </p>
@@ -270,7 +270,7 @@ export function DeliveryAgentDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {order.items.length} items • ${order.total} • {new Date(order.createdAt).toLocaleString()}
+                          {order.items.length} items • {order.total.toLocaleString()} DA • {new Date(order.createdAt).toLocaleString()}
                         </div>
                         {order.deliveryAddress && (
                           <div className="mt-2 text-sm bg-muted p-2 rounded">
@@ -352,7 +352,7 @@ export function DeliveryAgentDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {order.items.length} items • ${order.total}
+                          {order.items.length} items • {order.total.toLocaleString()} DA
                         </div>
                         {order.deliveryAddress && (
                           <div className="mt-2 text-sm bg-muted p-2 rounded">
@@ -434,7 +434,7 @@ export function DeliveryAgentDashboard() {
                           </div>
                         </div>
                         <div className="mt-2 text-sm text-muted-foreground">
-                          {order.items.length} items • ${order.total}
+                          {order.items.length} items • {order.total.toLocaleString()} DA
                         </div>
                       </div>
                       <div className="flex space-x-2">

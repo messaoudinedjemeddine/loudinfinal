@@ -156,7 +156,7 @@ export function AdminDashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold">Loudim Dashboard</h1>
         <p className="text-muted-foreground">
           Complete overview of your e-commerce platform. Manage products, orders, users, and analytics.
         </p>
@@ -232,7 +232,7 @@ export function AdminDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+              <div className="text-2xl font-bold">{stats.totalRevenue.toLocaleString()} DA</div>
               <p className="text-xs text-muted-foreground">
                 All time revenue
               </p>
@@ -274,7 +274,7 @@ export function AdminDashboard() {
                         </div>
                       </div>
                       <div className="mt-2 text-sm text-muted-foreground">
-                        {order.items.length} items • ${order.total}
+                        {order.items.length} items • {order.total.toLocaleString()} DA
                       </div>
                     </div>
                     <div className="flex space-x-2">

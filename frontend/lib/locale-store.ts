@@ -37,13 +37,14 @@ export const useLocaleStore = create<LocaleStore>()(
       }
     }),
     {
-      name: 'locale-storage',
-      onRehydrate: (state) => {
-        if (state && typeof document !== 'undefined') {
-          document.documentElement.dir = state.direction
-          document.documentElement.lang = state.locale
-        }
-      }
+      name: 'locale-storage'
     }
   )
 )
+
+// Initialize document direction and lang on mount
+if (typeof document !== 'undefined') {
+  const store = useLocaleStore.getState()
+  document.documentElement.dir = store.direction
+  document.documentElement.lang = store.locale
+}

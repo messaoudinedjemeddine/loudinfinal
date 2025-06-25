@@ -1,5 +1,21 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+// Helper function to get auth token
+const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const authData = localStorage.getItem('auth-storage');
+    if (authData) {
+      const parsedData = JSON.parse(authData);
+      return parsedData?.state?.token || parsedData?.token || null;
+    }
+  } catch (error) {
+    console.warn('Failed to parse auth token:', error);
+  }
+  return null;
+};
+
 class ApiClient {
   private baseURL: string;
 
@@ -23,19 +39,12 @@ class ApiClient {
 
     // Add auth token if available
     if (typeof window !== 'undefined') {
-      const authData = localStorage.getItem('auth-storage');
-      if (authData) {
-        try {
-          const { state } = JSON.parse(authData);
-          if (state?.token) {
-            config.headers = {
-              ...config.headers,
-              Authorization: `Bearer ${state.token}`,
-            };
-          }
-        } catch (error) {
-          console.warn('Failed to parse auth token:', error);
-        }
+      const token = getAuthToken();
+      if (token) {
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${token}`,
+        };
       }
     }
 
@@ -274,6 +283,63 @@ export const api = {
     deleteProduct: (id: string) => apiClient.request(`/admin/products/${id}`, {
       method: 'DELETE',
     }),
+    // Inventory management
+    getInventory: (params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      category?: string;
+      stockFilter?: string;
+      status?: string;
+    }) => {
+      const searchParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            searchParams.append(key, value.toString());
+          }
+        });
+      }
+      const query = searchParams.toString();
+      return apiClient.request(`/admin/inventory${query ? `?${query}` : ''}`);
+    },
+    exportInventory: async () => {
+      const response = await fetch(`${API_BASE_URL}/admin/inventory/export`, {
+        headers: {
+          'Content-Type': 'text/csv',
+          ...(typeof window !== 'undefined' ? {
+            Authorization: `Bearer ${getAuthToken()}`
+          } : {})
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.status}`);
+      }
+      
+      return await response.text();
+    },
+    importInventory: (data: any) => apiClient.request('/admin/inventory/import', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    // Orders export
+    exportOrders: async () => {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/export`, {
+        headers: {
+          'Content-Type': 'text/csv',
+          ...(typeof window !== 'undefined' ? {
+            Authorization: `Bearer ${getAuthToken()}`
+          } : {})
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.status}`);
+      }
+      
+      return await response.text();
+    },
     // Categories management
     getCategories: () => apiClient.request('/admin/categories'),
     createCategory: (data: any) => apiClient.request('/admin/categories', {

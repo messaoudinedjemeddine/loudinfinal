@@ -29,53 +29,6 @@ export function Footer() {
     <footer className="bg-background border-t">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Top Section with Newsletter */}
-        <div className="py-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-          <div className="lg:col-span-1">
-            <div className={`flex items-center space-x-2 ${isRTL ? 'lg:justify-end' : 'lg:justify-start'} justify-center`}>
-              <div className="relative w-24 h-24">
-                <img
-                  src="/logos/logo-light.png"
-                  alt="Site Logo"
-                  className="w-full h-full object-contain dark:hidden"
-                  width={96}
-                  height={96}
-                />
-                <img
-                  src="/logos/logo-dark.png"
-                  alt="Site Logo"
-                  className="w-full h-full object-contain hidden dark:block"
-                  width={96}
-                  height={96}
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="lg:col-span-2">
-            <div className={`text-center ${isRTL ? 'lg:text-right' : 'lg:text-left'}`}>
-              <h3 className="text-lg font-semibold">{t.footer.subscribeNewsletter}</h3>
-              <p className="text-muted-foreground text-sm mt-1 mb-4">{isRTL ? 'احصل على آخر التحديثات والعروض مباشرة في بريدك الإلكتروني.' : 'Get the latest updates and offers right in your inbox.'}</p>
-              <form onSubmit={handleSubscribe} className="flex items-center max-w-md mx-auto lg:mx-0 relative">
-                <Mail className={`w-5 h-5 text-muted-foreground absolute ${isRTL ? 'right-3' : 'left-3'}`} />
-                <Input 
-                  type="email" 
-                  id="email"
-                  name="email"
-                  placeholder={t.footer.enterEmail}
-                  className={`h-12 ${isRTL ? 'pr-10' : 'pl-10'} rounded-full w-full`}
-                  dir={isRTL ? 'rtl' : 'ltr'}
-                />
-                <Button type="submit" className={`absolute ${isRTL ? 'left-1' : 'right-1'} h-10 w-10 p-0 rounded-full`}>
-                  <Send className="w-5 h-5"/>
-                </Button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t"></div>
-
         {/* Middle Section with Links */}
         <div className="py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="col-span-2 md:col-span-1">

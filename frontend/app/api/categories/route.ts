@@ -12,12 +12,18 @@ export async function GET(request: NextRequest) {
     })
 
     if (!response.ok) {
-      throw new Error(`Backend responded with status: ${response.status}`)
+      console.error(`Backend responded with status: ${response.status}`)
+      // Return empty array instead of throwing error
+      return NextResponse.json([])
     }
 
     const data = await response.json()
     // Backend returns { categories: [...] }, but frontend expects just the array
-    const result = NextResponse.json(data.categories || [])
+    // Ensure we always return an array
+    const categories = Array.isArray(data.categories) ? data.categories : 
+                      Array.isArray(data) ? data : []
+    
+    const result = NextResponse.json(categories)
     
     // Add cache control headers to prevent caching
     result.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
@@ -27,9 +33,7 @@ export async function GET(request: NextRequest) {
     return result
   } catch (error) {
     console.error('Error fetching categories:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch categories' },
-      { status: 500 }
-    )
+    // Return empty array instead of error response
+    return NextResponse.json([])
   }
 } 

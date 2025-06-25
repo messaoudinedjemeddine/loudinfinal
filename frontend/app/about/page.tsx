@@ -1,27 +1,76 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { 
-  Users, 
-  Target, 
+  Heart, 
+  Star, 
   Award, 
-  Heart,
-  Truck,
-  Shield,
+  Users, 
+  ShoppingBag, 
+  Truck, 
+  Shield, 
   Clock,
-  Star
+  MapPin,
+  Phone,
+  Mail,
+  Instagram,
+  Facebook,
+  Twitter,
+  Target
 } from 'lucide-react'
 import Image from 'next/image'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
+import Link from 'next/link'
+import { useLocaleStore } from '@/lib/locale-store'
+
+// Custom hook for counter animation
+const useCounter = (end: number, duration: number = 2000) => {
+  const [count, setCount] = useState(0)
+  const [hasAnimated, setHasAnimated] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true)
+          let startTime: number | null = null
+          
+          const animate = (currentTime: number) => {
+            if (!startTime) startTime = currentTime
+            const progress = Math.min((currentTime - startTime) / duration, 1)
+            
+            setCount(Math.floor(progress * end))
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate)
+            }
+          }
+          
+          requestAnimationFrame(animate)
+        }
+      },
+      { threshold: 0.5 }
+    )
+
+    if (ref.current) {
+      observer.observe(ref.current)
+    }
+
+    return () => observer.disconnect()
+  }, [end, duration, hasAnimated])
+
+  return { count, ref }
+}
 
 const stats = [
-  { label: 'Happy Customers', value: '10,000+', icon: Users },
-  { label: 'Products Sold', value: '50,000+', icon: Award },
-  { label: 'Cities Covered', value: '48', icon: Truck },
-  { label: 'Years Experience', value: '5+', icon: Clock }
+  { label: 'Happy Customers', value: 10000, suffix: '+', icon: Users },
+  { label: 'Products Sold', value: 50000, suffix: '+', icon: Award },
+  { label: 'Cities Covered', value: 58, suffix: '', icon: Truck },
+  { label: 'Years Experience', value: 5, suffix: '+', icon: Clock }
 ]
 
 const values = [
@@ -38,7 +87,7 @@ const values = [
   {
     icon: Truck,
     title: 'Fast Delivery',
-    description: 'We ensure quick and reliable delivery across all 48 wilayas of Algeria with our extensive network.'
+    description: 'We ensure quick and reliable delivery across all 58 cities of Algeria with our extensive network.'
   },
   {
     icon: Star,
@@ -69,14 +118,20 @@ const team = [
 ]
 
 export default function AboutPage() {
+  // Initialize counters for each stat
+  const customerCounter = useCounter(10000, 2000)
+  const productCounter = useCounter(50000, 2000)
+  const cityCounter = useCounter(58, 2000)
+  const yearCounter = useCounter(5, 2000)
+
+  const counters = [customerCounter, productCounter, cityCounter, yearCounter]
+
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      
       <div className="pt-16">
         {/* Hero Section */}
         <section className="relative py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -84,7 +139,7 @@ export default function AboutPage() {
             >
               <h1 className="text-4xl md:text-6xl font-bold mb-6">About E-Shop Algeria</h1>
               <p className="text-xl text-muted-foreground mb-8">
-                We're on a mission to revolutionize online shopping in Algeria by providing 
+                We&apos;re on a mission to revolutionize online shopping in Algeria by providing 
                 quality products, exceptional service, and fast delivery to every corner of our beautiful country.
               </p>
               <Badge variant="secondary" className="text-lg px-6 py-2">
@@ -96,7 +151,7 @@ export default function AboutPage() {
 
         {/* Stats Section */}
         <section className="py-16">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {stats.map((stat, index) => (
                 <motion.div
@@ -106,11 +161,14 @@ export default function AboutPage() {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   className="text-center"
+                  ref={counters[index].ref}
                 >
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <stat.icon className="w-8 h-8 text-primary" />
                   </div>
-                  <div className="text-3xl font-bold mb-2">{stat.value}</div>
+                  <div className="text-3xl font-bold mb-2">
+                    {counters[index].count.toLocaleString()}{stat.suffix}
+                  </div>
                   <div className="text-muted-foreground">{stat.label}</div>
                 </motion.div>
               ))}
@@ -120,7 +178,7 @@ export default function AboutPage() {
 
         {/* Story Section */}
         <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
@@ -136,8 +194,8 @@ export default function AboutPage() {
                     a small team with big dreams and an unwavering commitment to customer satisfaction.
                   </p>
                   <p>
-                    Today, we've grown to become one of Algeria's most trusted e-commerce 
-                    platforms, serving customers in all 48 wilayas. Our success is built on 
+                    Today, we&apos;ve grown to become one of Algeria&apos;s most trusted e-commerce 
+                    platforms, serving customers in all 58 cities. Our success is built on 
                     three pillars: quality products, exceptional service, and reliable delivery.
                   </p>
                   <p>
@@ -168,7 +226,7 @@ export default function AboutPage() {
 
         {/* Values Section */}
         <section className="py-20">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -208,7 +266,7 @@ export default function AboutPage() {
 
         {/* Team Section */}
         <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -254,7 +312,7 @@ export default function AboutPage() {
 
         {/* Mission Section */}
         <section className="py-20">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -264,7 +322,7 @@ export default function AboutPage() {
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Our Mission</h2>
               <p className="text-xl text-muted-foreground mb-8">
-                To be Algeria's most trusted e-commerce platform, connecting customers with 
+                To be Algeria&apos;s most trusted e-commerce platform, connecting customers with 
                 quality products while supporting local businesses and contributing to the 
                 digital transformation of our economy.
               </p>
@@ -295,8 +353,6 @@ export default function AboutPage() {
           </div>
         </section>
       </div>
-
-      <Footer />
     </div>
   )
 }

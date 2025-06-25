@@ -2,21 +2,29 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { 
+  MapPin, 
   Phone, 
   Mail, 
-  MapPin, 
-  Clock,
-  MessageCircle,
-  Send,
-  Headphones
+  Clock, 
+  Send, 
+  MessageSquare,
+  Instagram,
+  Facebook,
+  Twitter,
+  Linkedin
 } from 'lucide-react'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
+import { useLocaleStore } from '@/lib/locale-store'
+import { 
+  MessageCircle,
+  Headphones,
+  Loader2
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 const contactInfo = [
@@ -100,12 +108,10 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      
       <div className="pt-16">
         {/* Header */}
         <section className="bg-muted/30 py-16">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -113,7 +119,7 @@ export default function ContactPage() {
             >
               <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                We're here to help! Get in touch with us for any questions, concerns, or feedback.
+                We&apos;re here to help! Get in touch with us for any questions, concerns, or feedback.
               </p>
             </motion.div>
           </div>
@@ -121,7 +127,7 @@ export default function ContactPage() {
 
         {/* Contact Info Cards */}
         <section className="py-16">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {contactInfo.map((info, index) => (
                 <motion.div
@@ -153,7 +159,7 @@ export default function ContactPage() {
 
         {/* Contact Form & FAQ */}
         <section className="py-16 bg-muted/30">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               {/* Contact Form */}
               <motion.div
@@ -196,7 +202,7 @@ export default function ContactPage() {
                             value={formData.email}
                             onChange={handleInputChange}
                             required
-                            placeholder="your@email.com"
+                            placeholder="your.email@example.com"
                           />
                         </div>
                       </div>
@@ -224,7 +230,7 @@ export default function ContactPage() {
                             value={formData.subject}
                             onChange={handleInputChange}
                             required
-                            placeholder="How can we help?"
+                            placeholder="What is this about?"
                           />
                         </div>
                       </div>
@@ -246,11 +252,14 @@ export default function ContactPage() {
                       
                       <Button 
                         type="submit" 
-                        className="w-full" 
                         disabled={isSubmitting}
+                        className="w-full"
                       >
                         {isSubmitting ? (
-                          'Sending...'
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Sending...
+                          </>
                         ) : (
                           <>
                             <Send className="w-4 h-4 mr-2" />
@@ -263,7 +272,7 @@ export default function ContactPage() {
                 </Card>
               </motion.div>
 
-              {/* FAQ */}
+              {/* FAQ Section */}
               <motion.div
                 initial={{ opacity: 0, x: 50 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -278,22 +287,13 @@ export default function ContactPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {faqItems.map((item, index) => (
-                        <div key={index} className="border-b border-border pb-4 last:border-b-0">
-                          <h4 className="font-medium mb-2">{item.question}</h4>
+                        <div key={index} className="border-b border-muted pb-4 last:border-b-0">
+                          <h4 className="font-semibold mb-2">{item.question}</h4>
                           <p className="text-muted-foreground text-sm">{item.answer}</p>
                         </div>
                       ))}
-                    </div>
-                    
-                    <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                      <p className="text-sm text-muted-foreground">
-                        Can't find what you're looking for? 
-                        <Button variant="link" className="p-0 ml-1 h-auto">
-                          View our complete FAQ section
-                        </Button>
-                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -304,7 +304,7 @@ export default function ContactPage() {
 
         {/* Map Section */}
         <section className="py-16">
-          <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -336,8 +336,6 @@ export default function ContactPage() {
           </div>
         </section>
       </div>
-
-      <Footer />
     </div>
   )
 }

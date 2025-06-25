@@ -17,11 +17,13 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  User
+  User,
+  Loader2
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { AdminLayout } from '@/components/admin/admin-layout'
+import { api } from '@/lib/api'
 import { toast } from 'sonner'
 
 interface OrderDetailPageProps {
@@ -30,32 +32,46 @@ interface OrderDetailPageProps {
   }
 }
 
-const mockOrder = {
-  id: 'ORD-001',
-  orderNumber: 'ORD-001',
-  customerName: 'Ahmed Benali',
-  customerPhone: '+213 555 123 456',
-  customerEmail: 'ahmed@example.com',
-  total: 25000,
-  subtotal: 25000,
-  deliveryFee: 0,
-  deliveryType: 'HOME_DELIVERY',
-  deliveryAddress: '123 Rue de la Liberté, Algiers',
-  city: 'Algiers',
-  callCenterStatus: 'NEW',
-  deliveryStatus: 'NOT_READY',
-  notes: 'Please call before delivery',
-  createdAt: '2024-01-15T10:30:00Z',
-  items: [
-    {
-      id: '1',
-      name: 'Traditional Karakou Dress',
-      quantity: 1,
-      price: 25000,
-      size: '40',
-      image: 'https://images.pexels.com/photos/3755706/pexels-photo-3755706.jpeg?auto=compress&cs=tinysrgb&w=200'
-    }
-  ]
+interface OrderItem {
+  id: string
+  name: string
+  nameAr?: string
+  quantity: number
+  price: number
+  size?: string
+  product: {
+    id: string
+    name: string
+    nameAr?: string
+    image?: string
+  }
+}
+
+interface Order {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerPhone: string
+  customerEmail?: string
+  total: number
+  subtotal: number
+  deliveryFee: number
+  deliveryType: 'HOME_DELIVERY' | 'PICKUP'
+  deliveryAddress?: string
+  city: {
+    name: string
+    nameAr?: string
+  }
+  deliveryDesk?: {
+    name: string
+    nameAr?: string
+  }
+  callCenterStatus: 'NEW' | 'CONFIRMED' | 'CANCELED' | 'NO_RESPONSE'
+  deliveryStatus: 'NOT_READY' | 'READY' | 'IN_TRANSIT' | 'DONE'
+  createdAt: string
+  updatedAt: string
+  notes?: string
+  items: OrderItem[]
 }
 
 const statusColors = {
@@ -71,22 +87,98 @@ const statusColors = {
 
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {
   const [mounted, setMounted] = useState(false)
-  const [order, setOrder] = useState(mockOrder)
+  const [order, setOrder] = useState<Order | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+    fetchOrder()
+  }, [params.id])
+
+  const fetchOrder = async () => {
+    try {
+      setLoading(true)
+      const response = await api.orders.getById(params.id) as Order
+      setOrder(response)
+    } catch (error) {
+      console.error('Failed to fetch order:', error)
+      toast.error('Failed to load order details')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdateCallCenterStatus = async (status: string) => {
+    if (!order) return
+    
+    try {
+      await api.admin.updateOrderStatus(order.id, { callCenterStatus: status })
+      setOrder(prev => prev ? { ...prev, callCenterStatus: status as any } : null)
+      toast.success('Call center status updated')
+    } catch (error) {
+      console.error('Failed to update call center status:', error)
+      toast.error('Failed to update call center status')
+    }
+  }
+
+  const handleUpdateDeliveryStatus = async (status: string) => {
+    if (!order) return
+    
+    try {
+      await api.admin.updateOrderStatus(order.id, { deliveryStatus: status })
+      setOrder(prev => prev ? { ...prev, deliveryStatus: status as any } : null)
+      toast.success('Delivery status updated')
+    } catch (error) {
+      console.error('Failed to update delivery status:', error)
+      toast.error('Failed to update delivery status')
+    }
+  }
 
   if (!mounted) return null
 
-  const handleUpdateCallCenterStatus = (status: string) => {
-    setOrder(prev => ({ ...prev, callCenterStatus: status }))
-    toast.success('Call center status updated')
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="space-y-8">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" asChild>
+              <Link href="/admin/orders">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Orders
+              </Link>
+            </Button>
+          </div>
+          <div className="text-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading order details...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
-  const handleUpdateDeliveryStatus = (status: string) => {
-    setOrder(prev => ({ ...prev, deliveryStatus: status }))
-    toast.success('Delivery status updated')
+  if (!order) {
+    return (
+      <AdminLayout>
+        <div className="space-y-8">
+          <div className="flex items-center space-x-4">
+            <Button variant="outline" asChild>
+              <Link href="/admin/orders">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Orders
+              </Link>
+            </Button>
+          </div>
+          <div className="text-center py-8">
+            <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Order not found</h3>
+            <p className="text-muted-foreground">
+              The order you&apos;re looking for doesn&apos;t exist
+            </p>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -170,12 +262,18 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                 </div>
                 <div>
                   <p className="font-medium">City:</p>
-                  <p className="text-muted-foreground">{order.city}</p>
+                  <p className="text-muted-foreground">{order.city.name}</p>
                 </div>
-                {order.deliveryAddress && (
+                {order.deliveryType === 'HOME_DELIVERY' && order.deliveryAddress && (
                   <div>
                     <p className="font-medium">Address:</p>
                     <p className="text-muted-foreground">{order.deliveryAddress}</p>
+                  </div>
+                )}
+                {order.deliveryType === 'PICKUP' && order.deliveryDesk && (
+                  <div>
+                    <p className="font-medium">Pickup Desk:</p>
+                    <p className="text-muted-foreground">{order.deliveryDesk.name}</p>
                   </div>
                 )}
                 {order.notes && (
@@ -201,14 +299,14 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                     <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
                       <div className="relative w-16 h-16 bg-muted rounded-md overflow-hidden">
                         <Image
-                          src={item.image}
-                          alt={item.name}
+                          src={item.product.image || '/placeholder-product.jpg'}
+                          alt={item.product.name}
                           fill
                           className="object-cover"
                         />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium">{item.name}</h4>
+                        <h4 className="font-medium">{item.product.name}</h4>
                         {item.size && (
                           <p className="text-sm text-muted-foreground">Size: {item.size}</p>
                         )}
@@ -291,7 +389,7 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
                       <SelectItem value="NOT_READY">Not Ready</SelectItem>
                       <SelectItem value="READY">Ready</SelectItem>
                       <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
-                      <SelectItem value="DONE">Done</SelectItem>
+                      <SelectItem value="DONE">Delivered</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

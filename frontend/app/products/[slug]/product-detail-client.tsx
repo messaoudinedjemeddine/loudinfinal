@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   ShoppingCart, 
   Heart, 
@@ -24,13 +26,20 @@ import {
   TrendingUp,
   Package,
   Clock,
-  MapPin
+  MapPin,
+  Eye,
+  X,
+  ArrowLeft,
+  ArrowRight,
+  ThumbsUp,
+  MessageCircle,
+  Calendar,
+  User,
+  Star as StarIcon
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
-import { useCartStore } from '@/lib/store'
+import { useCartStore, useWishlistStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
 import { toast } from 'sonner'
 
@@ -58,6 +67,7 @@ interface Product {
   sizes: Array<{ id: string; size: string; stock: number }>;
   features?: string[];
   specifications?: Record<string, string>;
+  slug?: string;
 }
 
 interface ProductDetailClientProps {
@@ -70,10 +80,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
-  const [isWishlisted, setIsWishlisted] = useState(false)
   const [activeTab, setActiveTab] = useState('description')
 
   const addItem = useCartStore((state) => state.addItem)
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore()
   const { t, isRTL } = useLocaleStore()
 
   useEffect(() => {
@@ -131,11 +141,26 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   }
 
   const handleWishlist = () => {
-    setIsWishlisted(!isWishlisted)
-    toast.success(isWishlisted 
-      ? (isRTL ? 'تم إزالة من المفضلة' : 'Removed from wishlist')
-      : (isRTL ? 'تم الإضافة للمفضلة' : 'Added to wishlist')
-    )
+    const isCurrentlyWishlisted = isInWishlist(product.id)
+    
+    if (isCurrentlyWishlisted) {
+      removeFromWishlist(product.id)
+      toast.success(isRTL ? 'تم إزالة من المفضلة' : 'Removed from wishlist')
+    } else {
+      addToWishlist({
+        id: product.id,
+        name: product.name,
+        nameAr: product.nameAr,
+        price: product.price,
+        oldPrice: product.oldPrice,
+        image: product.images?.[0] || '/placeholder.svg',
+        rating: product.rating,
+        isOnSale: product.isOnSale,
+        stock: product.stock,
+        slug: product.slug || product.id
+      })
+      toast.success(isRTL ? 'تم الإضافة للمفضلة' : 'Added to wishlist')
+    }
   }
 
   const handleShare = () => {
@@ -163,8 +188,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
-      <Navbar />
-      
       <div className="pt-16">
         {/* Breadcrumb */}
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -552,8 +575,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           </div>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }

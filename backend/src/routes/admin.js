@@ -227,6 +227,31 @@ router.post('/products', async (req, res) => {
   }
 });
 
+// Get single product by ID
+router.get('/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        category: true,
+        images: true,
+        sizes: true
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    res.json(product);
+  } catch (error) {
+    console.error('Get admin product error:', error);
+    res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
+
 // Update product
 router.put('/products/:id', async (req, res) => {
   try {
@@ -320,7 +345,8 @@ router.get('/orders', async (req, res) => {
       where.OR = [
         { orderNumber: { contains: search, mode: 'insensitive' } },
         { customerName: { contains: search, mode: 'insensitive' } },
-        { customerPhone: { contains: search, mode: 'insensitive' } }
+        { customerPhone: { contains: search, mode: 'insensitive' } },
+        { customerEmail: { contains: search, mode: 'insensitive' } }
       ];
     }
 
@@ -330,9 +356,18 @@ router.get('/orders', async (req, res) => {
         include: {
           items: {
             include: {
-              product: true
+              product: {
+                include: {
+                  images: {
+                    where: { isPrimary: true },
+                    take: 1
+                  }
+                }
+              }
             }
-          }
+          },
+          city: true,
+          deliveryDesk: true
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -341,8 +376,20 @@ router.get('/orders', async (req, res) => {
       prisma.order.count({ where })
     ]);
 
+    // Format orders to include proper structure
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        product: {
+          ...item.product,
+          image: item.product.images[0]?.url || '/placeholder-product.jpg'
+        }
+      }))
+    }));
+
     res.json({
-      orders,
+      orders: formattedOrders,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -353,6 +400,87 @@ router.get('/orders', async (req, res) => {
   } catch (error) {
     console.error('Admin orders error:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+// Export orders to CSV
+router.get('/orders/export', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: {
+        items: {
+          include: {
+            product: true
+          }
+        },
+        city: true,
+        deliveryDesk: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Create CSV headers
+    const headers = [
+      'Order Number',
+      'Customer Name',
+      'Customer Phone',
+      'Customer Email',
+      'Order Date',
+      'Delivery Type',
+      'City',
+      'Delivery Address/Desk',
+      'Call Center Status',
+      'Delivery Status',
+      'Subtotal (DA)',
+      'Delivery Fee (DA)',
+      'Total (DA)',
+      'Items',
+      'Notes'
+    ];
+
+    // Create CSV rows
+    const rows = orders.map(order => {
+      const items = order.items.map(item => 
+        `${item.quantity}x ${item.product.name}${item.size ? ` (Size: ${item.size})` : ''}`
+      ).join('; ');
+
+      const deliveryInfo = order.deliveryType === 'HOME_DELIVERY' 
+        ? (order.deliveryAddress || 'Home Delivery')
+        : (order.deliveryDesk?.name || 'Pickup');
+
+      return [
+        order.orderNumber,
+        order.customerName,
+        order.customerPhone,
+        order.customerEmail || '',
+        new Date(order.createdAt).toLocaleDateString(),
+        order.deliveryType === 'HOME_DELIVERY' ? 'Home Delivery' : 'Pickup',
+        order.city.name,
+        deliveryInfo,
+        order.callCenterStatus,
+        order.deliveryStatus,
+        order.subtotal.toLocaleString(),
+        order.deliveryFee.toLocaleString(),
+        order.total.toLocaleString(),
+        items,
+        order.notes || ''
+      ];
+    });
+
+    // Combine headers and rows
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    // Set response headers for CSV download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="orders-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Export orders error:', error);
+    res.status(500).json({ error: 'Failed to export orders' });
   }
 });
 
@@ -372,13 +500,34 @@ router.patch('/orders/:id/status', async (req, res) => {
       include: {
         items: {
           include: {
-            product: true
+            product: {
+              include: {
+                images: {
+                  where: { isPrimary: true },
+                  take: 1
+                }
+              }
+            }
           }
-        }
+        },
+        city: true,
+        deliveryDesk: true
       }
     });
 
-    res.json(order);
+    // Format order to include proper structure
+    const formattedOrder = {
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        product: {
+          ...item.product,
+          image: item.product.images[0]?.url || '/placeholder-product.jpg'
+        }
+      }))
+    };
+
+    res.json(formattedOrder);
   } catch (error) {
     console.error('Update order status error:', error);
     res.status(500).json({ error: 'Failed to update order status' });
@@ -611,6 +760,269 @@ router.delete('/categories/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete category error:', error);
     res.status(500).json({ error: 'Failed to delete category' });
+  }
+});
+
+// Inventory management
+router.get('/inventory', async (req, res) => {
+  try {
+    const { page = 1, limit = 50, search, category, stockFilter, status } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const where = {};
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { nameAr: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    if (category) {
+      where.category = { slug: category };
+    }
+
+    if (stockFilter === 'low') {
+      where.stock = { lte: 5, gt: 0 };
+    } else if (stockFilter === 'out') {
+      where.stock = 0;
+    } else if (stockFilter === 'in') {
+      where.stock = { gt: 5 };
+    }
+
+    if (status === 'active') {
+      where.isActive = true;
+    } else if (status === 'inactive') {
+      where.isActive = false;
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: true,
+          images: {
+            where: { isPrimary: true },
+            take: 1
+          },
+          sizes: {
+            orderBy: { size: 'asc' }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.product.count({ where })
+    ]);
+
+    res.json({
+      products: products.map(product => ({
+        ...product,
+        image: product.images[0]?.url || '/placeholder-product.jpg',
+        totalStock: product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0)
+      })),
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Inventory error:', error);
+    res.status(500).json({ error: 'Failed to fetch inventory' });
+  }
+});
+
+// Export inventory to Excel/CSV
+router.get('/inventory/export', async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        sizes: {
+          orderBy: { size: 'asc' }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Create CSV content
+    const headers = [
+      'Reference',
+      'Name',
+      'Name (Arabic)',
+      'Category',
+      'Price (DA)',
+      'Old Price (DA)',
+      'Main Stock',
+      'Sizes & Quantities',
+      'Total Stock',
+      'Status',
+      'On Sale',
+      'Created Date',
+      'Description',
+      'Description (Arabic)'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...products.map(product => {
+        const sizesInfo = product.sizes.map(size => `${size.size}:${size.stock}`).join(';');
+        const totalStock = product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0);
+        
+        return [
+          product.reference || '',
+          `"${product.name}"`,
+          `"${product.nameAr || ''}"`,
+          product.category?.name || '',
+          product.price,
+          product.oldPrice || '',
+          product.stock,
+          `"${sizesInfo}"`,
+          totalStock,
+          product.isActive ? 'Active' : 'Inactive',
+          product.isOnSale ? 'Yes' : 'No',
+          new Date(product.createdAt).toLocaleDateString(),
+          `"${product.description || ''}"`,
+          `"${product.descriptionAr || ''}"`
+        ].join(',');
+      })
+    ].join('\n');
+
+    // Set proper headers for CSV download
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="inventory-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    // Send the CSV content
+    res.status(200).send(csvContent);
+  } catch (error) {
+    console.error('Export inventory error:', error);
+    res.status(500).json({ error: 'Failed to export inventory' });
+  }
+});
+
+// Import inventory from Excel/CSV
+router.post('/inventory/import', async (req, res) => {
+  try {
+    const { products } = req.body;
+    
+    if (!Array.isArray(products)) {
+      return res.status(400).json({ error: 'Invalid data format' });
+    }
+
+    const results = {
+      created: 0,
+      updated: 0,
+      errors: []
+    };
+
+    for (const productData of products) {
+      try {
+        // Check if product exists by reference
+        const existingProduct = await prisma.product.findUnique({
+          where: { reference: productData.reference },
+          include: { sizes: true }
+        });
+
+        if (existingProduct) {
+          // Update existing product
+          await prisma.product.update({
+            where: { id: existingProduct.id },
+            data: {
+              name: productData.name,
+              nameAr: productData.nameAr,
+              description: productData.description,
+              descriptionAr: productData.descriptionAr,
+              price: parseFloat(productData.price) || 0,
+              oldPrice: productData.oldPrice ? parseFloat(productData.oldPrice) : null,
+              stock: parseInt(productData.mainStock) || 0,
+              isOnSale: productData.isOnSale === 'Yes',
+              isActive: productData.status === 'Active'
+            }
+          });
+
+          // Update sizes if provided
+          if (productData.sizes) {
+            const sizesData = productData.sizes.split(';').map(sizeInfo => {
+              const [size, stock] = sizeInfo.split(':');
+              return { size: size.trim(), stock: parseInt(stock) || 0 };
+            });
+
+            // Delete existing sizes
+            await prisma.productSize.deleteMany({
+              where: { productId: existingProduct.id }
+            });
+
+            // Create new sizes
+            for (const sizeData of sizesData) {
+              await prisma.productSize.create({
+                data: {
+                  size: sizeData.size,
+                  stock: sizeData.stock,
+                  productId: existingProduct.id
+                }
+              });
+            }
+          }
+
+          results.updated++;
+        } else {
+          // Create new product
+          const newProduct = await prisma.product.create({
+            data: {
+              name: productData.name,
+              nameAr: productData.nameAr,
+              description: productData.description,
+              descriptionAr: productData.descriptionAr,
+              price: parseFloat(productData.price) || 0,
+              oldPrice: productData.oldPrice ? parseFloat(productData.oldPrice) : null,
+              stock: parseInt(productData.mainStock) || 0,
+              reference: productData.reference,
+              isOnSale: productData.isOnSale === 'Yes',
+              isActive: productData.status === 'Active',
+              slug: productData.reference.toLowerCase().replace(/\s+/g, '-')
+            }
+          });
+
+          // Create sizes if provided
+          if (productData.sizes) {
+            const sizesData = productData.sizes.split(';').map(sizeInfo => {
+              const [size, stock] = sizeInfo.split(':');
+              return { size: size.trim(), stock: parseInt(stock) || 0 };
+            });
+
+            for (const sizeData of sizesData) {
+              await prisma.productSize.create({
+                data: {
+                  size: sizeData.size,
+                  stock: sizeData.stock,
+                  productId: newProduct.id
+                }
+              });
+            }
+          }
+
+          results.created++;
+        }
+      } catch (error) {
+        results.errors.push({
+          reference: productData.reference,
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      message: 'Import completed',
+      results
+    });
+  } catch (error) {
+    console.error('Import inventory error:', error);
+    res.status(500).json({ error: 'Failed to import inventory' });
   }
 });
 

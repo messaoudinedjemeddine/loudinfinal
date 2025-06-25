@@ -4,6 +4,9 @@ import { Inter, Noto_Sans_Arabic } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import { RTLProvider } from '@/components/rtl-provider';
+import { Navbar } from '@/components/navbar';
+import { Footer } from '@/components/footer';
+import { ScrollToTopButton } from '@/components/scroll-to-top-button';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -88,7 +91,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <RTLProvider>
-            {children}
+            <div className="min-h-screen bg-background">
+              <Navbar />
+              <main>
+                {children}
+              </main>
+              <Footer />
+              <ScrollToTopButton />
+            </div>
             <Toaster />
           </RTLProvider>
         </ThemeProvider>

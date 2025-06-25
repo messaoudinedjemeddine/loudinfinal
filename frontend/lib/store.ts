@@ -11,6 +11,20 @@ export interface CartItem {
   sizeId?: string
 }
 
+export interface WishlistItem {
+  id: string
+  name: string
+  nameAr?: string
+  price: number
+  oldPrice?: number
+  image: string
+  rating?: number
+  isOnSale?: boolean
+  stock: number
+  slug: string
+  addedDate: string
+}
+
 interface CartStore {
   items: CartItem[]
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void
@@ -19,6 +33,15 @@ interface CartStore {
   clearCart: () => void
   getTotalItems: () => number
   getTotalPrice: () => number
+}
+
+interface WishlistStore {
+  items: WishlistItem[]
+  addToWishlist: (item: Omit<WishlistItem, 'addedDate'>) => void
+  removeFromWishlist: (id: string) => void
+  clearWishlist: () => void
+  isInWishlist: (id: string) => boolean
+  getWishlistCount: () => number
 }
 
 interface AuthStore {
@@ -79,6 +102,41 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'cart-storage'
+    }
+  )
+)
+
+export const useWishlistStore = create<WishlistStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      addToWishlist: (item) => {
+        const { items } = get()
+        const existingItem = items.find(i => i.id === item.id)
+        
+        if (!existingItem) {
+          const newItem: WishlistItem = {
+            ...item,
+            addedDate: new Date().toISOString()
+          }
+          set({ items: [...items, newItem] })
+        }
+      },
+      removeFromWishlist: (id) => {
+        set((state) => ({
+          items: state.items.filter(item => item.id !== id)
+        }))
+      },
+      clearWishlist: () => set({ items: [] }),
+      isInWishlist: (id) => {
+        return get().items.some(item => item.id === id)
+      },
+      getWishlistCount: () => {
+        return get().items.length
+      }
+    }),
+    {
+      name: 'wishlist-storage'
     }
   )
 )

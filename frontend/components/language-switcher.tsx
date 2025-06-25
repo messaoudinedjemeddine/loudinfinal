@@ -29,30 +29,34 @@ export function LanguageSwitcher({ isTransparent = false }: { isTransparent?: bo
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={`flex items-center space-x-2 language-switcher-btn ${isTransparent ? 'language-switcher-transparent' : ''}`}>
-          <Globe className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {languageNames[locale].nativeName}
-          </span>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
+        >
+          <Globe className="w-5 h-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 language-switcher-menu">
+      <DropdownMenuContent 
+        align="end" 
+        className="w-48 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-camel-200/20 dark:border-gray-700/20 shadow-lg arabic-font"
+      >
         {locales.map((lang) => (
           <DropdownMenuItem
             key={lang}
             onClick={() => handleLanguageChange(lang)}
-            className="flex items-center justify-between cursor-pointer language-switcher-item"
+            className="flex items-center justify-between cursor-pointer p-3 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 transition-all duration-300"
           >
             <div className="flex flex-col">
-              <span className="font-medium">
+              <span className="font-medium text-gray-900 dark:text-gray-100">
                 {languageNames[lang].nativeName}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {languageNames[lang].name}
               </span>
             </div>
             {locale === lang && (
-              <Check className="w-4 h-4 text-primary" />
+              <Check className="w-4 h-4 text-camel-600 dark:text-camel-400" />
             )}
           </DropdownMenuItem>
         ))}
