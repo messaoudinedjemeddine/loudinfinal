@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { 
   LayoutDashboard, 
@@ -13,7 +12,6 @@ import {
   ShoppingCart, 
   Users, 
   Settings, 
-  Menu,
   LogOut,
   Tag,
   BarChart3,
@@ -100,7 +98,6 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [mounted, setMounted] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout, isAuthenticated } = useAuthStore()
@@ -194,7 +191,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
-              onClick={() => setSidebarOpen(false)}
             >
               <item.icon className="w-5 h-5 mr-3" />
               {item.name}
@@ -205,6 +201,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* User Info */}
       <div className="p-4 border-t">
+        {/* Theme and Language Controls */}
+        <div className="flex items-center justify-between mb-4 p-2 bg-muted/50 rounded-lg">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            className="p-2"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </Button>
+          
+          <LanguageSwitcher isTransparent={true} />
+        </div>
+
         <div className="flex items-center space-x-3 mb-4">
           <Avatar>
             <AvatarImage src="" />
@@ -248,31 +258,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block w-64 bg-muted/30 border-r">
+      {/* Sidebar - Always visible */}
+      <div className="w-64 bg-muted/30 border-r">
         <Sidebar />
       </div>
 
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-64 p-0">
-          <Sidebar />
-        </SheetContent>
-      </Sheet>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Menu Button - Only visible on mobile */}
-        <div className="lg:hidden p-4 border-b">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
-        </div>
-
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6">
           {children}

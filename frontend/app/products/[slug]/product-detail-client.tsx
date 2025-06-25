@@ -187,7 +187,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-warm-50 to-cream-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="pt-16">
         {/* Breadcrumb */}
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -221,7 +221,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               className="space-y-6"
             >
               {/* Main Image */}
-              <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative w-full h-[500px] bg-gradient-to-br from-cream-100 to-cream-200 dark:from-gray-900 dark:to-gray-950 rounded-2xl overflow-hidden shadow-2xl max-w-full">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentImageIndex}
@@ -234,8 +234,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     <Image
                       src={product.images?.[currentImageIndex] || product.images?.[0] || '/placeholder.svg'}
                       alt={isRTL ? product.nameAr || product.name : product.name}
+                      className="object-contain w-full h-full"
                       fill
-                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = '/placeholder.svg';
@@ -266,33 +268,6 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   </>
                 )}
               </div>
-
-              {/* Thumbnail Gallery */}
-              {product.images && product.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-4">
-                  {product.images.map((image, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className={`aspect-square p-0 overflow-hidden rounded-lg ${
-                        currentImageIndex === index ? 'ring-2 ring-primary' : ''
-                      }`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    >
-                      <Image
-                        src={image}
-                        alt={`${isRTL ? product.nameAr || product.name : product.name} - Image ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = '/placeholder.svg';
-                        }}
-                      />
-                    </Button>
-                  ))}
-                </div>
-              )}
             </motion.div>
 
             {/* Product Info */}
@@ -367,7 +342,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               </div>
 
               {/* Stock Status */}
-              <div className={`flex items-center space-x-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+              <div className={`flex items-center space-x-3 p-4 bg-green-50 dark:bg-green-900/40 rounded-xl border border-green-200 dark:border-green-700 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                 {availableStock > 0 ? (
                   <>
                     <Check className="w-6 h-6 text-green-500" />
@@ -410,9 +385,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                         key={sizeData.id}
                         variant={selectedSize === sizeData.id ? "default" : "outline"}
                         className={`h-12 px-4 relative text-center ${
-                          sizeData.stock === 0 
-                            ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' 
-                            : 'hover:scale-105 transition-transform'
+                          sizeData.stock === 0 ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800/60' : 'hover:scale-105 transition-transform'
                         }`}
                         onClick={() => sizeData.stock > 0 && setSelectedSize(sizeData.id)}
                         disabled={sizeData.stock === 0}
@@ -486,7 +459,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div className="mt-16">
             <Card>
               <CardContent className="p-6">
-                <div className={`flex space-x-8 border-b mb-6 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex space-x-8 border-b mb-6 border-gray-200 dark:border-gray-700 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                   {tabs.map((tab) => (
                     <Button
                       key={tab.id}
