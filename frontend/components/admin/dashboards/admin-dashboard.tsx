@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
+import { useLocaleStore } from '@/lib/locale-store'
 
 // Types for dashboard data
 interface DashboardStats {
@@ -76,20 +77,10 @@ const statusColors = {
   DONE: 'bg-green-100 text-green-800'
 }
 
-const statusLabels = {
-  NEW: 'New',
-  CONFIRMED: 'Confirmed',
-  CANCELED: 'Canceled',
-  NO_RESPONSE: 'No Response',
-  NOT_READY: 'Not Ready',
-  READY: 'Ready',
-  IN_TRANSIT: 'In Transit',
-  DONE: 'Delivered'
-}
-
 export function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { t, isRTL, direction } = useLocaleStore()
   
   // Dashboard data state
   const [stats, setStats] = useState<DashboardStats>({
@@ -100,6 +91,17 @@ export function AdminDashboard() {
   })
   const [recentOrders, setRecentOrders] = useState<Order[]>([])
   const [lowStockProducts, setLowStockProducts] = useState<LowStockProduct[]>([])
+
+  const statusLabels = {
+    NEW: t?.common?.new || 'New',
+    CONFIRMED: 'Confirmed',
+    CANCELED: 'Canceled',
+    NO_RESPONSE: 'No Response',
+    NOT_READY: 'Not Ready',
+    READY: 'Ready',
+    IN_TRANSIT: 'In Transit',
+    DONE: 'Delivered'
+  }
 
   useEffect(() => {
     fetchDashboardData()
@@ -134,7 +136,7 @@ export function AdminDashboard() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading dashboard data...</p>
+          <p className="text-muted-foreground">{t?.common?.loading || 'Loading...'}</p>
         </div>
       </div>
     )
@@ -153,10 +155,10 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" dir={direction}>
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Loudim Dashboard</h1>
+        <h1 className="text-3xl font-bold">{t?.admin?.sidebarTitle || 'Admin Dashboard'}</h1>
         <p className="text-muted-foreground">
           Complete overview of your e-commerce platform. Manage products, orders, users, and analytics.
         </p>
@@ -170,8 +172,8 @@ export function AdminDashboard() {
           transition={{ delay: 0.1 }}
         >
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <CardHeader className={`flex flex-row items-center justify-between pb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className="text-sm font-medium">{t?.admin?.products || 'Products'}</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -189,8 +191,8 @@ export function AdminDashboard() {
           transition={{ delay: 0.2 }}
         >
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardHeader className={`flex flex-row items-center justify-between pb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className="text-sm font-medium">{t?.admin?.orders || 'Orders'}</CardTitle>
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -208,14 +210,14 @@ export function AdminDashboard() {
           transition={{ delay: 0.3 }}
         >
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardHeader className={`flex flex-row items-center justify-between pb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className="text-sm font-medium">{t?.admin?.users || 'Users'}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalUsers}</div>
               <p className="text-xs text-muted-foreground">
-                Registered customers
+                Registered users
               </p>
             </CardContent>
           </Card>
@@ -227,7 +229,7 @@ export function AdminDashboard() {
           transition={{ delay: 0.4 }}
         >
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className={`flex flex-row items-center justify-between pb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -241,53 +243,53 @@ export function AdminDashboard() {
         </motion.div>
       </div>
 
-      {/* Dashboard Tabs */}
-      <Tabs defaultValue="orders" className="space-y-6">
+      {/* Tabs for Recent Orders and Low Stock */}
+      <Tabs defaultValue="orders" className="space-y-4">
         <TabsList>
           <TabsTrigger value="orders">Recent Orders</TabsTrigger>
           <TabsTrigger value="low-stock">Low Stock Alert</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Orders</CardTitle>
+              <CardTitle className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Clock className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                Recent Orders
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <p className="font-medium">{order.customerName}</p>
-                          <p className="text-sm text-muted-foreground">{order.customerPhone}</p>
+              {recentOrders.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No recent orders</p>
+              ) : (
+                <div className="space-y-4">
+                  {recentOrders.map((order) => (
+                    <div key={order.id} className={`flex items-center justify-between p-4 border rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex-1">
+                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'} mb-2`}>
+                          <h4 className="font-medium">{order.customerName}</h4>
+                          <Badge variant="outline">{order.customerPhone}</Badge>
                         </div>
-                        <div className="flex space-x-2">
-                          <Badge className={statusColors[order.callCenterStatus as keyof typeof statusColors]}>
-                            {statusLabels[order.callCenterStatus as keyof typeof statusLabels]}
-                          </Badge>
-                          <Badge className={statusColors[order.deliveryStatus as keyof typeof statusColors]}>
-                            {statusLabels[order.deliveryStatus as keyof typeof statusLabels]}
-                          </Badge>
+                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'} text-sm text-muted-foreground`}>
+                          <span>{order.items.length} items</span>
+                          <span>{order.total.toLocaleString()} DA</span>
+                          <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        {order.items.length} items • {order.total.toLocaleString()} DA
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                        <Badge className={statusColors[order.callCenterStatus as keyof typeof statusColors]}>
+                          {statusLabels[order.callCenterStatus as keyof typeof statusLabels]}
+                        </Badge>
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/admin/orders/${order.id}`}>
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/admin/orders/${order.id}`}>
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -295,68 +297,41 @@ export function AdminDashboard() {
         <TabsContent value="low-stock" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Low Stock Products</CardTitle>
+              <CardTitle className={`flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <AlertTriangle className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                Low Stock Products
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {lowStockProducts.map((product) => (
-                  <div key={product.id} className="border rounded-lg p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                        <Package className="w-6 h-6" />
+              {lowStockProducts.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No low stock products</p>
+              ) : (
+                <div className="space-y-4">
+                  {lowStockProducts.map((product) => (
+                    <div key={product.id} className={`flex items-center justify-between p-4 border rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
+                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
+                          <Package className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{product.name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Stock: {product.stock} units
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">Stock: {product.stock}</p>
-                        <p className="text-sm font-medium">${product.price}</p>
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                        <span className="text-sm font-medium">{product.price.toLocaleString()} DA</span>
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/admin/products/${product.id}/edit`}>
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        </Button>
                       </div>
                     </div>
-                    <div className="mt-3">
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/admin/products/${product.id}/edit`}>
-                          Update Stock
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Button asChild className="h-20 flex-col">
-                  <Link href="/admin/products/new">
-                    <Package className="w-6 h-6 mb-2" />
-                    Add Product
-                  </Link>
-                </Button>
-                <Button asChild className="h-20 flex-col" variant="outline">
-                  <Link href="/admin/categories/new">
-                    <BarChart3 className="w-6 h-6 mb-2" />
-                    Add Category
-                  </Link>
-                </Button>
-                <Button asChild className="h-20 flex-col" variant="outline">
-                  <Link href="/admin/users/new">
-                    <Users className="w-6 h-6 mb-2" />
-                    Add User
-                  </Link>
-                </Button>
-                <Button asChild className="h-20 flex-col" variant="outline">
-                  <Link href="/admin/analytics">
-                    <TrendingUp className="w-6 h-6 mb-2" />
-                    View Analytics
-                  </Link>
-                </Button>
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

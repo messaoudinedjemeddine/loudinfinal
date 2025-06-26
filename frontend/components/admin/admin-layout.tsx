@@ -27,68 +27,69 @@ import {
 import { useAuthStore } from '@/lib/store'
 import { useTheme } from 'next-themes'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { useLocaleStore } from '@/lib/locale-store'
 
 // Role-based navigation configuration
-const getNavigationByRole = (role: string) => {
+const getNavigationByRole = (role: string, t: any) => {
   switch (role) {
     case 'ADMIN':
     case 'SUPERADMIN':
       return [
-        { name: 'Dashboard', href: '/admin/dashboard/admin', icon: LayoutDashboard },
-        { name: 'Products', href: '/admin/products', icon: Package },
-        { name: 'Inventory', href: '/admin/inventory', icon: Package },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: 'Shipping', href: '/admin/shipping', icon: Truck },
-        { name: 'Categories', href: '/admin/categories', icon: Tag },
-        { name: 'Users', href: '/admin/users', icon: Users },
-        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
+        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/admin', icon: LayoutDashboard },
+        { name: t?.admin?.products || 'Products', href: '/admin/products', icon: Package },
+        { name: t?.admin?.inventory || 'Inventory', href: '/admin/inventory', icon: Package },
+        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: t?.admin?.shipping || 'Shipping', href: '/admin/shipping', icon: Truck },
+        { name: t?.admin?.categories || 'Categories', href: '/admin/categories', icon: Tag },
+        { name: t?.admin?.users || 'Users', href: '/admin/users', icon: Users },
+        { name: t?.admin?.analytics || 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
     case 'CALL_CENTER':
       return [
-        { name: 'Dashboard', href: '/admin/dashboard/call_center', icon: LayoutDashboard },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: 'Customer Calls', href: '/admin/calls', icon: Phone },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
+        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/call_center', icon: LayoutDashboard },
+        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: t?.admin?.customerCalls || 'Customer Calls', href: '/admin/calls', icon: Phone },
+        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
     case 'ORDER_CONFIRMATION':
       return [
-        { name: 'Dashboard', href: '/admin/dashboard/order_confirmation', icon: LayoutDashboard },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: 'Order Processing', href: '/admin/processing', icon: FileText },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
+        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/order_confirmation', icon: LayoutDashboard },
+        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: t?.admin?.orderProcessing || 'Order Processing', href: '/admin/processing', icon: FileText },
+        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
     case 'DELIVERY_COORDINATOR':
       return [
-        { name: 'Dashboard', href: '/admin/dashboard/delivery_coordinator', icon: LayoutDashboard },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: 'Delivery Areas', href: '/admin/shipping', icon: MapPin },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
+        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/delivery_coordinator', icon: LayoutDashboard },
+        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: t?.admin?.deliveryAreas || 'Delivery Areas', href: '/admin/shipping', icon: MapPin },
+        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
     default:
       return [
-        { name: 'Dashboard', href: '/admin/dashboard/admin', icon: LayoutDashboard },
-        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: 'Settings', href: '/admin/settings', icon: Settings },
+        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/admin', icon: LayoutDashboard },
+        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
   }
 }
 
 // Role display names
-const getRoleDisplayName = (role: string) => {
+const getRoleDisplayName = (role: string, t: any) => {
   switch (role) {
     case 'ADMIN':
-      return 'Administrator'
+      return t?.admin?.roleNames?.ADMIN || 'Admin'
     case 'SUPERADMIN':
-      return 'Super Administrator'
+      return t?.admin?.roleNames?.SUPERADMIN || 'Super Admin'
     case 'CALL_CENTER':
-      return 'Call Center Agent'
+      return t?.admin?.roleNames?.CALL_CENTER || 'Call Center'
     case 'ORDER_CONFIRMATION':
-      return 'Order Processor'
+      return t?.admin?.roleNames?.ORDER_CONFIRMATION || 'Order Confirmation'
     case 'DELIVERY_COORDINATOR':
-      return 'Delivery Agent'
+      return t?.admin?.roleNames?.DELIVERY_COORDINATOR || 'Delivery Coordinator'
     default:
-      return 'User'
+      return t?.admin?.roleNames?.USER || 'User'
   }
 }
 
@@ -102,6 +103,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const { user, logout, isAuthenticated } = useAuthStore()
   const { theme, setTheme } = useTheme()
+  const { t, isRTL, direction } = useLocaleStore()
 
   useEffect(() => {
     setMounted(true)
@@ -138,7 +140,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Checking authentication...</p>
+          <p className="text-muted-foreground">{t?.common?.loading || 'Loading...'}</p>
         </div>
       </div>
     )
@@ -149,21 +151,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading user data...</p>
+          <p className="text-muted-foreground">{t?.common?.loading || 'Loading...'}</p>
         </div>
       </div>
     )
   }
 
-  const navigation = getNavigationByRole(user.role)
-  const roleDisplayName = getRoleDisplayName(user.role)
+  const navigation = getNavigationByRole(user.role, t)
+  const roleDisplayName = getRoleDisplayName(user.role, t)
 
   const Sidebar = ({ className = '' }: { className?: string }) => (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`flex flex-col h-full ${className}`} dir={direction}>
       {/* Logo */}
-      <div className="flex items-center px-6 py-4 border-b">
-        <Link href={`/admin/dashboard/${user.role.toLowerCase()}`} className="flex items-center space-x-3">
-          <div className="relative w-10 h-10">
+      <div className={`flex items-center px-6 py-4 border-b ${isRTL ? 'border-l' : 'border-r'}`}>
+        <Link href={`/admin/dashboard/${user.role.toLowerCase()}`} className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
+          <div className="relative w-10 h-10 flex-shrink-0">
             <Image
               src={theme === 'dark' ? '/logos/logo-light.png' : '/logos/logo-dark.png'}
               alt="Loudim Logo"
@@ -171,9 +173,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               className="object-contain"
             />
           </div>
-          <div>
-            <span className="text-xl font-bold">Loudim Dashboard</span>
-            <p className="text-xs text-muted-foreground">{roleDisplayName}</p>
+          <div className="min-w-0 flex-1">
+            <span className="text-xl font-bold block truncate">{t?.admin?.sidebarTitle || 'Admin Dashboard'}</span>
+            <p className="text-xs text-muted-foreground truncate">{roleDisplayName}</p>
           </div>
         </Link>
       </div>
@@ -192,64 +194,53 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.name}
+              <item.icon className={`w-5 h-5 ${isRTL ? 'ml-3' : 'mr-3'} flex-shrink-0`} />
+              <span className="truncate">{item.name}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* User Info */}
-      <div className="p-4 border-t">
-        {/* Theme and Language Controls */}
-        <div className="flex items-center justify-between mb-4 p-2 bg-muted/50 rounded-lg">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            className="p-2"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </Button>
-          
-          <LanguageSwitcher isTransparent={true} />
-        </div>
-
-        <div className="flex items-center space-x-3 mb-4">
-          <Avatar>
-            <AvatarImage src="" />
+      {/* User Profile & Actions */}
+      <div className={`p-4 border-t ${isRTL ? 'border-l' : 'border-r'}`}>
+        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'} mb-4`}>
+          <Avatar className="w-10 h-10 flex-shrink-0">
+            <AvatarImage src={user.avatar} alt={user.firstName} />
             <AvatarFallback>
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
+              {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">
-              {user?.firstName} {user?.lastName}
+              {user.firstName} {user.lastName}
             </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {user?.email}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {roleDisplayName}
-            </p>
+            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           </div>
         </div>
         
-        <div className="space-y-2">
-          <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-            <Link href="/">
-              <Home className="w-4 h-4 mr-2" />
-              View Store
-            </Link>
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full justify-start" 
-            onClick={handleLogout}
+        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleTheme}
+            className="flex-1"
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4" />
+            ) : (
+              <Moon className="w-4 h-4" />
+            )}
+          </Button>
+          
+          <LanguageSwitcher />
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="flex-1"
+          >
+            <LogOut className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -257,18 +248,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   )
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar - Always visible */}
-      <div className="w-64 bg-muted/30 border-r">
-        <Sidebar />
-      </div>
+    <div className="min-h-screen bg-background" dir={direction}>
+      <div className="flex">
+        {/* Sidebar */}
+        <div className={`hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 ${isRTL ? 'lg:right-0' : 'lg:left-0'}`}>
+          <Sidebar className="bg-card" />
+        </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
+        {/* Mobile sidebar */}
+        <div className="lg:hidden">
+          {/* Mobile sidebar implementation would go here */}
+        </div>
+
+        {/* Main content */}
+        <div className={`lg:flex-1 ${isRTL ? 'lg:pr-64' : 'lg:pl-64'}`}>
+          <main className="p-6">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   )

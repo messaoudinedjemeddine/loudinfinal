@@ -653,3 +653,106 @@
 .dark .navbar-link-hover:hover, .dark .navbar-link-hover:focus {
   color: hsl(var(--primary)) !important;
 }
+
+/* Admin Dashboard RTL Styles */
+[dir="rtl"] .admin-sidebar {
+  border-left: 1px solid hsl(var(--border));
+  border-right: none;
+}
+
+[dir="rtl"] .admin-sidebar-nav {
+  direction: rtl;
+}
+
+[dir="rtl"] .admin-sidebar-nav .nav-item {
+  text-align: right;
+}
+
+[dir="rtl"] .admin-sidebar-nav .nav-icon {
+  margin-left: 0.75rem;
+  margin-right: 0;
+}
+
+[dir="rtl"] .admin-card-header {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .admin-card-content {
+  text-align: right;
+}
+
+[dir="rtl"] .admin-stats-grid {
+  direction: rtl;
+}
+
+[dir="rtl"] .admin-tabs-list {
+  direction: rtl;
+}
+
+[dir="rtl"] .admin-order-item {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .admin-product-item {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .admin-user-profile {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .admin-actions {
+  flex-direction: row-reverse;
+}
+
+/* Fix for dropdown menus in RTL */
+[dir="rtl"] .dropdown-menu-content {
+  text-align: right;
+}
+
+[dir="rtl"] .dropdown-menu-item {
+  flex-direction: row-reverse;
+}
+
+/* Fix for buttons with icons in RTL */
+[dir="rtl"] .btn-with-icon {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .btn-with-icon .icon {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+/* Fix for form inputs in RTL */
+[dir="rtl"] .form-input {
+  text-align: right;
+}
+
+[dir="rtl"] .form-label {
+  text-align: right;
+}
+
+/* Fix for tables in RTL */
+[dir="rtl"] .table-header {
+  text-align: right;
+}
+
+[dir="rtl"] .table-cell {
+  text-align: right;
+}
+
+/* Fix for badges and status indicators in RTL */
+[dir="rtl"] .status-badge {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+/* Fix for navigation breadcrumbs in RTL */
+[dir="rtl"] .breadcrumb {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .breadcrumb-separator {
+  transform: rotate(180deg);
+}

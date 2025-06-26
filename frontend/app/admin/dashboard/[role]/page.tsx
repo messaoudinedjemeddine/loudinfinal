@@ -9,12 +9,14 @@ import { CallCenterDashboard } from '@/components/admin/dashboards/call-center-d
 import { OrderConfirmationDashboard } from '@/components/admin/dashboards/order-confirmation-dashboard'
 import { DeliveryAgentDashboard } from '@/components/admin/dashboards/delivery-agent-dashboard'
 import { Loader2 } from 'lucide-react'
+import { useLocaleStore } from '@/lib/locale-store'
 
 export default function RoleBasedDashboard() {
   const params = useParams()
   const router = useRouter()
   const { user, isAuthenticated } = useAuthStore()
   const [mounted, setMounted] = useState(false)
+  const { t } = useLocaleStore()
 
   const role = params.role as string
 
@@ -41,7 +43,7 @@ export default function RoleBasedDashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Checking authentication...</p>
+          <p className="text-muted-foreground">{t?.common?.loading || 'Loading...'}</p>
         </div>
       </div>
     )
@@ -51,7 +53,7 @@ export default function RoleBasedDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-muted-foreground">Loading user data...</p>
+          <p className="text-muted-foreground">{t?.common?.loading || 'Loading...'}</p>
         </div>
       </div>
     )

@@ -65,6 +65,11 @@ export interface Translations {
     clearCart: string
     emptyCart: string
     itemsInCart: string
+    fullName: string
+    email: string
+    phoneNumber: string
+    subject: string
+    message: string
   }
   
   // Product
@@ -218,6 +223,120 @@ export interface Translations {
       addedOn: string
     }
   }
+  
+  // Admin
+  admin: {
+    dashboard: string
+    products: string
+    inventory: string
+    orders: string
+    shipping: string
+    categories: string
+    users: string
+    analytics: string
+    settings: string
+    customerCalls: string
+    orderProcessing: string
+    deliveryAreas: string
+    logout: string
+    roleNames: {
+      ADMIN: string
+      SUPERADMIN: string
+      CALL_CENTER: string
+      ORDER_CONFIRMATION: string
+      DELIVERY_COORDINATOR: string
+      USER: string
+    }
+    sidebarTitle: string
+    stats: {
+      happyCustomers: string
+      productsSold: string
+      citiesCovered: string
+      yearsExperience: string
+    }
+    values: {
+      customerFirst: string
+      qualityAssurance: string
+      fastDelivery: string
+      excellence: string
+    }
+    team: {
+      meetOurTeam: string
+      founder: string
+      headOfOperations: string
+      technologyDirector: string
+      description1: string
+      description2: string
+      description3: string
+    }
+    contactInfo: {
+      phone: string
+      email: string
+      address: string
+      businessHours: string
+      callUs: string
+      sendUsMessage: string
+      details: {
+        phone: string[]
+        email: string[]
+        address: string[]
+        businessHours: string[]
+      }
+    }
+    faq: {
+      q1: string
+      a1: string
+      q2: string
+      a2: string
+      q3: string
+      a3: string
+      q4: string
+      a4: string
+    }
+    form: {
+      productName: string
+      productNameAr: string
+      description: string
+      descriptionAr: string
+      categoryName: string
+      categoryNameAr: string
+      price: string
+      stock: string
+      image: string
+      status: string
+      actions: string
+      view: string
+      edit: string
+      delete: string
+      save: string
+      cancel: string
+      create: string
+      update: string
+      search: string
+      filter: string
+      sort: string
+      export: string
+      import: string
+      bulkActions: string
+      selectAll: string
+      clearSelection: string
+    }
+    messages: {
+      loading: string
+      error: string
+      success: string
+      confirmDelete: string
+      noData: string
+      noResults: string
+      retry: string
+      back: string
+      next: string
+      previous: string
+      close: string
+      submit: string
+      reset: string
+    }
+  }
 }
 
 export const translations: Record<Locale, Translations> = {
@@ -280,7 +399,12 @@ export const translations: Record<Locale, Translations> = {
       proceedToCheckout: 'Proceed to Checkout',
       clearCart: 'Clear Cart',
       emptyCart: 'Your cart is empty',
-      itemsInCart: 'items in cart'
+      itemsInCart: 'items in cart',
+      fullName: 'Full Name',
+      email: 'Email',
+      phoneNumber: 'Phone Number',
+      subject: 'Subject',
+      message: 'Message'
     },
     
     product: {
@@ -429,6 +553,118 @@ export const translations: Record<Locale, Translations> = {
         exploreMore: 'Explore More Products',
         addedOn: 'Added on'
       }
+    },
+    admin: {
+      dashboard: 'Dashboard',
+      products: 'Products',
+      inventory: 'Inventory',
+      orders: 'Orders',
+      shipping: 'Shipping',
+      categories: 'Categories',
+      users: 'Users',
+      analytics: 'Analytics',
+      settings: 'Settings',
+      customerCalls: 'Customer Calls',
+      orderProcessing: 'Order Processing',
+      deliveryAreas: 'Delivery Areas',
+      logout: 'Logout',
+      roleNames: {
+        ADMIN: 'Administrator',
+        SUPERADMIN: 'Super Administrator',
+        CALL_CENTER: 'Call Center Agent',
+        ORDER_CONFIRMATION: 'Order Processor',
+        DELIVERY_COORDINATOR: 'Delivery Agent',
+        USER: 'User'
+      },
+      sidebarTitle: 'Loudim Dashboard',
+      stats: {
+        happyCustomers: 'Happy Customers',
+        productsSold: 'Products Sold',
+        citiesCovered: 'Cities Covered',
+        yearsExperience: 'Years Experience'
+      },
+      values: {
+        customerFirst: 'Customer First',
+        qualityAssurance: 'Quality Assurance',
+        fastDelivery: 'Fast Delivery',
+        excellence: 'Excellence'
+      },
+      team: {
+        meetOurTeam: 'Meet Our Team',
+        founder: 'Founder & CEO',
+        headOfOperations: 'Head of Operations',
+        technologyDirector: 'Technology Director',
+        description1: 'Passionate about bringing quality products to Algerian customers.',
+        description2: 'Ensures smooth operations and exceptional customer experience.',
+        description3: 'Leads our technology initiatives and platform development.'
+      },
+      contactInfo: {
+        phone: 'Phone',
+        email: 'Email',
+        address: 'Address',
+        businessHours: 'Business Hours',
+        callUs: 'Call Us',
+        sendUsMessage: 'Send us a Message',
+        details: {
+          phone: ['+213 XXX XXX XXX', '+213 YYY YYY YYY'],
+          email: ['contact@eshop-algeria.com', 'support@eshop-algeria.com'],
+          address: ['123 Main Street', 'Algiers, Algeria'],
+          businessHours: ['Mon-Fri: 9:00 AM - 6:00 PM', 'Sat: 10:00 AM - 4:00 PM']
+        }
+      },
+      faq: {
+        q1: 'How long does delivery take?',
+        a1: 'Delivery typically takes 2-5 business days depending on your location within Algeria.',
+        q2: 'What payment methods do you accept?',
+        a2: 'We accept cash on delivery, bank transfers, and major credit cards.',
+        q3: 'Can I return or exchange items?',
+        a3: 'Yes, we offer a 30-day return policy for most items in original condition.',
+        q4: 'Do you deliver to all wilayas?',
+        a4: 'Yes, we deliver to all 48 wilayas across Algeria.'
+      },
+      form: {
+        productName: 'Product Name',
+        productNameAr: 'Product Name (Arabic)',
+        description: 'Description',
+        descriptionAr: 'Description (Arabic)',
+        categoryName: 'Category Name',
+        categoryNameAr: 'Category Name (Arabic)',
+        price: 'Price',
+        stock: 'Stock',
+        image: 'Image',
+        status: 'Status',
+        actions: 'Actions',
+        view: 'View',
+        edit: 'Edit',
+        delete: 'Delete',
+        save: 'Save',
+        cancel: 'Cancel',
+        create: 'Create',
+        update: 'Update',
+        search: 'Search',
+        filter: 'Filter',
+        sort: 'Sort',
+        export: 'Export',
+        import: 'Import',
+        bulkActions: 'Bulk Actions',
+        selectAll: 'Select All',
+        clearSelection: 'Clear Selection'
+      },
+      messages: {
+        loading: 'Loading...',
+        error: 'An error occurred',
+        success: 'Operation completed successfully',
+        confirmDelete: 'Are you sure you want to delete this item?',
+        noData: 'No data available',
+        noResults: 'No results found',
+        retry: 'Retry',
+        back: 'Back',
+        next: 'Next',
+        previous: 'Previous',
+        close: 'Close',
+        submit: 'Submit',
+        reset: 'Reset'
+      }
     }
   },
   
@@ -491,7 +727,12 @@ export const translations: Record<Locale, Translations> = {
       proceedToCheckout: 'إتمام الطلب',
       clearCart: 'إفراغ السلة',
       emptyCart: 'سلتك فارغة',
-      itemsInCart: 'عنصر في السلة'
+      itemsInCart: 'عنصر في السلة',
+      fullName: 'الاسم الكامل',
+      email: 'البريد الإلكتروني',
+      phoneNumber: 'رقم الهاتف',
+      subject: 'الموضوع',
+      message: 'الرسالة'
     },
     
     product: {
@@ -639,6 +880,118 @@ export const translations: Record<Locale, Translations> = {
         youMightLike: 'قد يعجبك أيضاً',
         exploreMore: 'استكشف المزيد من المنتجات',
         addedOn: 'أضيف في'
+      }
+    },
+    admin: {
+      dashboard: 'لوحة التحكم',
+      products: 'المنتجات',
+      inventory: 'المخزون',
+      orders: 'الطلبات',
+      shipping: 'الشحن',
+      categories: 'الفئات',
+      users: 'المستخدمون',
+      analytics: 'التحليلات',
+      settings: 'الإعدادات',
+      customerCalls: 'مكالمات العملاء',
+      orderProcessing: 'معالجة الطلبات',
+      deliveryAreas: 'مناطق التوصيل',
+      logout: 'تسجيل الخروج',
+      roleNames: {
+        ADMIN: 'مدير',
+        SUPERADMIN: 'مدير عام',
+        CALL_CENTER: 'موظف مركز الاتصال',
+        ORDER_CONFIRMATION: 'معالج الطلبات',
+        DELIVERY_COORDINATOR: 'مندوب التوصيل',
+        USER: 'مستخدم'
+      },
+      sidebarTitle: 'لوحة تحكم لوديم',
+      stats: {
+        happyCustomers: 'عملاء سعداء',
+        productsSold: 'منتجات مباعة',
+        citiesCovered: 'مدن مشمولة',
+        yearsExperience: 'سنوات الخبرة'
+      },
+      values: {
+        customerFirst: 'العميل أولاً',
+        qualityAssurance: 'ضمان الجودة',
+        fastDelivery: 'توصيل سريع',
+        excellence: 'التميز'
+      },
+      team: {
+        meetOurTeam: 'تعرف على فريقنا',
+        founder: 'المؤسس والرئيس التنفيذي',
+        headOfOperations: 'رئيس العمليات',
+        technologyDirector: 'مدير التكنولوجيا',
+        description1: 'شغوف بتقديم منتجات عالية الجودة للعملاء في الجزائر.',
+        description2: 'يضمن سير العمليات بسلاسة وتجربة عملاء استثنائية.',
+        description3: 'يقود مبادراتنا التقنية وتطوير المنصة.'
+      },
+      contactInfo: {
+        phone: 'الهاتف',
+        email: 'البريد الإلكتروني',
+        address: 'العنوان',
+        businessHours: 'ساعات العمل',
+        callUs: 'اتصل بنا',
+        sendUsMessage: 'أرسل لنا رسالة',
+        details: {
+          phone: ['+213 XXX XXX XXX', '+213 YYY YYY YYY'],
+          email: ['contact@eshop-algeria.com', 'support@eshop-algeria.com'],
+          address: ['123 شارع رئيسي', 'الجزائر العاصمة، الجزائر'],
+          businessHours: ['الإثنين-الجمعة: 9:00 ص - 6:00 م', 'السبت: 10:00 ص - 4:00 م']
+        }
+      },
+      faq: {
+        q1: 'كم يستغرق التوصيل؟',
+        a1: 'عادةً ما يستغرق التوصيل من 2 إلى 5 أيام عمل حسب موقعك في الجزائر.',
+        q2: 'ما هي طرق الدفع المتوفرة؟',
+        a2: 'نقبل الدفع عند الاستلام، التحويلات البنكية، وجميع البطاقات الائتمانية الرئيسية.',
+        q3: 'هل يمكنني إرجاع أو استبدال المنتجات؟',
+        a3: 'نعم، نقدم سياسة إرجاع لمدة 30 يومًا لمعظم المنتجات بحالتها الأصلية.',
+        q4: 'هل توصلون إلى جميع الولايات؟',
+        a4: 'نعم، نقوم بالتوصيل إلى جميع الولايات الـ 48 في الجزائر.'
+      },
+      form: {
+        productName: 'اسم المنتج',
+        productNameAr: 'اسم المنتج (بالعربية)',
+        description: 'الوصف',
+        descriptionAr: 'الوصف (بالعربية)',
+        categoryName: 'اسم الفئة',
+        categoryNameAr: 'اسم الفئة (بالعربية)',
+        price: 'السعر',
+        stock: 'المخزون',
+        image: 'الصورة',
+        status: 'الحالة',
+        actions: 'الإجراءات',
+        view: 'عرض',
+        edit: 'تعديل',
+        delete: 'حذف',
+        save: 'حفظ',
+        cancel: 'إلغاء',
+        create: 'إنشاء',
+        update: 'تحديث',
+        search: 'بحث',
+        filter: 'تصفية',
+        sort: 'ترتيب',
+        export: 'تصدير',
+        import: 'استيراد',
+        bulkActions: 'إجراءات جماعية',
+        selectAll: 'تحديد الكل',
+        clearSelection: 'مسح التحديد'
+      },
+      messages: {
+        loading: 'جاري التحميل...',
+        error: 'حدث خطأ',
+        success: 'تمت العملية بنجاح',
+        confirmDelete: 'هل أنت متأكد من حذف هذا العنصر؟',
+        noData: 'لا توجد بيانات متاحة',
+        noResults: 'لم يتم العثور على نتائج',
+        retry: 'إعادة المحاولة',
+        back: 'رجوع',
+        next: 'التالي',
+        previous: 'السابق',
+        close: 'إغلاق',
+        submit: 'إرسال',
+        reset: 'إعادة تعيين'
       }
     }
   }

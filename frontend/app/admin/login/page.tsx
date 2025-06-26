@@ -26,40 +26,7 @@ import { useAuthStore } from '@/lib/store'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
-
-// User credentials for all roles
-const userCredentials = [
-  {
-    role: 'Super Admin',
-    email: 'superadmin@example.com',
-    password: 'super123',
-    description: 'Full system access and user management'
-  },
-  {
-    role: 'Admin',
-    email: 'admin@example.com',
-    password: 'admin123',
-    description: 'Complete store management and analytics'
-  },
-  {
-    role: 'Call Center',
-    email: 'callcenter@example.com',
-    password: 'call123',
-    description: 'Customer order management and communications'
-  },
-  {
-    role: 'Order Confirmation',
-    email: 'orderconfirmation@example.com',
-    password: 'order123',
-    description: 'Order processing and delivery preparation'
-  },
-  {
-    role: 'Delivery Agent',
-    email: 'delivery@example.com',
-    password: 'delivery123',
-    description: 'Delivery tracking and customer interactions'
-  }
-]
+import { useLocaleStore } from '@/lib/locale-store'
 
 export default function AdminLoginPage() {
   const [mounted, setMounted] = useState(false)
@@ -74,6 +41,41 @@ export default function AdminLoginPage() {
 
   const router = useRouter()
   const { setAuth, isAuthenticated } = useAuthStore()
+  const { t } = useLocaleStore()
+
+  // User credentials for all roles
+  const userCredentials = [
+    {
+      role: t?.admin?.roleNames?.SUPERADMIN || 'Super Admin',
+      email: 'superadmin@example.com',
+      password: 'super123',
+      description: 'Full system access and user management'
+    },
+    {
+      role: t?.admin?.roleNames?.ADMIN || 'Admin',
+      email: 'admin@example.com',
+      password: 'admin123',
+      description: 'Complete store management and analytics'
+    },
+    {
+      role: t?.admin?.roleNames?.CALL_CENTER || 'Call Center',
+      email: 'callcenter@example.com',
+      password: 'call123',
+      description: 'Customer order management and communications'
+    },
+    {
+      role: t?.admin?.roleNames?.ORDER_CONFIRMATION || 'Order Confirmation',
+      email: 'orderconfirmation@example.com',
+      password: 'order123',
+      description: 'Order processing and delivery preparation'
+    },
+    {
+      role: t?.admin?.roleNames?.DELIVERY_COORDINATOR || 'Delivery Coordinator',
+      email: 'delivery@example.com',
+      password: 'delivery123',
+      description: 'Delivery tracking and customer interactions'
+    }
+  ]
 
   useEffect(() => {
     setMounted(true)
@@ -198,84 +200,91 @@ export default function AdminLoginPage() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className="flex justify-center mb-6"
+              className="w-16 h-16 mx-auto mb-6"
             >
-              <div className="w-16 h-16 bg-gradient-to-br from-camel-400 to-camel-600 rounded-full flex items-center justify-center shadow-lg">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
+              <img
+                src="/logos/logo-dark.png"
+                alt="Loudim Logo"
+                className="w-full h-full object-contain"
+              />
             </motion.div>
-
-            <CardTitle className="text-2xl font-bold text-foreground mb-2">
-              Loudim Dashboard
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Sign in to manage your store
-            </p>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <CardTitle className="text-2xl font-bold mb-2">Admin Login</CardTitle>
+              <p className="text-muted-foreground">
+                Access your admin dashboard
+              </p>
+            </motion.div>
           </CardHeader>
 
           <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <motion.form
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              onSubmit={handleSubmit}
+              className="space-y-4"
+            >
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
-                  Email Address
-                </Label>
+                <Label htmlFor="email">{t?.checkout?.email || 'Email'}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value)
-                      if (errors.email) setErrors(prev => ({ ...prev, email: undefined }))
-                    }}
-                    className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
-                    placeholder="admin@algerian-elegance.com"
-                    disabled={isLoading}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    placeholder="Enter your email"
+                    required
                   />
                 </div>
                 {errors.email && (
-                  <div className="flex items-center space-x-1 text-destructive text-sm">
-                    <AlertCircle className="w-3 h-3" />
-                    <span>{errors.email}</span>
-                  </div>
+                  <p className="text-sm text-destructive flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.email}
+                  </p>
                 )}
               </div>
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </Label>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      if (errors.password) setErrors(prev => ({ ...prev, password: undefined }))
-                    }}
-                    className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10"
                     placeholder="Enter your password"
-                    disabled={isLoading}
+                    required
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    disabled={isLoading}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </Button>
                 </div>
                 {errors.password && (
-                  <div className="flex items-center space-x-1 text-destructive text-sm">
-                    <AlertCircle className="w-3 h-3" />
-                    <span>{errors.password}</span>
-                  </div>
+                  <p className="text-sm text-destructive flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.password}
+                  </p>
                 )}
               </div>
 
@@ -284,90 +293,77 @@ export default function AdminLoginPage() {
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(!!checked)}
-                  disabled={isLoading}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
-                <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                  Remember me for 30 days
+                <Label htmlFor="remember" className="text-sm">
+                  Remember me
                 </Label>
               </div>
 
               {/* Submit Button */}
               <Button
                 type="submit"
-                className="w-full elegant-gradient hover:shadow-lg transition-all duration-300 font-medium"
-                size="lg"
+                className="w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Signing in...</span>
-                  </div>
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    Signing in...
+                  </>
                 ) : (
-                  <div className="flex items-center space-x-2">
-                    <span>Sign In</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
+                  <>
+                    Sign In
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
                 )}
               </Button>
-            </form>
+            </motion.form>
 
-            {/* User Credentials Section */}
-            <div className="mt-6">
-              <button
+            {/* Test Credentials */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="border-t pt-6"
+            >
+              <Button
                 type="button"
+                variant="outline"
+                className="w-full mb-4"
                 onClick={() => setShowCredentials(!showCredentials)}
-                className="w-full flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/30 hover:bg-muted/70 transition-colors"
               >
-                <div className="flex items-center space-x-2">
-                  <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Test User Credentials
-                  </span>
-                </div>
+                <Users className="w-4 h-4 mr-2" />
+                Test Credentials
                 {showCredentials ? (
-                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  <ChevronUp className="w-4 h-4 ml-2" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  <ChevronDown className="w-4 h-4 ml-2" />
                 )}
-              </button>
+              </Button>
 
               {showCredentials && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="mt-3 space-y-2"
+                  className="space-y-3"
                 >
                   {userCredentials.map((user, index) => (
-                    <motion.div
-                      key={user.email}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-3 bg-white rounded-lg border border-muted-foreground/20 shadow-sm"
+                    <div
+                      key={index}
+                      className="p-3 border rounded-lg bg-muted/30"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <Badge variant="outline" className="text-xs">
-                              {user.role}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mb-2">{user.description}</p>
-                          <div className="text-xs space-y-1">
-                            <p><strong>Email:</strong> {user.email}</p>
-                            <p><strong>Password:</strong> {user.password}</p>
-                          </div>
-                        </div>
-                        <div className="flex space-x-1 ml-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {user.role}
+                        </Badge>
+                        <div className="flex space-x-1">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => fillCredentials(user.email, user.password)}
-                            className="h-7 px-2 text-xs"
+                            className="h-6 px-2 text-xs"
                           >
                             Fill
                           </Button>
@@ -375,7 +371,7 @@ export default function AdminLoginPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => copyCredentials(user.email, user.password)}
-                            className="h-7 px-2 text-xs"
+                            className="h-6 px-2 text-xs"
                           >
                             {copiedUser === user.email ? (
                               <Check className="w-3 h-3" />
@@ -385,44 +381,18 @@ export default function AdminLoginPage() {
                           </Button>
                         </div>
                       </div>
-                    </motion.div>
+                      <div className="text-xs space-y-1">
+                        <p><strong>Email:</strong> {user.email}</p>
+                        <p><strong>Password:</strong> {user.password}</p>
+                        <p className="text-muted-foreground">{user.description}</p>
+                      </div>
+                    </div>
                   ))}
                 </motion.div>
               )}
-            </div>
-
-            {/* Footer Links */}
-            <div className="text-center space-y-2">
-              <button
-                type="button"
-                className="text-sm text-primary hover:underline"
-                onClick={() => toast.info('Password reset functionality would be implemented here')}
-              >
-                Forgot your password?
-              </button>
-              <div className="text-xs text-muted-foreground">
-                Need help? Contact{' '}
-                <a href="mailto:support@algerian-elegance.com" className="text-primary hover:underline">
-                  support@algerian-elegance.com
-                </a>
-              </div>
-            </div>
+            </motion.div>
           </CardContent>
         </Card>
-
-        {/* Back to Store Link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center mt-6"
-        >
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <a href="/">
-              ← Back to Algerian Elegance Store
-            </a>
-          </Button>
-        </motion.div>
       </motion.div>
     </div>
   )
