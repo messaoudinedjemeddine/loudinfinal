@@ -42,6 +42,7 @@ import Link from 'next/link'
 import { useCartStore, useWishlistStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
 import { toast } from 'sonner'
+import { LaunchCountdown } from '@/components/launch-countdown'
 
 interface Product {
   id: string;
@@ -61,6 +62,10 @@ interface Product {
   rating?: number;
   reviewCount?: number;
   isOnSale?: boolean;
+  isLaunch?: boolean;
+  isLaunchActive?: boolean;
+  isOrderable?: boolean;
+  launchAt?: string;
   stock: number;
   reference?: string;
   images: string[];
@@ -105,6 +110,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   }
 
   const handleAddToCart = () => {
+    if (product.isLaunch && product.isLaunchActive) {
+      toast.error(isRTL ? 'المنتج غير متاح للطلب حتى الآن' : 'Product is not available for ordering yet')
+      return
+    }
+
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
       toast.error(t.product.selectSize)
       return
@@ -136,6 +146,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   }
 
   const handleBuyNow = () => {
+    if (product.isLaunch && product.isLaunchActive) {
+      toast.error(isRTL ? 'المنتج غير متاح للطلب حتى الآن' : 'Product is not available for ordering yet')
+      return
+    }
     handleAddToCart()
     router.push('/checkout')
   }
@@ -280,16 +294,23 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               {/* Header */}
               <div className="space-y-4">
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <Badge variant="outline" className="text-sm font-medium text-center">
-                    {isRTL 
-                      ? (typeof product.category === 'string' 
-                          ? (product.categoryAr || product.category) 
-                          : (product.category.nameAr || product.category.name))
-                      : (typeof product.category === 'string' 
-                          ? product.category 
-                          : product.category.name)
-                    }
-                  </Badge>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="outline" className="text-sm font-medium text-center">
+                      {isRTL 
+                        ? (typeof product.category === 'string' 
+                            ? (product.categoryAr || product.category) 
+                            : (product.category.nameAr || product.category.name))
+                        : (typeof product.category === 'string' 
+                            ? product.category 
+                            : product.category.name)
+                      }
+                    </Badge>
+                    {product.isLaunch && (
+                      <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-lg text-sm">
+                        {isRTL ? 'إطلاق قريب' : 'Coming Soon'}
+                      </Badge>
+                    )}
+                  </div>
                   <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
@@ -341,9 +362,34 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 )}
               </div>
 
+              {/* Launch Countdown */}
+              {product.isLaunch && product.launchAt && (
+                <div className="space-y-4">
+                  <LaunchCountdown launchAt={product.launchAt} className="justify-center" />
+                </div>
+              )}
+
               {/* Stock Status */}
-              <div className={`flex items-center space-x-3 p-4 bg-green-50 dark:bg-green-900/40 rounded-xl border border-green-200 dark:border-green-700 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-                {availableStock > 0 ? (
+              <div className={`flex items-center space-x-3 p-4 rounded-xl border ${isRTL ? 'flex-row-reverse' : 'flex-row'} ${
+                product.isLaunch && product.isLaunchActive 
+                  ? 'bg-orange-50 dark:bg-orange-900/40 border-orange-200 dark:border-orange-700'
+                  : availableStock > 0 
+                    ? 'bg-green-50 dark:bg-green-900/40 border-green-200 dark:border-green-700'
+                    : 'bg-red-50 dark:bg-red-900/40 border-red-200 dark:border-red-700'
+              }`}>
+                {product.isLaunch && product.isLaunchActive ? (
+                  <>
+                    <Clock className="w-6 h-6 text-orange-500" />
+                    <div className="text-center">
+                      <p className="text-orange-700 dark:text-orange-300 font-medium">
+                        {isRTL ? 'قريباً' : 'Coming Soon'}
+                      </p>
+                      <p className="text-sm text-orange-600 dark:text-orange-400">
+                        {isRTL ? 'سيتم الإطلاق قريباً' : 'Will be available soon'}
+                      </p>
+                    </div>
+                  </>
+                ) : availableStock > 0 ? (
                   <>
                     <Check className="w-6 h-6 text-green-500" />
                     <div className="text-center">
@@ -435,20 +481,26 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     size="lg"
                     className="h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-center"
                     onClick={handleBuyNow}
-                    disabled={availableStock === 0}
+                    disabled={availableStock === 0 || (product.isLaunch && product.isLaunchActive)}
                   >
                     <ShoppingCart className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t.common.buyNow}
+                    {product.isLaunch && product.isLaunchActive 
+                      ? (isRTL ? 'قريباً' : 'Coming Soon')
+                      : t.common.buyNow
+                    }
                   </Button>
                   <Button
                     variant="outline"
                     size="lg"
                     className="h-14 border-2 font-semibold hover:bg-primary hover:text-white transition-all duration-300 text-center"
                     onClick={handleAddToCart}
-                    disabled={availableStock === 0}
+                    disabled={availableStock === 0 || (product.isLaunch && product.isLaunchActive)}
                   >
                     <Package className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t.common.addToCart}
+                    {product.isLaunch && product.isLaunchActive 
+                      ? (isRTL ? 'قريباً' : 'Coming Soon')
+                      : t.common.addToCart
+                    }
                   </Button>
                 </div>
               </div>

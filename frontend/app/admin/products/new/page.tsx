@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
+import { useLocaleStore } from '@/lib/locale-store'
 
 const availableSizes = ['36', '38', '40', '42', '44', '46', '48', '50']
 
@@ -35,6 +36,7 @@ interface Category {
 }
 
 export default function NewProductPage() {
+  const { t } = useLocaleStore()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -51,6 +53,8 @@ export default function NewProductPage() {
     stock: '',
     isOnSale: false,
     isActive: true,
+    isLaunch: false,
+    launchAt: '',
     images: [] as Array<{ url: string; alt?: string }>,
     sizes: [] as { size: string; stock: number }[],
     features: [] as string[],
@@ -176,6 +180,8 @@ export default function NewProductPage() {
         stock: parseInt(productData.stock) || 0,
         isOnSale: productData.isOnSale,
         isActive: productData.isActive,
+        isLaunch: productData.isLaunch,
+        launchAt: productData.launchAt ? new Date(productData.launchAt).toISOString() : undefined,
         slug: slug,
         images: productData.images,
         sizes: productData.sizes,
@@ -501,7 +507,7 @@ export default function NewProductPage() {
             <CardHeader>
               <CardTitle>Product Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
               <div className="flex items-center space-x-2">
                 <Switch
                   id="isActive"
@@ -510,6 +516,31 @@ export default function NewProductPage() {
                 />
                 <Label htmlFor="isActive">Product is active and visible to customers</Label>
               </div>
+              
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isLaunch"
+                  checked={productData.isLaunch}
+                  onCheckedChange={(checked) => handleInputChange('isLaunch', checked)}
+                />
+                <Label htmlFor="isLaunch">{t?.product?.launch?.launchMode || 'Launch Mode'}</Label>
+              </div>
+              
+              {productData.isLaunch && (
+                <div className="space-y-2">
+                  <Label htmlFor="launchAt">{t?.product?.launch?.launchDate || 'Launch Date & Time'}</Label>
+                  <Input
+                    id="launchAt"
+                    type="datetime-local"
+                    value={productData.launchAt}
+                    onChange={(e) => handleInputChange('launchAt', e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Set when this product will become available for ordering
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

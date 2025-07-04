@@ -206,6 +206,8 @@ class ApiClient {
   async getUsers(params?: {
     page?: number;
     limit?: number;
+    search?: string;
+    role?: string;
   }) {
     const searchParams = new URLSearchParams();
     
@@ -268,6 +270,31 @@ export const api = {
     ) => apiClient.updateOrderStatus(orderId, status),
     getUsers: (params?: Parameters<typeof apiClient.getUsers>[0]) => 
       apiClient.getUsers(params),
+    createUser: (data: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string;
+      password: string;
+      role?: string;
+    }) => apiClient.request('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    updateUser: (id: string, data: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      phone?: string;
+      role?: string;
+      password?: string;
+    }) => apiClient.request(`/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+    deleteUser: (id: string) => apiClient.request(`/admin/users/${id}`, {
+      method: 'DELETE',
+    }),
     // Products management
     getProducts: (params?: Parameters<typeof apiClient.getProducts>[0]) => 
       apiClient.getProducts(params),

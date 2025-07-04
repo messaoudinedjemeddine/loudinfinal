@@ -20,6 +20,7 @@ import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
+import { useLocaleStore } from '@/lib/locale-store'
 
 interface Product {
   id: string;
@@ -34,6 +35,8 @@ interface Product {
   stock: number;
   isOnSale: boolean;
   isActive: boolean;
+  isLaunch?: boolean;
+  launchAt?: string;
   images?: Array<{ url: string; alt?: string }>;
   slug?: string;
 }
@@ -45,6 +48,7 @@ interface EditProductPageProps {
 }
 
 export default function EditProductPage({ params }: EditProductPageProps) {
+  const { t } = useLocaleStore()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -61,6 +65,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     stock: 0,
     isOnSale: false,
     isActive: true,
+    isLaunch: false,
+    launchAt: '',
     images: []
   })
 
@@ -81,6 +87,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         stock: data.stock,
         isOnSale: data.isOnSale || false,
         isActive: data.isActive !== false,
+        isLaunch: data.isLaunch || false,
+        launchAt: data.launchAt ? new Date(data.launchAt).toISOString().slice(0, 16) : '',
         images: data.images || [],
         slug: data.slug || ''
       }
@@ -126,6 +134,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         stock: productData.stock,
         isOnSale: productData.isOnSale,
         isActive: productData.isActive,
+        isLaunch: productData.isLaunch,
+        launchAt: productData.launchAt ? new Date(productData.launchAt).toISOString() : undefined,
         slug: slug,
         images: productData.images
       })
@@ -289,7 +299,31 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                   />
                   <Label htmlFor="isActive">Active</Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="isLaunch"
+                    checked={productData.isLaunch}
+                    onCheckedChange={(checked) => handleInputChange('isLaunch', checked)}
+                  />
+                  <Label htmlFor="isLaunch">{t?.product?.launch?.launchMode || 'Launch Mode'}</Label>
+                </div>
               </div>
+              
+              {productData.isLaunch && (
+                <div className="space-y-2">
+                  <Label htmlFor="launchAt">{t?.product?.launch?.launchDate || 'Launch Date & Time'}</Label>
+                  <Input
+                    id="launchAt"
+                    type="datetime-local"
+                    value={productData.launchAt || ''}
+                    onChange={(e) => handleInputChange('launchAt', e.target.value)}
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Set when this product will become available for ordering
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

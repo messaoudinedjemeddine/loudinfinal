@@ -82,6 +82,8 @@ model Product {
   slug        String   @unique
   isOnSale    Boolean  @default(false)
   isActive    Boolean  @default(true)
+  isLaunch    Boolean  @default(false)
+  launchAt    DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

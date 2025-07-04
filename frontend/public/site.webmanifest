@@ -7,24 +7,68 @@
   "background_color": "#ffffff",
   "theme_color": "#C4A47C",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["shopping", "fashion", "lifestyle"],
   "icons": [
     {
       "src": "/logos/favicon-16x16.png",
       "sizes": "16x16",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/logos/favicon-32x32.png",
       "sizes": "32x32",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/logos/apple-touch-icon.png",
       "sizes": "180x180",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logos/logo-light.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["shopping", "fashion", "lifestyle"],
-  "lang": "en",
-  "dir": "ltr"
+  "shortcuts": [
+    {
+      "name": "Products",
+      "short_name": "Products",
+      "description": "Browse our products",
+      "url": "/products",
+      "icons": [
+        {
+          "src": "/logos/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "short_name": "Categories",
+      "description": "View product categories",
+      "url": "/categories",
+      "icons": [
+        {
+          "src": "/logos/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/logos/logo-light.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
 } 

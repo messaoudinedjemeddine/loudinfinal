@@ -24,6 +24,7 @@ import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { api } from '@/lib/api'
 import { toast } from 'sonner'
+import { useLocaleStore } from '@/lib/locale-store'
 
 interface Product {
   id: string
@@ -40,6 +41,8 @@ interface Product {
   reference: string
   isOnSale: boolean
   isActive: boolean
+  isLaunch: boolean
+  launchAt?: string
   image: string
   createdAt: string
   sales?: number // Optional since it's not in the backend response
@@ -54,6 +57,7 @@ function getCategoryName(category: any): string {
 }
 
 export default function AdminProductsPage() {
+  const { t } = useLocaleStore()
   const [mounted, setMounted] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
@@ -166,6 +170,33 @@ export default function AdminProductsPage() {
     } catch (error) {
       console.error('Failed to update product status:', error)
       toast.error('Failed to update product status')
+    }
+  }
+
+  const handleToggleLaunch = async (productId: string) => {
+    try {
+      const product = products.find(p => p.id === productId)
+      if (!product) return
+      
+      const newLaunchState = !product.isLaunch
+      const launchData = newLaunchState 
+        ? { 
+            isLaunch: true, 
+            launchAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Default to 24 hours from now
+          }
+        : { 
+            isLaunch: false, 
+            launchAt: null 
+          }
+      
+      await api.admin.updateProduct(productId, launchData)
+      setProducts(prev => prev.map(p => 
+        p.id === productId ? { ...p, isLaunch: launchData.isLaunch, launchAt: launchData.launchAt || undefined } : p
+      ))
+      toast.success(`Product ${newLaunchState ? (t?.product?.launch?.launchEnabled || 'Launch mode enabled') : (t?.product?.launch?.launchDisabled || 'Launch mode disabled')}`)
+    } catch (error) {
+      console.error('Failed to update product launch status:', error)
+      toast.error('Failed to update product launch status')
     }
   }
 
@@ -387,6 +418,9 @@ export default function AdminProductsPage() {
                         {product.isOnSale && (
                           <Badge variant="destructive" className="text-xs">Sale</Badge>
                         )}
+                        {product.isLaunch && (
+                          <Badge variant="default" className="text-xs bg-blue-500">{t?.product?.launch?.launchMode || 'Launch'}</Badge>
+                        )}
                         {!product.isActive && (
                           <Badge variant="secondary" className="text-xs">Inactive</Badge>
                         )}
@@ -420,6 +454,11 @@ export default function AdminProductsPage() {
                   </div>
 
                   <div className="flex items-center space-x-2">
+                    {product.isLaunch && product.launchAt && (
+                      <div className="text-xs text-muted-foreground mr-2">
+                        {t?.product?.launch?.launchDate || 'Launch Date'}: {new Date(product.launchAt).toLocaleString()}
+                      </div>
+                    )}
                     <Button variant="outline" size="sm" asChild>
                       <Link href={`/products/${product.id}`}>
                         <Eye className="w-4 h-4" />
@@ -437,6 +476,14 @@ export default function AdminProductsPage() {
                       className={product.isActive ? 'text-orange-600' : 'text-green-600'}
                     >
                       {product.isActive ? 'Deactivate' : 'Activate'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleLaunch(product.id)}
+                      className={product.isLaunch ? 'text-blue-600' : 'text-gray-600'}
+                    >
+                      {product.isLaunch ? (t?.product?.launch?.launchDisabled || 'Launch Off') : (t?.product?.launch?.launchEnabled || 'Launch On')}
                     </Button>
                     <Button
                       variant="outline"

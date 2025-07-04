@@ -1,6 +1,6 @@
-export type Locale = 'en' | 'ar'
+export type Locale = 'en' | 'ar' | 'fr'
 
-export const locales: Locale[] = ['en', 'ar']
+export const locales: Locale[] = ['en', 'ar', 'fr']
 export const defaultLocale: Locale = 'en'
 
 export interface Translations {
@@ -73,28 +73,37 @@ export interface Translations {
   }
   
   // Product
-  product: {
-    description: string
-    specifications: string
-    features: string
-    reviews: string
-    rating: string
-    reference: string
-    brand: string
-    category: string
-    availability: string
-    warranty: string
-    freeDelivery: string
-    easyReturns: string
-    securePayment: string
-    support247: string
-    selectSize: string
-    selectColor: string
-    maxQuantity: string
-    productNotFound: string
-    relatedProducts: string
-    recentlyViewed: string
-  }
+      product: {
+      description: string
+      specifications: string
+      features: string
+      reviews: string
+      rating: string
+      reference: string
+      brand: string
+      category: string
+      availability: string
+      warranty: string
+      freeDelivery: string
+      easyReturns: string
+      securePayment: string
+      support247: string
+      selectSize: string
+      selectColor: string
+      maxQuantity: string
+      productNotFound: string
+      relatedProducts: string
+      recentlyViewed: string
+      launch: {
+        availableNow: string
+        launchIn: string
+        comingSoon: string
+        launchMode: string
+        launchDate: string
+        launchEnabled: string
+        launchDisabled: string
+      }
+    }
   
   // Checkout
   checkout: {
@@ -427,7 +436,16 @@ export const translations: Record<Locale, Translations> = {
       maxQuantity: 'Max',
       productNotFound: 'Product not found',
       relatedProducts: 'Related Products',
-      recentlyViewed: 'Recently Viewed'
+      recentlyViewed: 'Recently Viewed',
+      launch: {
+        availableNow: 'Available Now!',
+        launchIn: 'Launch in:',
+        comingSoon: 'Coming Soon',
+        launchMode: 'Launch Mode',
+        launchDate: 'Launch Date & Time',
+        launchEnabled: 'Launch mode enabled',
+        launchDisabled: 'Launch mode disabled'
+      }
     },
     
     checkout: {
@@ -755,7 +773,16 @@ export const translations: Record<Locale, Translations> = {
       maxQuantity: 'الحد الأقصى',
       productNotFound: 'المنتج غير موجود',
       relatedProducts: 'منتجات ذات صلة',
-      recentlyViewed: 'شوهدت مؤخراً'
+      recentlyViewed: 'شوهدت مؤخراً',
+      launch: {
+        availableNow: 'متوفر الآن!',
+        launchIn: 'الإطلاق في:',
+        comingSoon: 'قريباً',
+        launchMode: 'وضع الإطلاق',
+        launchDate: 'تاريخ ووقت الإطلاق',
+        launchEnabled: 'تم تفعيل وضع الإطلاق',
+        launchDisabled: 'تم إلغاء وضع الإطلاق'
+      }
     },
     
     checkout: {
@@ -992,6 +1019,344 @@ export const translations: Record<Locale, Translations> = {
         close: 'إغلاق',
         submit: 'إرسال',
         reset: 'إعادة تعيين'
+      }
+    }
+  },
+  
+  fr: {
+    nav: {
+      home: 'Accueil',
+      products: 'Produits',
+      categories: 'Catégories',
+      about: 'À propos',
+      contact: 'Contact',
+      cart: 'Panier',
+      wishlist: 'Liste de souhaits',
+      login: 'Connexion',
+      logout: 'Déconnexion',
+      profile: 'Profil',
+      trackOrder: 'Suivre la commande',
+      faq: 'FAQ'
+    },
+    
+    common: {
+      search: 'Rechercher',
+      searchPlaceholder: 'Rechercher des produits...',
+      loading: 'Chargement...',
+      error: 'Erreur',
+      success: 'Succès',
+      cancel: 'Annuler',
+      save: 'Enregistrer',
+      edit: 'Modifier',
+      delete: 'Supprimer',
+      view: 'Voir',
+      back: 'Retour',
+      next: 'Suivant',
+      previous: 'Précédent',
+      close: 'Fermer',
+      submit: 'Soumettre',
+      required: 'Requis',
+      optional: 'Optionnel',
+      currency: 'DA',
+      outOfStock: 'Rupture de stock',
+      inStock: 'En stock',
+      sale: 'Promotion',
+      new: 'Nouveau',
+      featured: 'En vedette',
+      bestseller: 'Meilleure vente',
+      addToCart: 'Ajouter au panier',
+      buyNow: 'Acheter maintenant',
+      viewDetails: 'Voir les détails',
+      shareProduct: 'Partager le produit',
+      addToWishlist: 'Ajouter à la liste de souhaits',
+      removeFromWishlist: 'Retirer de la liste de souhaits',
+      quantity: 'Quantité',
+      size: 'Taille',
+      color: 'Couleur',
+      price: 'Prix',
+      total: 'Total',
+      subtotal: 'Sous-total',
+      deliveryFee: 'Frais de livraison',
+      free: 'Gratuit',
+      continueShopping: 'Continuer les achats',
+      proceedToCheckout: 'Procéder au paiement',
+      clearCart: 'Vider le panier',
+      emptyCart: 'Votre panier est vide',
+      itemsInCart: 'articles dans le panier',
+      fullName: 'Nom complet',
+      email: 'Email',
+      phoneNumber: 'Numéro de téléphone',
+      subject: 'Sujet',
+      message: 'Message'
+    },
+    
+    product: {
+      description: 'Description',
+      specifications: 'Spécifications',
+      features: 'Caractéristiques',
+      reviews: 'Avis',
+      rating: 'Évaluation',
+      reference: 'Référence',
+      brand: 'Marque',
+      category: 'Catégorie',
+      availability: 'Disponibilité',
+      warranty: 'Garantie',
+      freeDelivery: 'Livraison gratuite',
+      easyReturns: 'Retours faciles',
+      securePayment: 'Paiement sécurisé',
+      support247: 'Support 24/7',
+      selectSize: 'Veuillez sélectionner une taille',
+      selectColor: 'Veuillez sélectionner une couleur',
+      maxQuantity: 'Max',
+      productNotFound: 'Produit non trouvé',
+      relatedProducts: 'Produits connexes',
+      recentlyViewed: 'Vus récemment',
+      launch: {
+        availableNow: 'Disponible maintenant !',
+        launchIn: 'Lancement dans :',
+        comingSoon: 'Bientôt disponible',
+        launchMode: 'Mode de lancement',
+        launchDate: 'Date et heure de lancement',
+        launchEnabled: 'Mode de lancement activé',
+        launchDisabled: 'Mode de lancement désactivé'
+      }
+    },
+    
+    checkout: {
+      title: 'Paiement',
+      customerInfo: 'Informations client',
+      deliveryOptions: 'Options de livraison',
+      reviewOrder: 'Réviser la commande',
+      orderSummary: 'Résumé de la commande',
+      fullName: 'Nom complet',
+      phoneNumber: 'Numéro de téléphone',
+      email: 'Email',
+      deliveryType: 'Type de livraison',
+      homeDelivery: 'Livraison à domicile',
+      pickupFromDesk: 'Retrait au bureau',
+      city: 'Ville',
+      address: 'Adresse',
+      pickupLocation: 'Lieu de retrait',
+      orderNotes: 'Notes de commande',
+      paymentMethod: 'Méthode de paiement',
+      cashOnDelivery: 'Paiement à la livraison',
+      placeOrder: 'Passer la commande',
+      placingOrder: 'Passage de la commande...',
+      orderPlaced: 'Commande passée avec succès !',
+      estimatedDelivery: 'Livraison estimée',
+      orderConfirmation: 'Confirmation de commande',
+      whatNext: 'Et maintenant ?',
+      needHelp: 'Besoin d\'aide ?'
+    },
+    
+    footer: {
+      quickLinks: 'Liens rapides',
+      customerService: 'Service client',
+      contactInfo: 'Informations de contact',
+      newsletter: 'Newsletter',
+      subscribeNewsletter: 'Abonnez-vous à notre newsletter',
+      enterEmail: 'Entrez votre email',
+      subscribe: 'S\'abonner',
+      followUs: 'Suivez-nous',
+      allRightsReserved: 'Tous droits réservés',
+      privacyPolicy: 'Politique de confidentialité',
+      termsOfService: 'Conditions de service',
+      cookiePolicy: 'Politique des cookies',
+      freeShipping: 'Livraison gratuite',
+      securePayment: 'Paiement sécurisé',
+      support247: 'Support 24/7',
+      easyReturns: 'Retours faciles'
+    },
+    
+    pages: {
+      home: {
+        heroTitle: 'Achetez le meilleur',
+        heroSubtitle: 'Découvrez des produits incroyables avec une livraison rapide dans toute l\'Algérie',
+        shopNow: 'Acheter maintenant',
+        shopByCategory: 'Acheter par catégorie',
+        featuredProducts: 'Produits en vedette',
+        stayUpdated: 'Restez informé',
+        newsletterText: 'Abonnez-vous à notre newsletter et soyez le premier à connaître les nouveaux produits et offres exclusives'
+      },
+      
+      about: {
+        title: 'À propos d\'E-Shop Algérie',
+        subtitle: 'Nous avons pour mission de révolutionner le shopping en ligne en Algérie',
+        ourStory: 'Notre histoire',
+        ourValues: 'Nos valeurs',
+        meetOurTeam: 'Rencontrez notre équipe',
+        ourMission: 'Notre mission',
+        customerFirst: 'Client d\'abord',
+        qualityAssurance: 'Assurance qualité',
+        fastDelivery: 'Livraison rapide',
+        excellence: 'Excellence'
+      },
+      
+      contact: {
+        title: 'Contactez-nous',
+        subtitle: 'Nous sommes là pour vous aider ! Contactez-nous pour toute question, préoccupation ou commentaire.',
+        sendMessage: 'Envoyez-nous un message',
+        faq: 'Questions fréquemment posées',
+        phone: 'Téléphone',
+        email: 'Email',
+        address: 'Adresse',
+        businessHours: 'Heures d\'ouverture',
+        stillHaveQuestions: 'Vous avez encore des questions ?',
+        callUs: 'Appelez-nous',
+        sendUsMessage: 'Envoyez-nous un message'
+      },
+      
+      faq: {
+        title: 'Questions fréquemment posées',
+        subtitle: 'Trouvez des réponses aux questions courantes sur les achats, la livraison, les retours et plus encore.',
+        searchAnswers: 'Rechercher des réponses...',
+        allCategories: 'Toutes les catégories',
+        ordersDelivery: 'Commandes et livraison',
+        paymentPricing: 'Paiement et prix',
+        returnsExchanges: 'Retours et échanges',
+        accountSecurity: 'Compte et sécurité',
+        productsQuality: 'Produits et qualité',
+        noResults: 'Aucun résultat trouvé',
+        clearSearch: 'Effacer la recherche'
+      },
+      
+      trackOrder: {
+        title: 'Suivre votre commande',
+        subtitle: 'Entrez votre numéro de commande pour suivre votre colis et voir les mises à jour en temps réel',
+        orderNumber: 'Numéro de commande',
+        trackOrder: 'Suivre la commande',
+        searching: 'Recherche...',
+        orderFound: 'Commande trouvée !',
+        orderNotFound: 'Commande non trouvée. Veuillez vérifier votre numéro de commande.',
+        orderDetails: 'Détails de la commande',
+        trackingTimeline: 'Chronologie de suivi',
+        orderItems: 'Articles de la commande'
+      },
+      
+      wishlist: {
+        title: 'Ma liste de souhaits',
+        subtitle: 'Gardez une trace des articles que vous aimez et que vous voulez acheter plus tard',
+        emptyWishlist: 'Votre liste de souhaits est vide',
+        emptyWishlistText: 'Commencez à ajouter des articles à votre liste de souhaits en cliquant sur l\'icône cœur sur les produits que vous aimez',
+        startShopping: 'Commencer les achats',
+        shareWishlist: 'Partager la liste de souhaits',
+        addAllToCart: 'Tout ajouter au panier',
+        youMightLike: 'Vous pourriez aussi aimer',
+        exploreMore: 'Explorer plus de produits',
+        addedOn: 'Ajouté le'
+      }
+    },
+    
+    admin: {
+      dashboard: 'Tableau de bord',
+      products: 'Produits',
+      inventory: 'Inventaire',
+      orders: 'Commandes',
+      shipping: 'Expédition',
+      categories: 'Catégories',
+      users: 'Utilisateurs',
+      analytics: 'Analyses',
+      settings: 'Paramètres',
+      customerCalls: 'Appels clients',
+      orderProcessing: 'Traitement des commandes',
+      deliveryAreas: 'Zones de livraison',
+      logout: 'Déconnexion',
+      roleNames: {
+        ADMIN: 'Administrateur',
+        SUPERADMIN: 'Super administrateur',
+        CALL_CENTER: 'Agent du centre d\'appels',
+        ORDER_CONFIRMATION: 'Traiteur de commandes',
+        DELIVERY_COORDINATOR: 'Agent de livraison',
+        USER: 'Utilisateur'
+      },
+      sidebarTitle: 'Tableau de bord Loudim',
+      stats: {
+        happyCustomers: 'Clients satisfaits',
+        productsSold: 'Produits vendus',
+        citiesCovered: 'Villes couvertes',
+        yearsExperience: 'Années d\'expérience'
+      },
+      values: {
+        customerFirst: 'Client d\'abord',
+        qualityAssurance: 'Assurance qualité',
+        fastDelivery: 'Livraison rapide',
+        excellence: 'Excellence'
+      },
+      team: {
+        meetOurTeam: 'Rencontrez notre équipe',
+        founder: 'Fondateur et PDG',
+        headOfOperations: 'Chef des opérations',
+        technologyDirector: 'Directeur technologique',
+        description1: 'Passionné par l\'apport de produits de qualité aux clients algériens.',
+        description2: 'Assure des opérations fluides et une expérience client exceptionnelle.',
+        description3: 'Dirige nos initiatives technologiques et le développement de la plateforme.'
+      },
+      contactInfo: {
+        phone: 'Téléphone',
+        email: 'Email',
+        address: 'Adresse',
+        businessHours: 'Heures d\'ouverture',
+        callUs: 'Appelez-nous',
+        sendUsMessage: 'Envoyez-nous un message',
+        details: {
+          phone: ['+213 XXX XXX XXX', '+213 YYY YYY YYY'],
+          email: ['contact@eshop-algeria.com', 'support@eshop-algeria.com'],
+          address: ['123 Rue Principale', 'Alger, Algérie'],
+          businessHours: ['Lun-Ven: 9h00 - 18h00', 'Sam: 10h00 - 16h00']
+        }
+      },
+      faq: {
+        q1: 'Combien de temps prend la livraison ?',
+        a1: 'La livraison prend généralement 2 à 5 jours ouvrables selon votre emplacement en Algérie.',
+        q2: 'Quelles méthodes de paiement acceptez-vous ?',
+        a2: 'Nous acceptons le paiement à la livraison, les virements bancaires et les principales cartes de crédit.',
+        q3: 'Puis-je retourner ou échanger des articles ?',
+        a3: 'Oui, nous offrons une politique de retour de 30 jours pour la plupart des articles dans leur état d\'origine.',
+        q4: 'Livrez-vous dans toutes les wilayas ?',
+        a4: 'Oui, nous livrons dans les 48 wilayas d\'Algérie.'
+      },
+      form: {
+        productName: 'Nom du produit',
+        productNameAr: 'Nom du produit (arabe)',
+        description: 'Description',
+        descriptionAr: 'Description (arabe)',
+        categoryName: 'Nom de la catégorie',
+        categoryNameAr: 'Nom de la catégorie (arabe)',
+        price: 'Prix',
+        stock: 'Stock',
+        image: 'Image',
+        status: 'Statut',
+        actions: 'Actions',
+        view: 'Voir',
+        edit: 'Modifier',
+        delete: 'Supprimer',
+        save: 'Enregistrer',
+        cancel: 'Annuler',
+        create: 'Créer',
+        update: 'Mettre à jour',
+        search: 'Rechercher',
+        filter: 'Filtrer',
+        sort: 'Trier',
+        export: 'Exporter',
+        import: 'Importer',
+        bulkActions: 'Actions en lot',
+        selectAll: 'Tout sélectionner',
+        clearSelection: 'Effacer la sélection'
+      },
+      messages: {
+        loading: 'Chargement...',
+        error: 'Une erreur s\'est produite',
+        success: 'Opération terminée avec succès',
+        confirmDelete: 'Êtes-vous sûr de vouloir supprimer cet élément ?',
+        noData: 'Aucune donnée disponible',
+        noResults: 'Aucun résultat trouvé',
+        retry: 'Réessayer',
+        back: 'Retour',
+        next: 'Suivant',
+        previous: 'Précédent',
+        close: 'Fermer',
+        submit: 'Soumettre',
+        reset: 'Réinitialiser'
       }
     }
   }

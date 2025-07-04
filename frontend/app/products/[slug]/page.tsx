@@ -20,6 +20,10 @@ interface Product {
   rating?: number;
   reviewCount?: number;
   isOnSale?: boolean;
+  isLaunch?: boolean;
+  isLaunchActive?: boolean;
+  isOrderable?: boolean;
+  launchAt?: string;
   stock: number;
   reference?: string;
   images: string[];

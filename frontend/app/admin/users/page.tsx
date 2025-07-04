@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -77,13 +77,7 @@ export default function AdminUsersPage() {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (mounted) {
-      fetchUsers()
-    }
-  }, [mounted, pagination.page, searchQuery, roleFilter])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -95,7 +89,11 @@ export default function AdminUsersPage() {
         role: roleFilter !== 'all' ? roleFilter : undefined
       }
 
-      const data = await api.admin.getUsers(params) as {
+      const data = await api.admin.getUsers({
+        ...params,
+        search: searchQuery || undefined,
+        role: roleFilter !== 'all' ? roleFilter : undefined
+      }) as {
         users: User[];
         pagination: {
           page: number;
@@ -120,7 +118,13 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination.page, pagination.limit, searchQuery, roleFilter])
+
+  useEffect(() => {
+    if (mounted) {
+      fetchUsers()
+    }
+  }, [mounted, fetchUsers])
 
   if (!mounted) return null
 
@@ -151,16 +155,36 @@ export default function AdminUsersPage() {
     )
   }
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(prev => prev.filter(u => u.id !== userId))
-    toast.success('User deleted successfully')
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return
+      }
+      
+      await api.admin.deleteUser(userId)
+      setUsers(prev => prev.filter(u => u.id !== userId))
+      setFilteredUsers(prev => prev.filter(u => u.id !== userId))
+      toast.success('User deleted successfully')
+    } catch (error) {
+      console.error('Delete user error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to delete user')
+    }
   }
 
-  const handleUpdateRole = (userId: string, newRole: string) => {
-    setUsers(prev => prev.map(u => 
-      u.id === userId ? { ...u, role: newRole } : u
-    ))
-    toast.success('User role updated')
+  const handleUpdateRole = async (userId: string, newRole: string) => {
+    try {
+      const updatedUser = await api.admin.updateUser(userId, { role: newRole }) as User
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? updatedUser : u
+      ))
+      setFilteredUsers(prev => prev.map(u => 
+        u.id === userId ? updatedUser : u
+      ))
+      toast.success('User role updated successfully')
+    } catch (error) {
+      console.error('Update role error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update user role')
+    }
   }
 
   return (

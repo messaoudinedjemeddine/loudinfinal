@@ -80,11 +80,23 @@ router.get('/', async (req, res) => {
       prisma.product.count({ where })
     ]);
 
-    res.json({
-      products: products.map(product => ({
+    // Add launch status and orderability to products
+    const now = new Date();
+    const productsWithLaunchStatus = products.map(product => {
+      const isLaunchActive = product.isLaunch && product.launchAt && product.launchAt > now;
+      const isOrderable = !isLaunchActive;
+      
+      return {
         ...product,
-        image: product.images[0]?.url || '/placeholder-product.jpg'
-      })),
+        image: product.images[0]?.url || '/placeholder-product.jpg',
+        isLaunchActive,
+        isOrderable,
+        timeUntilLaunch: isLaunchActive ? product.launchAt.getTime() - now.getTime() : null
+      };
+    });
+
+    res.json({
+      products: productsWithLaunchStatus,
       pagination: {
         page,
         limit,
@@ -116,7 +128,19 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.json(product);
+    // Add launch status and orderability
+    const now = new Date();
+    const isLaunchActive = product.isLaunch && product.launchAt && product.launchAt > now;
+    const isOrderable = !isLaunchActive;
+    
+    const productWithLaunchStatus = {
+      ...product,
+      isLaunchActive,
+      isOrderable,
+      timeUntilLaunch: isLaunchActive ? product.launchAt.getTime() - now.getTime() : null
+    };
+
+    res.json(productWithLaunchStatus);
   } catch (error) {
     console.error('Product fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch product' });
@@ -172,10 +196,18 @@ router.get('/slug/:slug', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
     
+    // Add launch status and orderability
+    const now = new Date();
+    const isLaunchActive = product.isLaunch && product.launchAt && product.launchAt > now;
+    const isOrderable = !isLaunchActive;
+    
     // Transform the product to match frontend expectations
     const transformedProduct = {
       ...product,
-      images: product.images.map(img => img.url) // Convert image objects to URL strings
+      images: product.images.map(img => img.url), // Convert image objects to URL strings
+      isLaunchActive,
+      isOrderable,
+      timeUntilLaunch: isLaunchActive ? product.launchAt.getTime() - now.getTime() : null
     };
     
     res.json({ product: transformedProduct });

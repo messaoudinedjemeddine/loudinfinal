@@ -102,14 +102,14 @@ export function Navbar() {
               <Link href="/" className="flex items-center group">
                 <div className="relative w-20 h-20 transition-transform duration-300 group-hover:scale-105">
                   <Image
-                    src="/logos/logo-light.png"
+                    src="/logos/logo-dark.png"
                     alt="Algerian Elegance Logo"
                     width={80}
                     height={80}
                     className="w-full h-full object-contain dark:hidden"
                   />
                   <Image
-                    src="/logos/logo-dark.png"
+                    src="/logos/logo-light.png"
                     alt="Algerian Elegance Logo"
                     width={80}
                     height={80}

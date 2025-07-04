@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/admin-layout'
+import { api } from '@/lib/api'
 import { toast } from 'sonner'
 
 interface EditUserPageProps {
@@ -28,11 +29,12 @@ export default function EditUserPage({ params }: EditUserPageProps) {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [userData, setUserData] = useState({
-    firstName: 'Ahmed',
-    lastName: 'Benali',
-    email: 'ahmed.benali@example.com',
-    phone: '+213 555 123 456',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     role: 'USER',
     isActive: true
   })
@@ -40,6 +42,50 @@ export default function EditUserPage({ params }: EditUserPageProps) {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const fetchUserData = useCallback(async () => {
+    try {
+      setIsLoadingData(true)
+      // For now, we'll use the same API as getting all users and filter by ID
+      // In a real app, you'd have a separate endpoint for getting a single user
+      const response = await api.admin.getUsers({ limit: 1000 }) as {
+        users: Array<{
+          id: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+          phone?: string;
+          role: string;
+        }>;
+      }
+      
+      const user = response.users.find(u => u.id === params.id)
+      if (user) {
+        setUserData({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone || '',
+          role: user.role,
+          isActive: true
+        })
+      } else {
+        toast.error('User not found')
+        router.push('/admin/users')
+      }
+    } catch (error) {
+      console.error('Fetch user error:', error)
+      toast.error('Failed to load user data')
+    } finally {
+      setIsLoadingData(false)
+    }
+  }, [params.id, router])
+
+  useEffect(() => {
+    if (mounted) {
+      fetchUserData()
+    }
+  }, [mounted, fetchUserData])
 
   if (!mounted) return null
 
@@ -52,14 +98,40 @@ export default function EditUserPage({ params }: EditUserPageProps) {
     setIsLoading(true)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!userData.firstName || !userData.lastName || !userData.email) {
+        toast.error('Please fill in all required fields')
+        return
+      }
+
+      await api.admin.updateUser(params.id, {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone || undefined,
+        role: userData.role
+      })
+      
       toast.success('User updated successfully!')
       router.push('/admin/users')
     } catch (error) {
-      toast.error('Failed to update user')
+      console.error('Update user error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to update user')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (isLoadingData) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading user data...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -144,8 +216,10 @@ export default function EditUserPage({ params }: EditUserPageProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="USER">Customer</SelectItem>
-                      <SelectItem value="CALLCENTER">Call Center</SelectItem>
-                      <SelectItem value="DELIVERY">Delivery</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="CALL_CENTER">Call Center</SelectItem>
+                      <SelectItem value="ORDER_CONFIRMATION">Order Confirmation</SelectItem>
+                      <SelectItem value="DELIVERY_COORDINATOR">Delivery Coordinator</SelectItem>
                       <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>

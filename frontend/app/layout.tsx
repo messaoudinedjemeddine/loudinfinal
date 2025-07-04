@@ -5,6 +5,9 @@ import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme-provider';
 import { RTLProvider } from '@/components/rtl-provider';
 import { LayoutWrapper } from '@/components/layout-wrapper';
+import { ServiceWorkerRegister } from '@/components/service-worker-register';
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt';
+import { PWAStatus } from '@/components/pwa-status';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -93,8 +96,11 @@ export default function RootLayout({
               {children}
             </LayoutWrapper>
             <Toaster />
+            <PWAInstallPrompt />
+            <PWAStatus />
           </RTLProvider>
         </ThemeProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

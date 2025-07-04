@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { AdminLayout } from '@/components/admin/admin-layout'
+import { api } from '@/lib/api'
 import { toast } from 'sonner'
 
 export default function NewUserPage() {
@@ -54,11 +55,20 @@ export default function NewUserPage() {
         return
       }
 
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await api.admin.createUser({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone || undefined,
+        password: userData.password,
+        role: userData.role
+      })
+      
       toast.success('User created successfully!')
       router.push('/admin/users')
     } catch (error) {
-      toast.error('Failed to create user')
+      console.error('Create user error:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to create user')
     } finally {
       setIsLoading(false)
     }
@@ -162,8 +172,10 @@ export default function NewUserPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="USER">Customer</SelectItem>
-                      <SelectItem value="CALLCENTER">Call Center</SelectItem>
-                      <SelectItem value="DELIVERY">Delivery</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="CALL_CENTER">Call Center</SelectItem>
+                      <SelectItem value="ORDER_CONFIRMATION">Order Confirmation</SelectItem>
+                      <SelectItem value="DELIVERY_COORDINATOR">Delivery Coordinator</SelectItem>
                       <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>

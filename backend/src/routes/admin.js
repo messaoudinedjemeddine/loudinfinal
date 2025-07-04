@@ -194,6 +194,8 @@ router.post('/products', async (req, res) => {
         reference: productData.reference,
         isOnSale: productData.isOnSale || false,
         isActive: productData.isActive !== false,
+        isLaunch: productData.isLaunch || false,
+        launchAt: productData.launchAt ? new Date(productData.launchAt) : null,
         categoryId: productData.categoryId,
         slug: productData.slug
       }
@@ -258,23 +260,37 @@ router.put('/products/:id', async (req, res) => {
     const { id } = req.params;
     const productData = req.body;
 
+    // Check if product exists
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Build update data object with only provided fields
+    const updateData = {};
+    
+    if (productData.name !== undefined) updateData.name = productData.name;
+    if (productData.nameAr !== undefined) updateData.nameAr = productData.nameAr;
+    if (productData.description !== undefined) updateData.description = productData.description;
+    if (productData.descriptionAr !== undefined) updateData.descriptionAr = productData.descriptionAr;
+    if (productData.price !== undefined) updateData.price = parseFloat(productData.price);
+    if (productData.oldPrice !== undefined) updateData.oldPrice = productData.oldPrice ? parseFloat(productData.oldPrice) : null;
+    if (productData.stock !== undefined) updateData.stock = parseInt(productData.stock);
+    if (productData.reference !== undefined) updateData.reference = productData.reference;
+    if (productData.isOnSale !== undefined) updateData.isOnSale = productData.isOnSale;
+    if (productData.isActive !== undefined) updateData.isActive = productData.isActive;
+    if (productData.isLaunch !== undefined) updateData.isLaunch = productData.isLaunch;
+    if (productData.launchAt !== undefined) updateData.launchAt = productData.launchAt ? new Date(productData.launchAt) : null;
+    if (productData.categoryId !== undefined) updateData.categoryId = productData.categoryId;
+    if (productData.slug !== undefined) updateData.slug = productData.slug;
+
     // Update the product
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        name: productData.name,
-        nameAr: productData.nameAr,
-        description: productData.description,
-        descriptionAr: productData.descriptionAr,
-        price: parseFloat(productData.price),
-        oldPrice: productData.oldPrice ? parseFloat(productData.oldPrice) : null,
-        stock: parseInt(productData.stock),
-        reference: productData.reference,
-        isOnSale: productData.isOnSale || false,
-        isActive: productData.isActive !== false,
-        categoryId: productData.categoryId,
-        slug: productData.slug
-      }
+      data: updateData
     });
 
     // Update images if provided
@@ -289,7 +305,7 @@ router.put('/products/:id', async (req, res) => {
         await prisma.productImage.createMany({
           data: productData.images.map((img, index) => ({
             url: img.url,
-            alt: img.alt || `${productData.name} image ${index + 1}`,
+            alt: img.alt || `${productData.name || existingProduct.name} image ${index + 1}`,
             isPrimary: index === 0,
             productId: id
           }))
@@ -612,6 +628,185 @@ router.get('/users', async (req, res) => {
   } catch (error) {
     console.error('Admin users error:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Create user
+router.post('/users', async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, password, role } = req.body;
+    
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+
+    // Hash password
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        phone: phone || null,
+        password: hashedPassword,
+        role: role || 'USER'
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    res.status(201).json({
+      ...user,
+      orderCount: 0,
+      totalSpent: 0
+    });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+// Update user (including role)
+router.put('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, phone, role, password } = req.body;
+    
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if email is taken by another user
+    if (email && email !== existingUser.email) {
+      const emailTaken = await prisma.user.findUnique({
+        where: { email }
+      });
+      if (emailTaken) {
+        return res.status(400).json({ error: 'Email already taken by another user' });
+      }
+    }
+
+    // Prepare update data
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone || null;
+    if (role) updateData.role = role;
+    
+    // Hash new password if provided
+    if (password) {
+      const bcrypt = require('bcrypt');
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    // Update user
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        createdAt: true,
+        _count: {
+          select: {
+            orders: true
+          }
+        },
+        orders: {
+          select: {
+            total: true
+          }
+        }
+      }
+    });
+
+    // Calculate total spent
+    const totalSpent = updatedUser.orders.reduce((sum, order) => sum + order.total, 0);
+
+    res.json({
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      phone: updatedUser.phone,
+      role: updatedUser.role,
+      createdAt: updatedUser.createdAt,
+      orderCount: updatedUser._count.orders,
+      totalSpent: totalSpent
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Delete user
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            orders: true
+          }
+        }
+      }
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user has orders
+    if (existingUser._count.orders > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete user with existing orders. Consider deactivating instead.' 
+      });
+    }
+
+    // Delete user
+    await prisma.user.delete({
+      where: { id }
+    });
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 

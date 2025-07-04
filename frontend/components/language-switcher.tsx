@@ -14,7 +14,8 @@ import { Locale, locales } from '@/lib/i18n'
 
 const languageNames: Record<Locale, { name: string; nativeName: string }> = {
   en: { name: 'English', nativeName: 'English' },
-  ar: { name: 'Arabic', nativeName: 'العربية' }
+  ar: { name: 'Arabic', nativeName: 'العربية' },
+  fr: { name: 'French', nativeName: 'Français' }
 }
 
 export function LanguageSwitcher({ isTransparent = false }: { isTransparent?: boolean }) {

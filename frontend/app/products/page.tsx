@@ -28,6 +28,7 @@ import Link from 'next/link'
 import { useCartStore, useWishlistStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
 import { toast } from 'sonner'
+import { LaunchCountdown } from '@/components/launch-countdown'
 
 // Define Product type
 interface Product {
@@ -47,6 +48,10 @@ interface Product {
   categoryAr?: string;
   rating?: number;
   isOnSale?: boolean;
+  isLaunch?: boolean;
+  isLaunchActive?: boolean;
+  isOrderable?: boolean;
+  launchAt?: string;
   stock: number;
   sizes: Array<{ id: string; size: string; stock: number }> | string[];
 }
@@ -356,6 +361,17 @@ export default function ProductsPage() {
                   </Badge>
                 </motion.div>
               )}
+              {product.isLaunch && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, x: isRTL ? 20 : -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ delay: 0.25 + index * 0.1, duration: 0.4 }}
+                >
+                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-lg text-center">
+                    {t?.product?.launch?.comingSoon || 'Coming Soon'}
+                  </Badge>
+                </motion.div>
+              )}
             </div>
             
             <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'}`}>
@@ -401,7 +417,7 @@ export default function ProductsPage() {
                 </Badge>
                 <div className={`flex items-center space-x-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-gray-600 dark:text-muted-foreground">
                     {product.rating?.toFixed(1) || '0.0'}
                   </span>
                 </div>
@@ -426,7 +442,7 @@ export default function ProductsPage() {
                     </span>
                   ))}
                   {sizeStrings.length > 3 && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-gray-500 dark:text-muted-foreground">
                       +{sizeStrings.length - 3}
                     </span>
                   )}
@@ -457,14 +473,26 @@ export default function ProductsPage() {
                 </div>
               </div>
 
+              {/* Launch Countdown */}
+              {product.isLaunch && product.launchAt && (
+                <div className="mt-3">
+                  <LaunchCountdown launchAt={product.launchAt} />
+                </div>
+              )}
+
               {/* Add to Cart Button */}
               <Button
                 className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-center mt-3 h-10"
                 onClick={() => handleAddToCart(product)}
-                disabled={product.stock === 0}
+                disabled={product.stock === 0 || (product.isLaunch && product.isLaunchActive)}
               >
                 <ShoppingCart className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {product.stock === 0 ? (isRTL ? 'غير متوفر' : 'Out of Stock') : (isRTL ? 'أضيفي للسلة' : 'Add to Cart')}
+                {product.stock === 0 
+                  ? (isRTL ? 'غير متوفر' : 'Out of Stock')
+                  : (product.isLaunch && product.isLaunchActive)
+                    ? (t?.product?.launch?.comingSoon || 'Coming Soon')
+                    : (isRTL ? 'أضيفي للسلة' : 'Add to Cart')
+                }
               </Button>
             </div>
           </CardContent>
@@ -525,6 +553,11 @@ export default function ProductsPage() {
                   <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-lg text-xs">
                     <Sparkles className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     {isRTL ? 'تخفيض' : 'Sale'}
+                  </Badge>
+                )}
+                {product.isLaunch && (
+                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-lg text-xs">
+                    {t?.product?.launch?.comingSoon || 'Coming Soon'}
                   </Badge>
                 )}
                 {product.stock <= 5 && product.stock > 0 && (
@@ -617,15 +650,27 @@ export default function ProductsPage() {
                 </div>
               </div>
 
+              {/* Launch Countdown */}
+              {product.isLaunch && product.launchAt && (
+                <div className="w-full mb-3">
+                  <LaunchCountdown launchAt={product.launchAt} />
+                </div>
+              )}
+
               {/* Actions - Always visible at bottom */}
               <div className={`flex items-center space-x-3 ${isRTL ? 'flex-row-reverse' : 'flex-row'} pt-4 border-t border-gray-200 dark:border-gray-700 mt-auto`}>
                 <Button
                   className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 h-10"
                   onClick={() => handleAddToCart(product)}
-                  disabled={product.stock === 0}
+                  disabled={product.stock === 0 || (product.isLaunch && product.isLaunchActive)}
                 >
                   <ShoppingCart className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {product.stock === 0 ? (isRTL ? 'غير متوفر' : 'Out of Stock') : (isRTL ? 'أضيفي للسلة' : 'Add to Cart')}
+                  {product.stock === 0 
+                    ? (isRTL ? 'غير متوفر' : 'Out of Stock')
+                    : (product.isLaunch && product.isLaunchActive)
+                      ? (t?.product?.launch?.comingSoon || 'Coming Soon')
+                      : (isRTL ? 'أضيفي للسلة' : 'Add to Cart')
+                  }
                 </Button>
                 
                 <Button
@@ -690,7 +735,7 @@ export default function ProductsPage() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent text-center leading-tight">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-secondary bg-clip-text text-transparent text-center leading-tight">
               {isRTL ? 'أناقة الأزياء التقليدية الجزائرية' : 'Discover Our Collection'}
             </h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-center leading-relaxed">
@@ -724,7 +769,7 @@ export default function ProductsPage() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="lg:w-80 space-y-6"
           >
-            <Card className="sticky top-8 bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
+            <Card className="sticky top-8 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 shadow-xl">
               <CardContent className="p-6 space-y-6">
                 {/* Header */}
                 <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
@@ -744,11 +789,11 @@ export default function ProductsPage() {
 
                 {/* Category Filter */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide text-center w-full">
+                  <h4 className="font-medium text-sm text-gray-700 dark:text-muted-foreground uppercase tracking-wide text-center w-full">
                     {isRTL ? 'الفئة' : 'Category'}
                   </h4>
                   <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="bg-white/50 text-center w-full">
+                    <SelectTrigger className="bg-white/90 dark:bg-gray-700/90 text-center w-full">
                       <SelectValue placeholder={isRTL ? 'اختر الفئة' : 'Select category'} />
                     </SelectTrigger>
                     <SelectContent>
@@ -764,7 +809,7 @@ export default function ProductsPage() {
 
                 {/* Price Range */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide text-center w-full">
+                  <h4 className="font-medium text-sm text-gray-700 dark:text-muted-foreground uppercase tracking-wide text-center w-full">
                     {isRTL ? 'نطاق السعر' : 'Price Range'}
                   </h4>
                   <div className="space-y-4">
@@ -776,7 +821,7 @@ export default function ProductsPage() {
                       step={1000}
                       className="w-full"
                     />
-                    <div className={`flex justify-between text-sm ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className={`flex justify-between text-sm text-gray-600 dark:text-gray-300 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                       <span className="text-center">{priceRange[0].toLocaleString()} {isRTL ? 'د.ج' : 'DA'}</span>
                       <span className="text-center">{priceRange[1].toLocaleString()} {isRTL ? 'د.ج' : 'DA'}</span>
                     </div>
@@ -785,7 +830,7 @@ export default function ProductsPage() {
 
                 {/* Size Filter */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide text-center w-full">
+                  <h4 className="font-medium text-sm text-gray-700 dark:text-muted-foreground uppercase tracking-wide text-center w-full">
                     {isRTL ? 'المقاس' : 'Size'}
                   </h4>
                   <div className="grid grid-cols-4 gap-2">
@@ -805,7 +850,7 @@ export default function ProductsPage() {
 
                 {/* Additional Filters */}
                 <div className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide text-center w-full">
+                  <h4 className="font-medium text-sm text-gray-700 dark:text-muted-foreground uppercase tracking-wide text-center w-full">
                     {isRTL ? 'خيارات إضافية' : 'Additional Options'}
                   </h4>
                   <div className="space-y-3">
@@ -874,7 +919,7 @@ export default function ProductsPage() {
 
               <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48 bg-white/50 text-center">
+                  <SelectTrigger className="w-48 bg-white/90 dark:bg-gray-700/90 text-center">
                     <SelectValue placeholder={isRTL ? 'ترتيب حسب' : 'Sort by'} />
                   </SelectTrigger>
                   <SelectContent>
@@ -886,7 +931,7 @@ export default function ProductsPage() {
                   </SelectContent>
                 </Select>
 
-                <div className={`flex items-center gap-2 bg-white/50 rounded-lg p-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`flex items-center gap-2 bg-white/90 dark:bg-gray-700/90 rounded-lg p-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                   <Button
                     variant={viewMode === 'grid' ? 'default' : 'ghost'}
                     size="sm"
@@ -956,7 +1001,7 @@ export default function ProductsPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className={viewMode === 'grid' 
-                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
                     : "space-y-4"
                   }
                 >
