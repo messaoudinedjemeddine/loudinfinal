@@ -128,7 +128,7 @@ curl "https://api.yalidine.app/v1/wilayas/" \
 import { yalidineAPI } from '@/lib/yalidine-api';
 
 const fees = await yalidineAPI.calculateFees({
-  fromWilayaId: 16, // Alger
+  fromWilayaId: 5, // Batna
   toWilayaId: 19,   // Sétif
   weight: 2.5,
   length: 30,
@@ -248,7 +248,7 @@ curl "http://localhost:5000/api/shipping/status"
 curl -X POST "http://localhost:5000/api/shipping/calculate-fees" \
   -H "Content-Type: application/json" \
   -d '{
-    "fromWilayaId": 16,
+    "fromWilayaId": 5,
     "toWilayaId": 19,
     "weight": 2.5,
     "length": 30,

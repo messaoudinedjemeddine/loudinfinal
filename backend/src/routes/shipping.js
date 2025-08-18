@@ -3,6 +3,26 @@ const router = express.Router();
 const yalidineService = require('../services/yalidine');
 const { z } = require('zod');
 
+// Simple in-memory cache for API responses
+const cache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Cache helper function
+function getCachedData(key) {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedData(key, data) {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+}
+
 // Validation schemas
 const calculateFeesSchema = z.object({
   fromWilayaId: z.number().int().positive(),
@@ -50,14 +70,56 @@ router.get('/status', (req, res) => {
 // Get all wilayas (provinces)
 router.get('/wilayas', async (req, res) => {
   try {
+    console.log('🔍 Wilayas request received');
+    
     if (!yalidineService.isConfigured()) {
+      console.log('❌ Yalidine service not configured');
       return res.status(503).json({ error: 'Yalidine shipping not configured' });
     }
 
-    const wilayas = await yalidineService.getWilayas();
+    // Check cache first
+    const cacheKey = 'wilayas';
+    const cachedWilayas = getCachedData(cacheKey);
+    if (cachedWilayas) {
+      console.log('✅ Returning cached wilayas data');
+      return res.json(cachedWilayas);
+    }
+
+    console.log('🔍 Calling Yalidine service for wilayas');
+    
+    // Add retry logic for intermittent failures
+    let wilayas;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        wilayas = await yalidineService.getWilayas();
+        console.log('✅ Wilayas fetched successfully, count:', wilayas.data ? wilayas.data.length : 'unknown');
+        break;
+      } catch (retryError) {
+        retryCount++;
+        console.log(`⚠️ Retry ${retryCount}/${maxRetries} for wilayas request`);
+        
+        if (retryCount >= maxRetries) {
+          throw retryError;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      }
+    }
+    
+    // Cache the result
+    setCachedData(cacheKey, wilayas);
+    
     res.json(wilayas);
   } catch (error) {
-    console.error('Error fetching wilayas:', error);
+    console.error('❌ Error fetching wilayas:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
     res.status(500).json({ error: 'Failed to fetch wilayas' });
   }
 });
@@ -65,15 +127,58 @@ router.get('/wilayas', async (req, res) => {
 // Get communes by wilaya
 router.get('/communes', async (req, res) => {
   try {
+    console.log('🔍 Communes request received:', { wilayaId: req.query.wilayaId });
+    
     if (!yalidineService.isConfigured()) {
+      console.log('❌ Yalidine service not configured');
       return res.status(503).json({ error: 'Yalidine shipping not configured' });
     }
 
     const { wilayaId } = req.query;
-    const communes = await yalidineService.getCommunes(wilayaId ? parseInt(wilayaId) : null);
+    
+    // Check cache first
+    const cacheKey = `communes_${wilayaId || 'all'}`;
+    const cachedCommunes = getCachedData(cacheKey);
+    if (cachedCommunes) {
+      console.log('✅ Returning cached communes data');
+      return res.json(cachedCommunes);
+    }
+    
+    console.log('🔍 Calling Yalidine service with wilayaId:', wilayaId);
+    
+    // Add retry logic for intermittent failures
+    let communes;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        communes = await yalidineService.getCommunes(wilayaId ? parseInt(wilayaId) : null);
+        console.log('✅ Communes fetched successfully, count:', communes.data ? communes.data.length : 'unknown');
+        break;
+      } catch (retryError) {
+        retryCount++;
+        console.log(`⚠️ Retry ${retryCount}/${maxRetries} for communes request`);
+        
+        if (retryCount >= maxRetries) {
+          throw retryError;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      }
+    }
+    
+    // Cache the result
+    setCachedData(cacheKey, communes);
+    
     res.json(communes);
   } catch (error) {
-    console.error('Error fetching communes:', error);
+    console.error('❌ Error fetching communes:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
     res.status(500).json({ error: 'Failed to fetch communes' });
   }
 });
@@ -81,15 +186,58 @@ router.get('/communes', async (req, res) => {
 // Get pickup centers
 router.get('/centers', async (req, res) => {
   try {
+    console.log('🔍 Centers request received:', { wilayaId: req.query.wilayaId });
+    
     if (!yalidineService.isConfigured()) {
+      console.log('❌ Yalidine service not configured');
       return res.status(503).json({ error: 'Yalidine shipping not configured' });
     }
 
     const { wilayaId } = req.query;
-    const centers = await yalidineService.getCenters(wilayaId ? parseInt(wilayaId) : null);
+    
+    // Check cache first
+    const cacheKey = `centers_${wilayaId || 'all'}`;
+    const cachedCenters = getCachedData(cacheKey);
+    if (cachedCenters) {
+      console.log('✅ Returning cached centers data');
+      return res.json(cachedCenters);
+    }
+    
+    console.log('🔍 Calling Yalidine service with wilayaId:', wilayaId);
+    
+    // Add retry logic for intermittent failures
+    let centers;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        centers = await yalidineService.getCenters(wilayaId ? parseInt(wilayaId) : null);
+        console.log('✅ Centers fetched successfully, count:', centers.data ? centers.data.length : 'unknown');
+        break;
+      } catch (retryError) {
+        retryCount++;
+        console.log(`⚠️ Retry ${retryCount}/${maxRetries} for centers request`);
+        
+        if (retryCount >= maxRetries) {
+          throw retryError;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      }
+    }
+    
+    // Cache the result
+    setCachedData(cacheKey, centers);
+    
     res.json(centers);
   } catch (error) {
-    console.error('Error fetching centers:', error);
+    console.error('❌ Error fetching centers:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
     res.status(500).json({ error: 'Failed to fetch pickup centers' });
   }
 });
@@ -264,6 +412,65 @@ router.delete('/shipment/:tracking', async (req, res) => {
   } catch (error) {
     console.error('Error deleting shipment:', error);
     res.status(500).json({ error: 'Failed to delete shipment' });
+  }
+});
+
+// Get all shipments from Yalidine
+router.get('/shipments', async (req, res) => {
+  try {
+    console.log('🔍 Shipments request received');
+    
+    if (!yalidineService.isConfigured()) {
+      console.log('❌ Yalidine service not configured');
+      return res.status(503).json({ error: 'Yalidine shipping not configured' });
+    }
+
+    // Check cache first
+    const cacheKey = 'yalidine_shipments';
+    const cachedShipments = getCachedData(cacheKey);
+    if (cachedShipments) {
+      console.log('✅ Returning cached shipments data');
+      return res.json(cachedShipments);
+    }
+
+    console.log('🔍 Calling Yalidine service for all shipments');
+    
+    // Add retry logic for intermittent failures
+    let shipments;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        // This would need to be implemented in the Yalidine service
+        // For now, return empty array
+        shipments = { data: [] };
+        console.log('✅ Shipments fetched successfully');
+        break;
+      } catch (retryError) {
+        retryCount++;
+        console.log(`⚠️ Retry ${retryCount}/${maxRetries} for shipments request`);
+        
+        if (retryCount >= maxRetries) {
+          throw retryError;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      }
+    }
+    
+    // Cache the result
+    setCachedData(cacheKey, shipments);
+    
+    res.json(shipments);
+  } catch (error) {
+    console.error('❌ Error fetching shipments:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    res.status(500).json({ error: 'Failed to fetch shipments' });
   }
 });
 

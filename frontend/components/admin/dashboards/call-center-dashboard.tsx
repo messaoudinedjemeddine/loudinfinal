@@ -244,6 +244,9 @@ export function CallCenterDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>New Orders - Require Confirmation</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Confirm orders to move them to the shipping dashboard. Only confirmed orders will appear in shipping management.
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -377,6 +380,9 @@ export function CallCenterDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Confirmed Orders</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                These orders have been confirmed and are now available in the shipping dashboard for shipment creation.
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

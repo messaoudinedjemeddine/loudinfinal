@@ -84,6 +84,34 @@ export function Navbar() {
     setTheme(theme === 'dark' ? 'light' : 'dark')
   }
 
+  const clearCache = () => {
+    console.log('🧹 Clearing frontend cache...');
+    
+    // Clear localStorage
+    localStorage.clear();
+    console.log('✅ localStorage cleared');
+    
+    // Clear sessionStorage
+    sessionStorage.clear();
+    console.log('✅ sessionStorage cleared');
+    
+    // Clear any cached data in memory
+    if (window.caches) {
+      caches.keys().then(function(names) {
+        for (let name of names) {
+          caches.delete(name);
+        }
+        console.log('✅ Cache storage cleared');
+      });
+    }
+    
+    // Show success message
+    alert('Cache cleared successfully! The page will now reload with fresh data.');
+    
+    // Force page reload to get fresh data
+    window.location.reload(true);
+  };
+
   return (
     <>
       <motion.nav
@@ -160,6 +188,19 @@ export function Navbar() {
                 className="p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </Button>
+
+              {/* Cache Clear Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearCache}
+                className="p-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-300"
+                title="Clear cache and reload fresh data"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
               </Button>
 
               {/* Language Switcher */}

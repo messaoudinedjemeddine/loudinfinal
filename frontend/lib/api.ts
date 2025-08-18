@@ -49,16 +49,22 @@ class ApiClient {
     }
 
     try {
+      console.log(`🔍 Making API request to: ${url}`);
       const response = await fetch(url, config);
+      
+      console.log(`📊 Response status: ${response.status} for ${endpoint}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        console.error(`❌ API error for ${endpoint}:`, errorData);
+        throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log(`✅ API success for ${endpoint}:`, data);
+      return data;
     } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
+      console.error(`❌ API request failed: ${endpoint}`, error);
       throw error;
     }
   }
@@ -114,7 +120,7 @@ class ApiClient {
     customerEmail?: string;
     deliveryType: 'HOME_DELIVERY' | 'PICKUP';
     deliveryAddress?: string;
-    cityId: string;
+    wilayaId: number;
     deliveryDeskId?: string;
     notes?: string;
     items: Array<{
@@ -175,6 +181,8 @@ class ApiClient {
     page?: number;
     limit?: number;
     status?: string;
+    search?: string;
+    confirmedOnly?: string;
   }) {
     const searchParams = new URLSearchParams();
     
@@ -411,6 +419,7 @@ export const api = {
     deleteShipment: (tracking: string) => apiClient.request(`/shipping/shipment/${tracking}`, {
       method: 'DELETE',
     }),
+    getAllShipments: () => apiClient.request('/shipping/shipments'),
   },
 };
 

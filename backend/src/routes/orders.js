@@ -9,7 +9,7 @@ const createOrderSchema = z.object({
   customerEmail: z.string().email().optional(),
   deliveryType: z.enum(['HOME_DELIVERY', 'PICKUP']),
   deliveryAddress: z.string().optional(),
-  cityId: z.string().min(1, 'City is required'),
+  wilayaId: z.number().min(1, 'Wilaya is required'), // Changed from cityId to wilayaId
   deliveryDeskId: z.string().optional(),
   notes: z.string().optional(),
   items: z.array(z.object({
@@ -23,6 +23,86 @@ const createOrderSchema = z.object({
 router.post('/', async (req, res) => {
   try {
     const orderData = createOrderSchema.parse(req.body);
+
+    // Map wilaya ID to city ID - Complete mapping for all 58 Algerian wilayas
+    const wilayaToCityMap = {
+      1: 'Adrar',
+      2: 'Chlef',
+      3: 'Laghouat',
+      4: 'Oum El Bouaghi',
+      5: 'Batna',
+      6: 'Béjaïa',
+      7: 'Biskra',
+      8: 'Béchar',
+      9: 'Blida',
+      10: 'Bouira',
+      11: 'Tamanrasset',
+      12: 'Tébessa',
+      13: 'Tlemcen',
+      14: 'Tiaret',
+      15: 'Tizi Ouzou',
+      16: 'Algiers',
+      17: 'Djelfa',
+      18: 'Jijel',
+      19: 'Sétif',
+      20: 'Saïda',
+      21: 'Skikda',
+      22: 'Sidi Bel Abbès',
+      23: 'Annaba',
+      24: 'Guelma',
+      25: 'Constantine',
+      26: 'Médéa',
+      27: 'Mostaganem',
+      28: "M'Sila",
+      29: 'Mascara',
+      30: 'Ouargla',
+      31: 'Oran',
+      32: 'El Bayadh',
+      33: 'Illizi',
+      34: 'Bordj Bou Arréridj',
+      35: 'Boumerdès',
+      36: 'El Tarf',
+      37: 'Tindouf',
+      38: 'Tissemsilt',
+      39: 'El Oued',
+      40: 'Khenchela',
+      41: 'Souk Ahras',
+      42: 'Tipaza',
+      43: 'Mila',
+      44: 'Aïn Defla',
+      45: 'Naâma',
+      46: 'Aïn Témouchent',
+      47: 'Ghardaïa',
+      48: 'Relizane',
+      49: 'Timimoun',
+      50: 'Bordj Badji Mokhtar',
+      51: 'Ouled Djellal',
+      52: 'Béni Abbès',
+      53: 'In Salah',
+      54: 'In Guezzam',
+      55: 'Touggourt',
+      56: 'Djanet',
+      57: "M'Sila",
+      58: 'El M\'Ghair'
+    };
+
+    const cityName = wilayaToCityMap[orderData.wilayaId];
+    if (!cityName) {
+      return res.status(400).json({ 
+        error: `Unsupported wilaya ID: ${orderData.wilayaId}` 
+      });
+    }
+
+    // Find the city by name
+    const city = await prisma.city.findFirst({
+      where: { name: cityName }
+    });
+
+    if (!city) {
+      return res.status(400).json({ 
+        error: `City not found for wilaya: ${cityName}` 
+      });
+    }
 
     // Generate order number
     const orderCount = await prisma.order.count();
@@ -93,7 +173,7 @@ router.post('/', async (req, res) => {
           subtotal,
           total,
           notes: orderData.notes,
-          cityId: orderData.cityId,
+          cityId: city.id,
           deliveryDeskId: orderData.deliveryDeskId,
           items: {
             create: orderItems

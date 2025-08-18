@@ -115,8 +115,8 @@ export default function CheckoutPage() {
   // Calculate shipping fees
   const calculateShippingFees = async (toWilayaId: number) => {
     try {
-      // Use Algiers (16) as default from wilaya
-      const fromWilayaId = 16
+      // Use Batna (5) as default from wilaya
+      const fromWilayaId = 5
       
       // Calculate total weight and dimensions from cart items (using defaults if not available)
       const totalWeight = items.reduce((sum, item) => sum + 0.5, 0) // Default 0.5kg per item
@@ -225,6 +225,10 @@ export default function CheckoutPage() {
     setIsSubmitting(true)
     
     try {
+      // Debug: Log the items being sent
+      console.log('🔍 Debug: Items being sent to order:', items);
+      console.log('🔍 Debug: Form data:', formData);
+      
       // Prepare order data
       const orderData = {
         customerName: formData.customerName,
@@ -232,7 +236,7 @@ export default function CheckoutPage() {
         customerEmail: formData.customerEmail || undefined,
         deliveryType: formData.deliveryType as 'HOME_DELIVERY' | 'PICKUP',
         deliveryAddress: formData.deliveryType === 'HOME_DELIVERY' ? formData.deliveryAddress : undefined,
-        cityId: formData.wilayaId,
+        wilayaId: parseInt(formData.wilayaId),
         deliveryDeskId: formData.deliveryType === 'PICKUP' ? formData.centerId : undefined,
         notes: formData.notes || undefined,
         items: items.map(item => ({
@@ -241,6 +245,10 @@ export default function CheckoutPage() {
           sizeId: item.sizeId
         }))
       }
+
+      // Debug: Log the order data being sent
+      console.log('🔍 Debug: Order data being sent:', orderData);
+      console.log('🔍 Debug: API base URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api');
 
       // Create order via API
       const response = await api.orders.create(orderData) as { orderNumber: string }
@@ -664,6 +672,22 @@ export default function CheckoutPage() {
                           className="min-w-32"
                         >
                           {isSubmitting ? 'Placing Order...' : 'Place Order'}
+                        </Button>
+                      </div>
+                      
+                      {/* Debug Button */}
+                      <div className="mt-4">
+                        <Button
+                          onClick={() => {
+                            console.log('🔍 Debug: Current cart items:', items);
+                            console.log('🔍 Debug: Form data:', formData);
+                            console.log('🔍 Debug: Cart from localStorage:', localStorage.getItem('cart'));
+                            alert('Check browser console for debug information');
+                          }}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          Debug Info
                         </Button>
                       </div>
                     </motion.div>

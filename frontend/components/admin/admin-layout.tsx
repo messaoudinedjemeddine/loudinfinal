@@ -39,9 +39,9 @@ const getNavigationByRole = (role: string, t: any) => {
         { name: t?.admin?.products || 'Products', href: '/admin/products', icon: Package },
         { name: t?.admin?.inventory || 'Inventory', href: '/admin/inventory', icon: Package },
         { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: t?.admin?.shipping || 'Shipping', href: '/admin/shipping', icon: Truck },
         { name: t?.admin?.categories || 'Categories', href: '/admin/categories', icon: Tag },
         { name: t?.admin?.users || 'Users', href: '/admin/users', icon: Users },
+        { name: t?.admin?.shipping || 'Shipping', href: '/admin/shipping', icon: Truck },
         { name: t?.admin?.analytics || 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]

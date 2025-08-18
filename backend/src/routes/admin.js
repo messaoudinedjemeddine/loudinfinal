@@ -348,13 +348,18 @@ router.delete('/products/:id', async (req, res) => {
 // Admin orders management
 router.get('/orders', async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, search } = req.query;
+    const { page = 1, limit = 20, status, search, confirmedOnly } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {};
     
     if (status) {
       where.callCenterStatus = status;
+    }
+
+    // If confirmedOnly is true, only return confirmed orders
+    if (confirmedOnly === 'true') {
+      where.callCenterStatus = 'CONFIRMED';
     }
 
     if (search) {

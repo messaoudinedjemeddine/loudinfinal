@@ -36,7 +36,7 @@ export function ShippingCalculator({ onShippingSelected, orderTotal, items }: Sh
   const [yalidineStatus, setYalidineStatus] = useState<{ configured: boolean; message: string } | null>(null);
 
   // Form state
-  const [fromWilayaId, setFromWilayaId] = useState<number>(16); // Default: Alger
+  const [fromWilayaId, setFromWilayaId] = useState<number>(5); // Default: Batna
   const [toWilayaId, setToWilayaId] = useState<number>(16);
   const [toCommuneId, setToCommuneId] = useState<number | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<'home' | 'desk'>('home');

@@ -18,11 +18,13 @@ import {
   Clock,
   Loader2,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Truck
 } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { useLocaleStore } from '@/lib/locale-store'
+import { ShippingDashboard } from '@/components/admin/shipping-dashboard'
 
 // Types for dashboard data
 interface DashboardStats {
@@ -243,11 +245,12 @@ export function AdminDashboard() {
         </motion.div>
       </div>
 
-      {/* Tabs for Recent Orders and Low Stock */}
+      {/* Tabs for Recent Orders, Low Stock, and Shipping */}
       <Tabs defaultValue="orders" className="space-y-4">
         <TabsList>
           <TabsTrigger value="orders">Recent Orders</TabsTrigger>
           <TabsTrigger value="low-stock">Low Stock Alert</TabsTrigger>
+          <TabsTrigger value="shipping">Shipping Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
@@ -334,6 +337,10 @@ export function AdminDashboard() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="shipping" className="space-y-4">
+          <ShippingDashboard />
         </TabsContent>
       </Tabs>
     </div>

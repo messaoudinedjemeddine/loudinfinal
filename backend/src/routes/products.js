@@ -343,4 +343,35 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Debug endpoint to list all products with IDs
+router.get('/debug/list', async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        stock: true,
+        isActive: true
+      },
+      where: {
+        isActive: true
+      }
+    });
+    
+    res.json({
+      success: true,
+      count: products.length,
+      products: products
+    });
+  } catch (error) {
+    console.error('Error fetching products for debug:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch products',
+      details: error.message 
+    });
+  }
+});
+
 module.exports = router;

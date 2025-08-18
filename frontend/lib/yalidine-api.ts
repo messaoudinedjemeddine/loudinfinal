@@ -163,6 +163,11 @@ class YalidineAPI {
     return api.shipping.deleteShipment(tracking);
   }
 
+  // Get all shipments
+  async getAllShipments(): Promise<{ data: any[]; has_more: boolean; total_data: number }> {
+    return api.shipping.getAllShipments() as Promise<{ data: any[]; has_more: boolean; total_data: number }>;
+  }
+
   // Utility methods
   validatePhoneNumber(phone: string): boolean {
     const phoneRegex = /^0[5-7][0-9]{8}$/; // Mobile: 05xxxxxxxx, 06xxxxxxxx, 07xxxxxxxx

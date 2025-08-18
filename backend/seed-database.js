@@ -488,60 +488,93 @@ async function seedDatabase() {
       })
     ]);
 
-    // Create cities
+    // Create cities - All 58 Algerian wilayas
     console.log('🏙️ Creating cities...');
-    const cities = await Promise.all([
-      prisma.city.create({
-        data: {
-          name: 'Algiers',
-          nameAr: 'الجزائر',
-          code: 'ALG',
-          deliveryFee: 500
-        }
-      }),
-      prisma.city.create({
-        data: {
-          name: 'Oran',
-          nameAr: 'وهران',
-          code: 'ORA',
-          deliveryFee: 600
-        }
-      }),
-      prisma.city.create({
-        data: {
-          name: 'Constantine',
-          nameAr: 'قسنطينة',
-          code: 'CON',
-          deliveryFee: 700
-        }
-      }),
-      prisma.city.create({
-        data: {
-          name: 'Annaba',
-          nameAr: 'عنابة',
-          code: 'ANN',
-          deliveryFee: 650
-        }
-      }),
-      prisma.city.create({
-        data: {
-          name: 'Blida',
-          nameAr: 'البليدة',
-          code: 'BLI',
-          deliveryFee: 450
-        }
-      })
-    ]);
+    const citiesData = [
+      { name: 'Adrar', nameAr: 'أدرار', code: 'ADR', deliveryFee: 800 },
+      { name: 'Chlef', nameAr: 'الشلف', code: 'CHL', deliveryFee: 600 },
+      { name: 'Laghouat', nameAr: 'الأغواط', code: 'LAG', deliveryFee: 700 },
+      { name: 'Oum El Bouaghi', nameAr: 'أم البواقي', code: 'OEB', deliveryFee: 650 },
+      { name: 'Batna', nameAr: 'باتنة', code: 'BAT', deliveryFee: 600 },
+      { name: 'Béjaïa', nameAr: 'بجاية', code: 'BEJ', deliveryFee: 650 },
+      { name: 'Biskra', nameAr: 'بسكرة', code: 'BIS', deliveryFee: 700 },
+      { name: 'Béchar', nameAr: 'بشار', code: 'BEC', deliveryFee: 900 },
+      { name: 'Blida', nameAr: 'البليدة', code: 'BLI', deliveryFee: 450 },
+      { name: 'Bouira', nameAr: 'البويرة', code: 'BOU', deliveryFee: 550 },
+      { name: 'Tamanrasset', nameAr: 'تمنراست', code: 'TAM', deliveryFee: 1200 },
+      { name: 'Tébessa', nameAr: 'تبسة', code: 'TEB', deliveryFee: 750 },
+      { name: 'Tlemcen', nameAr: 'تلمسان', code: 'TLE', deliveryFee: 700 },
+      { name: 'Tiaret', nameAr: 'تيارت', code: 'TIA', deliveryFee: 650 },
+      { name: 'Tizi Ouzou', nameAr: 'تيزي وزو', code: 'TIZ', deliveryFee: 550 },
+      { name: 'Algiers', nameAr: 'الجزائر', code: 'ALG', deliveryFee: 500 },
+      { name: 'Djelfa', nameAr: 'الجلفة', code: 'DJF', deliveryFee: 650 },
+      { name: 'Jijel', nameAr: 'جيجل', code: 'JIJ', deliveryFee: 600 },
+      { name: 'Sétif', nameAr: 'سطيف', code: 'SET', deliveryFee: 600 },
+      { name: 'Saïda', nameAr: 'سعيدة', code: 'SAI', deliveryFee: 700 },
+      { name: 'Skikda', nameAr: 'سكيكدة', code: 'SKI', deliveryFee: 650 },
+      { name: 'Sidi Bel Abbès', nameAr: 'سيدي بلعباس', code: 'SBA', deliveryFee: 700 },
+      { name: 'Annaba', nameAr: 'عنابة', code: 'ANN', deliveryFee: 650 },
+      { name: 'Guelma', nameAr: 'قالمة', code: 'GUE', deliveryFee: 650 },
+      { name: 'Constantine', nameAr: 'قسنطينة', code: 'CON', deliveryFee: 700 },
+      { name: 'Médéa', nameAr: 'المدية', code: 'MED', deliveryFee: 550 },
+      { name: 'Mostaganem', nameAr: 'مستغانم', code: 'MOS', deliveryFee: 600 },
+      { name: "M'Sila", nameAr: 'المسيلة', code: 'MSI', deliveryFee: 650 },
+      { name: 'Mascara', nameAr: 'معسكر', code: 'MAS', deliveryFee: 650 },
+      { name: 'Ouargla', nameAr: 'ورقلة', code: 'OUA', deliveryFee: 800 },
+      { name: 'Oran', nameAr: 'وهران', code: 'ORA', deliveryFee: 600 },
+      { name: 'El Bayadh', nameAr: 'البيض', code: 'EBA', deliveryFee: 750 },
+      { name: 'Illizi', nameAr: 'إليزي', code: 'ILL', deliveryFee: 1000 },
+      { name: 'Bordj Bou Arréridj', nameAr: 'برج بوعريريج', code: 'BBA', deliveryFee: 600 },
+      { name: 'Boumerdès', nameAr: 'بومرداس', code: 'BMD', deliveryFee: 500 },
+      { name: 'El Tarf', nameAr: 'الطارف', code: 'ETA', deliveryFee: 650 },
+      { name: 'Tindouf', nameAr: 'تندوف', code: 'TIN', deliveryFee: 1100 },
+      { name: 'Tissemsilt', nameAr: 'تيسمسيلت', code: 'TIS', deliveryFee: 600 },
+      { name: 'El Oued', nameAr: 'الوادي', code: 'EOU', deliveryFee: 750 },
+      { name: 'Khenchela', nameAr: 'خنشلة', code: 'KHE', deliveryFee: 650 },
+      { name: 'Souk Ahras', nameAr: 'سوق أهراس', code: 'SOU', deliveryFee: 700 },
+      { name: 'Tipaza', nameAr: 'تيبازة', code: 'TIP', deliveryFee: 500 },
+      { name: 'Mila', nameAr: 'ميلة', code: 'MIL', deliveryFee: 600 },
+      { name: 'Aïn Defla', nameAr: 'عين الدفلى', code: 'AID', deliveryFee: 550 },
+      { name: 'Naâma', nameAr: 'النعامة', code: 'NAA', deliveryFee: 800 },
+      { name: 'Aïn Témouchent', nameAr: 'عين تموشنت', code: 'AIT', deliveryFee: 700 },
+      { name: 'Ghardaïa', nameAr: 'غرداية', code: 'GHA', deliveryFee: 800 },
+      { name: 'Relizane', nameAr: 'غليزان', code: 'REL', deliveryFee: 650 },
+      { name: 'Timimoun', nameAr: 'تيميمون', code: 'TIM', deliveryFee: 900 },
+      { name: 'Bordj Badji Mokhtar', nameAr: 'برج باجي مختار', code: 'BBM', deliveryFee: 1000 },
+      { name: 'Ouled Djellal', nameAr: 'أولاد جلال', code: 'OUL', deliveryFee: 750 },
+      { name: 'Béni Abbès', nameAr: 'بني عباس', code: 'BEA', deliveryFee: 900 },
+      { name: 'In Salah', nameAr: 'عين صالح', code: 'INS', deliveryFee: 1000 },
+      { name: 'In Guezzam', nameAr: 'عين قزام', code: 'ING', deliveryFee: 1100 },
+      { name: 'Touggourt', nameAr: 'تقرت', code: 'TOU', deliveryFee: 800 },
+      { name: 'Djanet', nameAr: 'جانت', code: 'DJA', deliveryFee: 1200 },
+      { name: 'El M\'Ghair', nameAr: 'المغير', code: 'EMG', deliveryFee: 750 }
+    ];
+
+    const cities = await Promise.all(
+      citiesData.map(cityData => 
+        prisma.city.create({
+          data: cityData
+        })
+      )
+    );
 
     // Create delivery desks
     console.log('📦 Creating delivery desks...');
+    
+    // Find specific cities for delivery desks
+    const algiersCity = cities.find(c => c.name === 'Algiers');
+    const oranCity = cities.find(c => c.name === 'Oran');
+    const constantineCity = cities.find(c => c.name === 'Constantine');
+    const batnaCity = cities.find(c => c.name === 'Batna');
+    const annabaCity = cities.find(c => c.name === 'Annaba');
+    
     const deliveryDesks = await Promise.all([
       prisma.deliveryDesk.create({
         data: {
           name: 'Algiers Central Desk',
           nameAr: 'مكتب الجزائر المركزي',
           address: 'Downtown Algiers, Rue de la Liberté',
-          cityId: cities[0].id
+          cityId: algiersCity.id
         }
       }),
       prisma.deliveryDesk.create({
@@ -549,7 +582,7 @@ async function seedDatabase() {
           name: 'Oran Main Office',
           nameAr: 'المكتب الرئيسي لوهران',
           address: 'City Center Oran, Place du 1er Novembre',
-          cityId: cities[1].id
+          cityId: oranCity.id
         }
       }),
       prisma.deliveryDesk.create({
@@ -557,7 +590,23 @@ async function seedDatabase() {
           name: 'Constantine Hub',
           nameAr: 'مركز قسنطينة',
           address: 'Central Constantine, Avenue de l\'Indépendance',
-          cityId: cities[2].id
+          cityId: constantineCity.id
+        }
+      }),
+      prisma.deliveryDesk.create({
+        data: {
+          name: 'Batna Central',
+          nameAr: 'مركز باتنة',
+          address: 'Central Batna, Place de la Révolution',
+          cityId: batnaCity.id
+        }
+      }),
+      prisma.deliveryDesk.create({
+        data: {
+          name: 'Annaba Express',
+          nameAr: 'عنابة إكسبريس',
+          address: 'Downtown Annaba, Boulevard de l\'Indépendance',
+          cityId: annabaCity.id
         }
       })
     ]);
@@ -579,7 +628,7 @@ async function seedDatabase() {
           notes: 'Please deliver in the morning',
           callCenterStatus: 'CONFIRMED',
           deliveryStatus: 'READY',
-          cityId: cities[0].id,
+          cityId: algiersCity.id,
           items: {
             create: [
               {
@@ -606,7 +655,7 @@ async function seedDatabase() {
           notes: 'Will pick up on Friday',
           callCenterStatus: 'NEW',
           deliveryStatus: 'NOT_READY',
-          cityId: cities[1].id,
+          cityId: oranCity.id,
           deliveryDeskId: deliveryDesks[1].id,
           items: {
             create: [
@@ -635,7 +684,7 @@ async function seedDatabase() {
           notes: 'Ring the bell twice',
           callCenterStatus: 'CONFIRMED',
           deliveryStatus: 'IN_TRANSIT',
-          cityId: cities[2].id,
+          cityId: constantineCity.id,
           items: {
             create: [
               {
@@ -663,7 +712,7 @@ async function seedDatabase() {
           notes: 'Call before delivery',
           callCenterStatus: 'CONFIRMED',
           deliveryStatus: 'DONE',
-          cityId: cities[3].id,
+          cityId: annabaCity.id,
           items: {
             create: [
               {
@@ -691,7 +740,7 @@ async function seedDatabase() {
           notes: 'Customer prefers afternoon delivery',
           callCenterStatus: 'NO_RESPONSE',
           deliveryStatus: 'NOT_READY',
-          cityId: cities[4].id,
+          cityId: batnaCity.id,
           items: {
             create: [
               {
@@ -718,7 +767,7 @@ async function seedDatabase() {
           notes: 'Customer will call to confirm pickup time',
           callCenterStatus: 'NEW',
           deliveryStatus: 'NOT_READY',
-          cityId: cities[0].id,
+          cityId: algiersCity.id,
           deliveryDeskId: deliveryDesks[0].id,
           items: {
             create: [
