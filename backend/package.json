@@ -11,7 +11,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "node src/utils/seed.js"
+    "db:seed": "node seed-database.js"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
