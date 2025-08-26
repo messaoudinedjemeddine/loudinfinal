@@ -1,0 +1,229 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  CALL_CENTER
+  ORDER_CONFIRMATION
+  DELIVERY_COORDINATOR
+  SUPERADMIN
+}
+
+enum CallCenterStatus {
+  NEW
+  CONFIRMED
+  CANCELED
+  NO_RESPONSE
+}
+
+enum DeliveryStatus {
+  NOT_READY
+  READY
+  IN_TRANSIT
+  DONE
+}
+
+enum DeliveryType {
+  HOME_DELIVERY
+  PICKUP
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  phone     String?
+  firstName String
+  lastName  String
+  role      UserRole @default(USER)
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  nameAr      String?
+  description String?
+  descriptionAr String?
+  image       String?
+  slug        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String?
+  description String?
+  descriptionAr String?
+  price       Float
+  oldPrice    Float?
+  stock       Int      @default(0)
+  reference   String?  @unique
+  slug        String   @unique
+  isOnSale    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  isLaunch    Boolean  @default(false)
+  launchAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  images     ProductImage[]
+  sizes      ProductSize[]
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String?
+  isPrimary Boolean @default(false)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductSize {
+  id    String @id @default(cuid())
+  size  String
+  stock Int    @default(0)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+
+  @@map("product_sizes")
+}
+
+model City {
+  id          String  @id @default(cuid())
+  name        String
+  nameAr      String?
+  code        String  @unique
+  deliveryFee Float   @default(0)
+  isActive    Boolean @default(true)
+
+  deliveryDesks DeliveryDesk[]
+  orders        Order[]
+
+  @@map("cities")
+}
+
+model DeliveryDesk {
+  id       String  @id @default(cuid())
+  name     String
+  nameAr   String?
+  address  String?
+  phone    String?
+  isActive Boolean @default(true)
+
+  cityId String
+  city   City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  orders Order[]
+
+  @@map("delivery_desks")
+}
+
+model Order {
+  id               String            @id @default(cuid())
+  orderNumber      String            @unique
+  customerName     String
+  customerPhone    String
+  customerEmail    String?
+  deliveryType     DeliveryType
+  deliveryAddress  String?
+  deliveryFee      Float             @default(0)
+  subtotal         Float
+  total            Float
+  notes            String?
+  callCenterStatus CallCenterStatus  @default(NEW)
+  deliveryStatus   DeliveryStatus    @default(NOT_READY)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id])
+  cityId         String
+  city           City          @relation(fields: [cityId], references: [id])
+  deliveryDeskId String?
+  deliveryDesk   DeliveryDesk? @relation(fields: [deliveryDeskId], references: [id])
+
+  items   OrderItem[]
+  coupons OrderCoupon[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  quantity Int
+  price    Float
+  size     String?
+
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  sizeId    String?
+  productSize ProductSize? @relation(fields: [sizeId], references: [id])
+
+  @@map("order_items")
+}
+
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  discountType   String    // PERCENTAGE, FIXED
+  discountValue  Float
+  minOrderAmount Float?
+  maxUses        Int?
+  currentUses    Int       @default(0)
+  isActive       Boolean   @default(true)
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  orders OrderCoupon[]
+
+  @@map("coupons")
+}
+
+model OrderCoupon {
+  id            String @id @default(cuid())
+  discountAmount Float
+
+  orderId  String
+  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  couponId String
+  coupon   Coupon @relation(fields: [couponId], references: [id])
+
+  @@map("order_coupons")
+}
