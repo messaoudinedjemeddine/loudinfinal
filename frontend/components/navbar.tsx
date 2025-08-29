@@ -48,11 +48,8 @@ export function Navbar() {
   const wishlistCount = getWishlistCount()
 
   const navigation = [
-    { name: isRTL ? 'الرئيسية' : 'Home', href: '/' },
-    { name: isRTL ? 'المنتجات' : 'Products', href: '/products' },
-    { name: isRTL ? 'المجموعات' : 'Collections', href: '/categories' },
-    { name: isRTL ? 'من نحن' : 'About', href: '/about' },
-    { name: isRTL ? 'اتصلي بنا' : 'Contact', href: '/contact' },
+    { name: 'Loudim', href: '/loudim' },
+    { name: 'Loud Styles', href: '/loud-styles' },
   ]
 
   useEffect(() => {
@@ -128,21 +125,10 @@ export function Navbar() {
             {/* Logo Section */}
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center group">
-                <div className="relative w-20 h-20 transition-transform duration-300 group-hover:scale-105">
-                  <Image
-                    src="/logos/logo-dark.png"
-                    alt="Algerian Elegance Logo"
-                    width={80}
-                    height={80}
-                    className="w-full h-full object-contain dark:hidden"
-                  />
-                  <Image
-                    src="/logos/logo-light.png"
-                    alt="Algerian Elegance Logo"
-                    width={80}
-                    height={80}
-                    className="w-full h-full object-contain hidden dark:block"
-                  />
+                <div className="transition-transform duration-300 group-hover:scale-105">
+                  <h1 className="text-2xl font-bold text-camel-800 dark:text-camel-200">
+                    Loudim Brands
+                  </h1>
                 </div>
               </Link>
             </div>

@@ -51,12 +51,17 @@ const requireRole = (roles) => {
   };
 };
 
-const requireAdmin = requireRole(['SUPERADMIN', 'ADMIN', 'CALL_CENTER', 'ORDER_CONFIRMATION', 'DELIVERY_COORDINATOR']);
-const requireSuperAdmin = requireRole(['SUPERADMIN']);
+// Role-specific middleware
+const requireAdmin = requireRole(['ADMIN']);
+const requireConfirmatrice = requireRole(['ADMIN', 'CONFIRMATRICE']);
+const requireAgentLivraison = requireRole(['ADMIN', 'AGENT_LIVRAISON']);
+const requireAnyRole = requireRole(['ADMIN', 'CONFIRMATRICE', 'AGENT_LIVRAISON']);
 
 module.exports = {
   authenticateToken,
   requireRole,
   requireAdmin,
-  requireSuperAdmin
+  requireConfirmatrice,
+  requireAgentLivraison,
+  requireAnyRole
 };

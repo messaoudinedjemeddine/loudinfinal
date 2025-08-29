@@ -202,6 +202,97 @@ class YalidineService {
     }
   }
 
+  // Get all parcels/shipments with filters
+  async getAllParcels(filters = {}) {
+    try {
+      console.log('🔍 Fetching all parcels from Yalidine API with filters:', filters);
+      
+      // Build query parameters according to Yalidine API documentation
+      const queryParams = new URLSearchParams();
+      
+      // Set page_size to maximum (1000) to get all parcels in one request
+      queryParams.append('page_size', '1000');
+      
+      // Add page parameter if provided
+      if (filters.page && !isNaN(filters.page) && filters.page > 0) {
+        queryParams.append('page', filters.page.toString());
+      }
+      
+      // Add last_status filter if provided (Yalidine uses last_status parameter)
+      if (filters.status && filters.status.trim() !== '') {
+        queryParams.append('last_status', filters.status.trim());
+      }
+      
+      // Add tracking filter if provided
+      if (filters.tracking && filters.tracking.trim() !== '') {
+        queryParams.append('tracking', filters.tracking.trim());
+      }
+      
+      // Add order_id filter if provided
+      if (filters.order_id && filters.order_id.trim() !== '') {
+        queryParams.append('order_id', filters.order_id.trim());
+      }
+      
+      // Add to_wilaya_id filter if provided
+      if (filters.to_wilaya_id && !isNaN(filters.to_wilaya_id)) {
+        queryParams.append('to_wilaya_id', filters.to_wilaya_id.toString());
+      }
+      
+      // Add to_commune_name filter if provided
+      if (filters.to_commune_name && filters.to_commune_name.trim() !== '') {
+        queryParams.append('to_commune_name', filters.to_commune_name.trim());
+      }
+      
+      // Add is_stopdesk filter if provided
+      if (filters.is_stopdesk !== undefined) {
+        queryParams.append('is_stopdesk', filters.is_stopdesk.toString());
+      }
+      
+      // Add freeshipping filter if provided
+      if (filters.freeshipping !== undefined) {
+        queryParams.append('freeshipping', filters.freeshipping.toString());
+      }
+      
+      // Add date_creation filter if provided
+      if (filters.date_creation && filters.date_creation.trim() !== '') {
+        queryParams.append('date_creation', filters.date_creation.trim());
+      }
+      
+      // Add date_last_status filter if provided
+      if (filters.date_last_status && filters.date_last_status.trim() !== '') {
+        queryParams.append('date_last_status', filters.date_last_status.trim());
+      }
+      
+      // Add payment_status filter if provided
+      if (filters.payment_status && filters.payment_status.trim() !== '') {
+        queryParams.append('payment_status', filters.payment_status.trim());
+      }
+
+      // Use the correct Yalidine API endpoint
+      const url = `/parcels/${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      console.log('🔍 Fetching parcels from Yalidine API:', url);
+      
+      const response = await this.client.get(url);
+      console.log('✅ Successfully fetched parcels, count:', response.data.data?.length || 0);
+      console.log('📊 Total data available:', response.data.total_data || 0);
+      console.log('🔄 Has more pages:', response.data.has_more || false);
+      
+      // Debug: Log the first shipment to see available fields
+      if (response.data.data && response.data.data.length > 0) {
+        console.log('🔍 Sample shipment data structure:', JSON.stringify(response.data.data[0], null, 2));
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ Error fetching parcels:', error.message);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      throw new Error('Failed to fetch shipments');
+    }
+  }
+
   // Calculate weight fees
   calculateWeightFees(weight, oversizeFee) {
     if (weight <= 5) return 0;
@@ -295,24 +386,35 @@ class YalidineService {
     };
   }
 
-  // Test API connection
+    // Test API connection and list available endpoints
   async testConnection() {
     try {
       console.log('🔍 Testing Yalidine API connection...');
-      const response = await this.client.get('/wilayas/');
+      
+      // Test basic connection
+      const response = await this.client.get('/');
       console.log('✅ API connection successful');
-      return {
-        success: true,
-        message: 'API connection successful',
-        data: response.data
-      };
+      
+      // Try to get account info or available endpoints
+      try {
+        const accountResponse = await this.client.get('/account/');
+        console.log('✅ Account info available:', accountResponse.data);
+      } catch (accountError) {
+        console.log('⚠️ Account endpoint not available');
+      }
+      
+      // Try to get available endpoints
+      try {
+        const endpointsResponse = await this.client.get('/api/');
+        console.log('✅ Available endpoints:', endpointsResponse.data);
+      } catch (endpointsError) {
+        console.log('⚠️ Endpoints listing not available');
+      }
+      
+      return { success: true, message: 'API connection successful' };
     } catch (error) {
       console.error('❌ API connection failed:', error.message);
-      return {
-        success: false,
-        message: error.message,
-        error: error.response ? error.response.data : null
-      };
+      return { success: false, message: error.message };
     }
   }
 

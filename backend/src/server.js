@@ -9,6 +9,8 @@ const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
 const categoryRoutes = require('./routes/categories');
 const adminRoutes = require('./routes/admin');
+const confirmatriceRoutes = require('./routes/confirmatrice');
+const agentLivraisonRoutes = require('./routes/agent-livraison');
 const uploadRoutes = require('./routes/upload');
 const shippingRoutes = require('./routes/shipping');
 
@@ -39,7 +41,7 @@ app.use(limiter);
 
 // CORS configuration - More permissive for development
 app.use(cors({
-  origin: true, // Allow all origins in development
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], // Allow specific origins
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -52,20 +54,6 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Handle preflight requests
 app.options('*', cors());
-
-// Add CORS headers to all responses
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -82,6 +70,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/confirmatrice', confirmatriceRoutes);
+app.use('/api/agent-livraison', agentLivraisonRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/shipping', shippingRoutes);
 

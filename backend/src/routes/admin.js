@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticateToken, requireAdmin, requireSuperAdmin } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, requireConfirmatrice, requireAgentLivraison, requireAnyRole } = require('../middleware/auth');
 const prisma = require('../config/database');
 const { z } = require('zod');
 
@@ -7,7 +7,7 @@ const router = express.Router();
 
 // All admin routes require authentication
 router.use(authenticateToken);
-router.use(requireAdmin);
+router.use(requireAnyRole);
 
 // Dashboard stats
 router.get('/dashboard/stats', async (req, res) => {

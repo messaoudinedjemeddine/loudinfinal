@@ -46,34 +46,22 @@ export default function AdminLoginPage() {
   // User credentials for all roles
   const userCredentials = [
     {
-      role: t?.admin?.roleNames?.SUPERADMIN || 'Super Admin',
-      email: 'superadmin@example.com',
-      password: 'super123',
-      description: 'Full system access and user management'
-    },
-    {
-      role: t?.admin?.roleNames?.ADMIN || 'Admin',
+      role: 'Administrateur',
       email: 'admin@example.com',
       password: 'admin123',
-      description: 'Complete store management and analytics'
+      description: 'Accès complet au système - gestion des produits, utilisateurs, et analytics'
     },
     {
-      role: t?.admin?.roleNames?.CALL_CENTER || 'Call Center',
-      email: 'callcenter@example.com',
-      password: 'call123',
-      description: 'Customer order management and communications'
+      role: 'Confirmatrice (Centre d\'Appel)',
+      email: 'confirmatrice@test.com',
+      password: 'confirmatrice123',
+      description: 'Confirmation des commandes et service client'
     },
     {
-      role: t?.admin?.roleNames?.ORDER_CONFIRMATION || 'Order Confirmation',
-      email: 'orderconfirmation@example.com',
-      password: 'order123',
-      description: 'Order processing and delivery preparation'
-    },
-    {
-      role: t?.admin?.roleNames?.DELIVERY_COORDINATOR || 'Delivery Coordinator',
-      email: 'delivery@example.com',
-      password: 'delivery123',
-      description: 'Delivery tracking and customer interactions'
+      role: 'Agent de Livraison',
+      email: 'agent@test.com',
+      password: 'agent123',
+      description: 'Coordination des livraisons et suivi des commandes'
     }
   ]
 
@@ -94,15 +82,15 @@ export default function AdminLoginPage() {
     const newErrors: { email?: string; password?: string } = {}
 
     if (!email) {
-      newErrors.email = 'Email is required'
+      newErrors.email = 'Email requis'
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email'
+      newErrors.email = 'Veuillez entrer un email valide'
     }
 
     if (!password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = 'Mot de passe requis'
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters'
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères'
     }
 
     setErrors(newErrors)
@@ -132,26 +120,39 @@ export default function AdminLoginPage() {
       }
       
       // Check if user has admin role
-      const adminRoles = ['SUPERADMIN', 'ADMIN', 'CALL_CENTER', 'ORDER_CONFIRMATION', 'DELIVERY_COORDINATOR']
+      const adminRoles = ['ADMIN', 'CONFIRMATRICE', 'AGENT_LIVRAISON']
       if (!adminRoles.includes(data.user.role)) {
-        toast.error('Access denied. Admin privileges required.')
+        toast.error('Accès refusé. Privilèges administrateur requis.')
         setErrors({ 
-          email: 'Admin access required',
-          password: 'Admin access required'
+          email: 'Accès administrateur requis',
+          password: 'Accès administrateur requis'
         })
         return
       }
       
       setAuth(data.user, data.token)
-      toast.success('Welcome back! Login successful.')
-      router.push('/admin')
+      toast.success('Bienvenue ! Connexion réussie.')
+      
+      // Redirect based on user role
+      switch (data.user.role) {
+        case 'CONFIRMATRICE':
+          router.push('/confirmatrice/dashboard')
+          break
+        case 'AGENT_LIVRAISON':
+          router.push('/agent-livraison/dashboard')
+          break
+        case 'ADMIN':
+        default:
+          router.push('/admin/dashboard')
+          break
+      }
     } catch (error: any) {
       console.error('Login error:', error)
-      toast.error(error.message || 'Login failed. Please try again.')
-      setErrors({ 
-        email: 'Invalid credentials',
-        password: 'Invalid credentials'
-      })
+      toast.error(error.message || 'Échec de la connexion. Veuillez réessayer.')
+              setErrors({ 
+          email: 'Identifiants invalides',
+          password: 'Identifiants invalides'
+        })
     } finally {
       setIsLoading(false)
     }
@@ -161,17 +162,17 @@ export default function AdminLoginPage() {
     setEmail(userEmail)
     setPassword(userPassword)
     setErrors({}) // Clear any existing errors
-    toast.success('Credentials filled! Click Sign In to continue.')
+    toast.success('Identifiants remplis ! Cliquez sur Se connecter pour continuer.')
   }
 
   const copyCredentials = async (userEmail: string, userPassword: string) => {
     try {
       await navigator.clipboard.writeText(`Email: ${userEmail}\nPassword: ${userPassword}`)
       setCopiedUser(userEmail)
-      toast.success('Credentials copied to clipboard!')
+      toast.success('Identifiants copiés dans le presse-papiers !')
       setTimeout(() => setCopiedUser(null), 2000)
     } catch (err) {
-      toast.error('Failed to copy credentials')
+      toast.error('Échec de la copie des identifiants')
     }
   }
 
@@ -214,9 +215,9 @@ export default function AdminLoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <CardTitle className="text-2xl font-bold mb-2">Admin Login</CardTitle>
+              <CardTitle className="text-2xl font-bold mb-2">Connexion Admin</CardTitle>
               <p className="text-muted-foreground">
-                Access your admin dashboard
+                Accédez à votre tableau de bord
               </p>
             </motion.div>
           </CardHeader>
@@ -240,7 +241,7 @@ export default function AdminLoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
-                    placeholder="Enter your email"
+                    placeholder="Entrez votre email"
                     required
                   />
                 </div>
@@ -254,7 +255,7 @@ export default function AdminLoginPage() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Mot de passe</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
@@ -263,7 +264,7 @@ export default function AdminLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
-                    placeholder="Enter your password"
+                    placeholder="Entrez votre mot de passe"
                     required
                   />
                   <Button
@@ -296,7 +297,7 @@ export default function AdminLoginPage() {
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
                 <Label htmlFor="remember" className="text-sm">
-                  Remember me
+                  Se souvenir de moi
                 </Label>
               </div>
 
@@ -309,11 +310,11 @@ export default function AdminLoginPage() {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Signing in...
+                    Connexion...
                   </>
                 ) : (
                   <>
-                    Sign In
+                    Se connecter
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
@@ -334,7 +335,7 @@ export default function AdminLoginPage() {
                 onClick={() => setShowCredentials(!showCredentials)}
               >
                 <Users className="w-4 h-4 mr-2" />
-                Test Credentials
+                Identifiants de Test
                 {showCredentials ? (
                   <ChevronUp className="w-4 h-4 ml-2" />
                 ) : (
@@ -365,7 +366,7 @@ export default function AdminLoginPage() {
                             onClick={() => fillCredentials(user.email, user.password)}
                             className="h-6 px-2 text-xs"
                           >
-                            Fill
+                            Remplir
                           </Button>
                           <Button
                             size="sm"
@@ -383,7 +384,7 @@ export default function AdminLoginPage() {
                       </div>
                       <div className="text-xs space-y-1">
                         <p><strong>Email:</strong> {user.email}</p>
-                        <p><strong>Password:</strong> {user.password}</p>
+                        <p><strong>Mot de passe:</strong> {user.password}</p>
                         <p className="text-muted-foreground">{user.description}</p>
                       </div>
                     </div>

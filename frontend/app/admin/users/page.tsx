@@ -41,21 +41,15 @@ interface User {
 }
 
 const roleColors = {
-  USER: 'bg-blue-100 text-blue-800',
   ADMIN: 'bg-green-100 text-green-800',
-  CALL_CENTER: 'bg-purple-100 text-purple-800',
-  ORDER_CONFIRMATION: 'bg-orange-100 text-orange-800',
-  DELIVERY_COORDINATOR: 'bg-yellow-100 text-yellow-800',
-  SUPERADMIN: 'bg-red-100 text-red-800'
+  CONFIRMATRICE: 'bg-purple-100 text-purple-800',
+  AGENT_LIVRAISON: 'bg-orange-100 text-orange-800'
 }
 
 const roleIcons = {
-  USER: User,
   ADMIN: Shield,
-  CALL_CENTER: Phone,
-  ORDER_CONFIRMATION: Users,
-  DELIVERY_COORDINATOR: Users,
-  SUPERADMIN: Shield
+  CONFIRMATRICE: Phone,
+  AGENT_LIVRAISON: Users
 }
 
 export default function AdminUsersPage() {
@@ -232,20 +226,20 @@ export default function AdminUsersPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Customers</CardTitle>
-                <User className="h-4 w-4 text-blue-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {users.filter(u => u.role === 'USER').length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Regular customers
-                </p>
-              </CardContent>
-            </Card>
+                          <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Confirmatrice</CardTitle>
+                  <Phone className="h-4 w-4 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {users.filter(u => u.role === 'CONFIRMATRICE').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Call center staff
+                  </p>
+                </CardContent>
+              </Card>
           </motion.div>
 
           <motion.div
@@ -253,20 +247,20 @@ export default function AdminUsersPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Staff</CardTitle>
-                <Shield className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {users.filter(u => u.role !== 'USER').length}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Admin & staff accounts
-                </p>
-              </CardContent>
-            </Card>
+                          <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">Agent Livraison</CardTitle>
+                  <Users className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {users.filter(u => u.role === 'AGENT_LIVRAISON').length}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Delivery coordinators
+                  </p>
+                </CardContent>
+              </Card>
           </motion.div>
         </div>
 
@@ -296,12 +290,9 @@ export default function AdminUsersPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="USER">Customer</SelectItem>
                   <SelectItem value="ADMIN">Admin</SelectItem>
-                  <SelectItem value="CALL_CENTER">Call Center</SelectItem>
-                  <SelectItem value="ORDER_CONFIRMATION">Order Confirmation</SelectItem>
-                  <SelectItem value="DELIVERY_COORDINATOR">Delivery Coordinator</SelectItem>
-                  <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
+                  <SelectItem value="CONFIRMATRICE">Confirmatrice</SelectItem>
+                  <SelectItem value="AGENT_LIVRAISON">Agent Livraison</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -339,7 +330,10 @@ export default function AdminUsersPage() {
                             {user.firstName} {user.lastName}
                           </h3>
                           <Badge className={roleColors[user.role as keyof typeof roleColors]}>
-                            <RoleIcon className="w-3 h-3 mr-1" />
+                            {(() => {
+                              const IconComponent = roleIcons[user.role as keyof typeof roleIcons];
+                              return IconComponent ? <IconComponent className="w-3 h-3 mr-1" /> : null;
+                            })()}
                             {user.role}
                           </Badge>
                         </div>
@@ -359,16 +353,7 @@ export default function AdminUsersPage() {
                           </div>
                         </div>
                         
-                        {user.role === 'USER' && (
-                          <div className="flex items-center space-x-4 mt-2 text-sm">
-                            <span className="text-muted-foreground">
-                              Orders: <span className="font-medium">{user.orderCount}</span>
-                            </span>
-                            <span className="text-muted-foreground">
-                              Spent: <span className="font-medium">{(user.totalSpent || 0).toLocaleString()} DA</span>
-                            </span>
-                          </div>
-                        )}
+
                       </div>
                     </div>
 
@@ -381,12 +366,9 @@ export default function AdminUsersPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="USER">Customer</SelectItem>
                           <SelectItem value="ADMIN">Admin</SelectItem>
-                          <SelectItem value="CALL_CENTER">Call Center</SelectItem>
-                          <SelectItem value="ORDER_CONFIRMATION">Order Confirmation</SelectItem>
-                          <SelectItem value="DELIVERY_COORDINATOR">Delivery Coordinator</SelectItem>
-                          <SelectItem value="SUPERADMIN">Super Admin</SelectItem>
+                          <SelectItem value="CONFIRMATRICE">Confirmatrice</SelectItem>
+                          <SelectItem value="AGENT_LIVRAISON">Agent Livraison</SelectItem>
                         </SelectContent>
                       </Select>
 

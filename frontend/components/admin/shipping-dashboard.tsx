@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Package, Truck, Eye, Plus, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Loader2, Package, Truck, Eye, Plus, CheckCircle, Clock, AlertCircle, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { yalidineAPI, Wilaya, Commune, Center, ShipmentData } from '@/lib/yalidine-api';
@@ -71,6 +71,28 @@ const statusLabels = {
   DONE: 'Delivered'
 };
 
+// Helper function to format Yalidine dates
+const formatYalidineDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    // Yalidine dates are in format "YYYY-MM-DD HH:MM:SS"
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return 'Invalid Date';
+  }
+};
+
 export function ShippingDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,12 +111,63 @@ export function ShippingDashboard() {
   // Yalidine shipments
   const [yalidineShipments, setYalidineShipments] = useState<any[]>([]);
   const [loadingShipments, setLoadingShipments] = useState(false);
+  const [shipmentPagination, setShipmentPagination] = useState({
+    has_more: false,
+    total_data: 0,
+    current_page: 1
+  });
 
   // Yalidine data
   const [wilayas, setWilayas] = useState<Wilaya[]>([]);
   const [communes, setCommunes] = useState<Commune[]>([]);
   const [centers, setCenters] = useState<Center[]>([]);
   const [selectedWilaya, setSelectedWilaya] = useState<string>('');
+
+  // Filters for Yalidine shipments
+  const [shipmentFilters, setShipmentFilters] = useState({
+    status: '',
+    tracking: '',
+    order_id: '',
+    to_commune_name: '',
+    date_creation: '',
+    date_last_status: '',
+    payment_status: ''
+  });
+
+  // Yalidine status options (exact values from API)
+  const yalidineStatuses = [
+    { value: 'Pas encore expédié', label: 'Pas encore expédié' },
+    { value: 'A vérifier', label: 'A vérifier' },
+    { value: 'En préparation', label: 'En préparation' },
+    { value: 'Pas encore ramassé', label: 'Pas encore ramassé' },
+    { value: 'Prêt à expédier', label: 'Prêt à expédier' },
+    { value: 'Ramassé', label: 'Ramassé' },
+    { value: 'Bloqué', label: 'Bloqué' },
+    { value: 'Débloqué', label: 'Débloqué' },
+    { value: 'Transfert', label: 'Transfert' },
+    { value: 'Expédié', label: 'Expédié' },
+    { value: 'Centre', label: 'Centre' },
+    { value: 'En localisation', label: 'En localisation' },
+    { value: 'Vers Wilaya', label: 'Vers Wilaya' },
+    { value: 'Reçu à Wilaya', label: 'Reçu à Wilaya' },
+    { value: 'En attente du client', label: 'En attente du client' },
+    { value: 'Prêt pour livreur', label: 'Prêt pour livreur' },
+    { value: 'Sorti en livraison', label: 'Sorti en livraison' },
+    { value: 'En attente', label: 'En attente' },
+    { value: 'En alerte', label: 'En alerte' },
+    { value: 'Tentative échouée', label: 'Tentative échouée' },
+    { value: 'Livré', label: 'Livré' },
+    { value: 'Echèc livraison', label: 'Echèc livraison' },
+    { value: 'Retour vers centre', label: 'Retour vers centre' },
+    { value: 'Retourné au centre', label: 'Retourné au centre' },
+    { value: 'Retour transfert', label: 'Retour transfert' },
+    { value: 'Retour groupé', label: 'Retour groupé' },
+    { value: 'Retour à retirer', label: 'Retour à retirer' },
+    { value: 'Retour vers vendeur', label: 'Retour vers vendeur' },
+    { value: 'Retourné au vendeur', label: 'Retourné au vendeur' },
+    { value: 'Echange échoué', label: 'Echange échoué' }
+  ];
+  const [showFilters, setShowFilters] = useState(false);
 
   // Shipment form
   const [shipmentForm, setShipmentForm] = useState<Partial<ShipmentData>>({
@@ -167,17 +240,56 @@ export function ShippingDashboard() {
     }
   };
 
-  const fetchYalidineShipments = async () => {
+  const fetchYalidineShipments = async (filters = {}) => {
     try {
       setLoadingShipments(true);
-      const response = await yalidineAPI.getAllShipments();
+      const response = await yalidineAPI.getAllShipments(filters);
+      
+      // Handle pagination data
+      if (response.has_more !== undefined) {
+        setShipmentPagination({
+          has_more: response.has_more,
+          total_data: response.total_data || 0,
+          current_page: 1
+        });
+      }
+      
       setYalidineShipments(response.data || []);
     } catch (error) {
       console.error('Error fetching Yalidine shipments:', error);
       setYalidineShipments([]);
+      setShipmentPagination({
+        has_more: false,
+        total_data: 0,
+        current_page: 1
+      });
     } finally {
       setLoadingShipments(false);
     }
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setShipmentFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const applyFilters = () => {
+    const activeFilters = Object.fromEntries(
+      Object.entries(shipmentFilters).filter(([_, value]) => value !== '')
+    );
+    fetchYalidineShipments(activeFilters);
+  };
+
+  const clearFilters = () => {
+    setShipmentFilters({
+      status: '',
+      tracking: '',
+      order_id: '',
+      to_commune_name: '',
+      date_creation: '',
+      date_last_status: '',
+      payment_status: ''
+    });
+    fetchYalidineShipments();
   };
 
   const handleCreateShipment = async (order: Order) => {
@@ -460,51 +572,272 @@ export function ShippingDashboard() {
         </TabsContent>
 
         <TabsContent value="yalidine" className="space-y-4">
+          {/* Filters */}
           <Card>
             <CardHeader>
-              <CardTitle>All Yalidine Shipments</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                View all shipments created in your Yalidine account
-              </p>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center">
+                  <Filter className="w-5 h-5 mr-2" />
+                  Filters
+                </CardTitle>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    {showFilters ? 'Hide Filters' : 'Show Filters'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearFilters}
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            {showFilters && (
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Status</label>
+                    <select
+                      className="w-full p-2 border rounded mt-1"
+                      value={shipmentFilters.status}
+                      onChange={(e) => handleFilterChange('status', e.target.value)}
+                    >
+                      <option value="">All Statuses</option>
+                      {yalidineStatuses.map((status) => (
+                        <option key={status.value} value={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Tracking Number</label>
+                    <input
+                      type="text"
+                      placeholder="Enter tracking number"
+                      className="w-full p-2 border rounded mt-1"
+                      value={shipmentFilters.tracking}
+                      onChange={(e) => handleFilterChange('tracking', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Order ID</label>
+                    <input
+                      type="text"
+                      placeholder="Enter order ID"
+                      className="w-full p-2 border rounded mt-1"
+                      value={shipmentFilters.order_id}
+                      onChange={(e) => handleFilterChange('order_id', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Commune Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter commune name"
+                      className="w-full p-2 border rounded mt-1"
+                      value={shipmentFilters.to_commune_name}
+                      onChange={(e) => handleFilterChange('to_commune_name', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Creation Date</label>
+                    <input
+                      type="date"
+                      className="w-full p-2 border rounded mt-1"
+                      value={shipmentFilters.date_creation}
+                      onChange={(e) => handleFilterChange('date_creation', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Last Status Date</label>
+                    <input
+                      type="date"
+                      className="w-full p-2 border rounded mt-1"
+                      value={shipmentFilters.date_last_status}
+                      onChange={(e) => handleFilterChange('date_last_status', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-4">
+                  <Button onClick={applyFilters} className="ml-2">
+                    Apply Filters
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Yalidine Shipments Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Total Shipments</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{shipmentPagination.total_data || yalidineShipments.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {shipmentPagination.total_data > 0 ? `All shipments in Yalidine (showing ${yalidineShipments.length})` : 'All shipments in Yalidine'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">En Préparation</CardTitle>
+                <Clock className="h-4 w-4 text-yellow-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {yalidineShipments.filter(s => s.last_status === 'En préparation').length}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Being prepared
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">En Livraison</CardTitle>
+                <Truck className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {yalidineShipments.filter(s => s.last_status === 'Sorti en livraison').length}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Out for delivery
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Livré</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {yalidineShipments.filter(s => s.last_status === 'Livré').length}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Successfully delivered
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center">
+                    <Package className="w-5 h-5 mr-2" />
+                    All Yalidine Shipments
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    View all shipments from your Yalidine account ({shipmentPagination.total_data || yalidineShipments.length} total)
+                  </p>
+                </div>
+                <Button 
+                  onClick={fetchYalidineShipments} 
+                  disabled={loadingShipments}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Loader2 className={`h-4 w-4 mr-2 ${loadingShipments ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingShipments ? (
                 <div className="flex items-center justify-center h-32">
                   <Loader2 className="h-6 w-6 animate-spin" />
-                  <span className="ml-2">Loading shipments...</span>
+                  <span className="ml-2">Loading shipments from Yalidine...</span>
                 </div>
               ) : yalidineShipments.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <p>No shipments found in Yalidine account</p>
-                  <p className="text-sm">Shipments will appear here once created</p>
+                  <p className="text-sm">Create shipments from confirmed orders to see them here</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {yalidineShipments.map((shipment) => (
-                    <div key={shipment.id} className="border rounded-lg p-4">
+                  {yalidineShipments.map((shipment, index) => (
+                    <div key={shipment.id || shipment.tracking || `shipment-${index}`} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-4">
-                            <div>
-                              <p className="font-medium">#{shipment.tracking}</p>
-                              <p className="text-sm text-muted-foreground">{shipment.customer_name}</p>
+                          <div className="flex items-center space-x-4 mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <p className="font-medium text-lg">#{shipment.tracking}</p>
+                                <Badge className={`${
+                                  shipment.last_status === 'Livré' ? 'bg-green-100 text-green-800' :
+                                  shipment.last_status === 'Sorti en livraison' ? 'bg-blue-100 text-blue-800' :
+                                  shipment.last_status === 'En préparation' ? 'bg-yellow-100 text-yellow-800' :
+                                  shipment.last_status === 'Echèc livraison' ? 'bg-red-100 text-red-800' :
+                                  shipment.last_status === 'Retourné au vendeur' ? 'bg-orange-100 text-orange-800' :
+                                  shipment.last_status === 'Echange échoué' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {shipment.last_status || 'Active'}
+                                </Badge>
+                              </div>
+                              <p className="font-medium">{shipment.customer_name}</p>
                               <p className="text-sm text-muted-foreground">{shipment.customer_phone}</p>
                             </div>
-                            <div className="flex space-x-2">
-                              <Badge className="bg-blue-100 text-blue-800">
-                                {shipment.status || 'Active'}
-                              </Badge>
+                            <div className="text-right">
+                              <p className="font-medium text-lg">{shipment.price?.toLocaleString()} DA</p>
+                              <p className="text-sm text-muted-foreground">
+                                {shipment.weight || 1} kg
+                              </p>
                             </div>
                           </div>
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            {shipment.to_wilaya_name} • {shipment.to_commune_name} • {shipment.price?.toLocaleString()} DA
+                          <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
+                            <div>
+                              <span className="font-medium">From:</span> {shipment.from_wilaya_name || 'Batna'}
+                            </div>
+                            <div>
+                              <span className="font-medium">To:</span> {shipment.to_wilaya_name} • {shipment.to_commune_name}
+                            </div>
+                            <div>
+                              <span className="font-medium">Created:</span> {formatYalidineDate(shipment.date_creation)}
+                            </div>
+                            <div>
+                              <span className="font-medium">Products:</span> {shipment.product_list || 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Last Status Date:</span> {formatYalidineDate(shipment.date_last_status)}
+                            </div>
                           </div>
+                          {shipment.customer_address && (
+                            <div className="mt-2 text-sm text-muted-foreground">
+                              <span className="font-medium">Address:</span> {shipment.customer_address}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2 ml-4">
                           <Button size="sm" variant="outline">
                             <Eye className="h-4 w-4 mr-1" />
                             View Details
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Truck className="h-4 w-4 mr-1" />
+                            Track
                           </Button>
                         </div>
                       </div>
@@ -561,8 +894,8 @@ export function ShippingDashboard() {
                    onChange={(e) => handleWilayaChange(e.target.value)}
                  >
                    <option value="">Select Wilaya</option>
-                   {wilayas.map((wilaya) => (
-                     <option key={wilaya.id} value={wilaya.id} selected={wilaya.name === shipmentForm.toWilayaName}>
+                   {wilayas.map((wilaya, index) => (
+                     <option key={wilaya.id || `dialog-wilaya-${index}`} value={wilaya.id} selected={wilaya.name === shipmentForm.toWilayaName}>
                        {wilaya.name}
                      </option>
                    ))}
@@ -576,8 +909,8 @@ export function ShippingDashboard() {
                    onChange={(e) => setShipmentForm({...shipmentForm, toCommuneName: e.target.value})}
                  >
                    <option value="">Select Commune</option>
-                   {communes.map((commune) => (
-                     <option key={commune.id} value={commune.name}>
+                   {communes.map((commune, index) => (
+                     <option key={commune.id || `commune-${index}`} value={commune.name}>
                        {commune.name}
                      </option>
                    ))}

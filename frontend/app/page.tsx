@@ -51,23 +51,23 @@ export default function HomePage() {
   const features = [
     {
       icon: Truck,
-      title: isRTL ? 'توصيل مجاني' : 'Free Delivery',
-      description: isRTL ? 'توصيل مجاني في جميع أنحاء الجزائر' : 'Free delivery across Algeria'
+      title: 'Free Delivery',
+      description: 'Free delivery across Algeria'
     },
     {
       icon: Shield,
-      title: isRTL ? 'جودة مضمونة' : 'Quality Guaranteed',
-      description: isRTL ? 'أقمشة فاخرة وخياطة متقنة' : 'Premium fabrics and expert craftsmanship'
+      title: 'Quality Guaranteed',
+      description: 'Premium fabrics and expert craftsmanship'
     },
     {
       icon: Headphones,
-      title: isRTL ? 'دعم شخصي' : 'Personal Support',
-      description: isRTL ? 'استشارة مجانية لاختيار المقاس المناسب' : 'Free consultation for perfect fit'
+      title: 'Personal Support',
+      description: 'Free consultation for perfect fit'
     },
     {
       icon: CreditCard,
-      title: isRTL ? 'دفع آمن' : 'Secure Payment',
-      description: isRTL ? 'دفع عند الاستلام أو تحويل بنكي' : 'Cash on delivery or bank transfer'
+      title: 'Secure Payment',
+      description: 'Cash on delivery or bank transfer'
     }
   ]
 
@@ -208,7 +208,7 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
             className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
           >
-            {isRTL ? 'أناقة الأزياء التقليدية الجزائرية' : 'Elegant Algerian Traditional Fashion'}
+            Loudim Brands
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 50 }}
@@ -216,10 +216,7 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-xl md:text-2xl mb-8 text-gray-200 font-light"
           >
-            {isRTL 
-              ? 'اكتشفي مجموعتنا الفاخرة من الأزياء التقليدية الجزائرية المصممة خصيصاً للمرأة العصرية'
-              : 'Discover our exquisite collection of traditional Algerian fashion designed for the modern woman'
-            }
+            Discover our premium collection of fashion brands including Loudim and Loud Styles
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -232,8 +229,8 @@ export default function HomePage() {
               className="text-lg px-8 py-6 elegant-outline hover:elegant-gradient transition-all duration-300 font-medium" 
               asChild
             >
-              <Link href="/products">
-                {isRTL ? 'تسوقي الآن' : 'Shop Now'}
+              <Link href="/loudim">
+                Explore Loudim
               </Link>
             </Button>
             <Button 
@@ -241,8 +238,8 @@ export default function HomePage() {
               className="text-lg px-8 py-6 elegant-outline hover:elegant-gradient transition-all duration-300 font-medium" 
               asChild
             >
-              <Link href="/categories">
-                {isRTL ? 'استكشفي المجموعات' : 'Explore Collections'}
+              <Link href="/loud-styles">
+                Discover Loud Styles
               </Link>
             </Button>
           </motion.div>
@@ -304,13 +301,10 @@ export default function HomePage() {
             className={`text-center mb-16 ${isRTL ? 'text-right' : 'text-left'}`}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              {isRTL ? 'تسوقي حسب المجموعة' : 'Shop by Collection'}
+              Our Brands
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {isRTL 
-                ? 'استكشفي مجموعاتنا المتنوعة من الأزياء التقليدية الجزائرية المصممة بعناية فائقة'
-                : 'Explore our diverse collections of traditional Algerian fashion crafted with exceptional care'
-              }
+              Explore our premium fashion brands designed for the modern lifestyle
             </p>
           </motion.div>
 

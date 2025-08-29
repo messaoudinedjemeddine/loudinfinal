@@ -419,7 +419,30 @@ export const api = {
     deleteShipment: (tracking: string) => apiClient.request(`/shipping/shipment/${tracking}`, {
       method: 'DELETE',
     }),
-    getAllShipments: () => apiClient.request('/shipping/shipments'),
+    getAllShipments: (filters?: {
+      status?: string;
+      tracking?: string;
+      order_id?: string;
+      to_wilaya_id?: number;
+      to_commune_name?: string;
+      is_stopdesk?: boolean;
+      freeshipping?: boolean;
+      date_creation?: string;
+      date_last_status?: string;
+      payment_status?: string;
+      page?: number;
+    }) => {
+      const searchParams = new URLSearchParams();
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            searchParams.append(key, value.toString());
+          }
+        });
+      }
+      const query = searchParams.toString();
+      return apiClient.request(`/shipping/shipments${query ? `?${query}` : ''}`);
+    },
   },
 };
 

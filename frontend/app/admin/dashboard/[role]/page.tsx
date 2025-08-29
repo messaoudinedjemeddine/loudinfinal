@@ -6,7 +6,6 @@ import { useAuthStore } from '@/lib/store'
 import { AdminLayout } from '@/components/admin/admin-layout'
 import { AdminDashboard } from '@/components/admin/dashboards/admin-dashboard'
 import { CallCenterDashboard } from '@/components/admin/dashboards/call-center-dashboard'
-import { OrderConfirmationDashboard } from '@/components/admin/dashboards/order-confirmation-dashboard'
 import { DeliveryAgentDashboard } from '@/components/admin/dashboards/delivery-agent-dashboard'
 import { Loader2 } from 'lucide-react'
 import { useLocaleStore } from '@/lib/locale-store'
@@ -63,13 +62,10 @@ export default function RoleBasedDashboard() {
   const renderDashboard = () => {
     switch (role) {
       case 'admin':
-      case 'superadmin':
         return <AdminDashboard />
-      case 'call_center':
+      case 'confirmatrice':
         return <CallCenterDashboard />
-      case 'order_confirmation':
-        return <OrderConfirmationDashboard />
-      case 'delivery_coordinator':
+      case 'agent_livraison':
         return <DeliveryAgentDashboard />
       default:
         return <AdminDashboard />

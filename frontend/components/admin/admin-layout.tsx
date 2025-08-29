@@ -33,9 +33,8 @@ import { useLocaleStore } from '@/lib/locale-store'
 const getNavigationByRole = (role: string, t: any) => {
   switch (role) {
     case 'ADMIN':
-    case 'SUPERADMIN':
       return [
-        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/admin', icon: LayoutDashboard },
+        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: t?.admin?.products || 'Products', href: '/admin/products', icon: Package },
         { name: t?.admin?.inventory || 'Inventory', href: '/admin/inventory', icon: Package },
         { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
@@ -45,30 +44,23 @@ const getNavigationByRole = (role: string, t: any) => {
         { name: t?.admin?.analytics || 'Analytics', href: '/admin/analytics', icon: BarChart3 },
         { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
-    case 'CALL_CENTER':
+    case 'CONFIRMATRICE':
       return [
-        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/call_center', icon: LayoutDashboard },
-        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: t?.admin?.customerCalls || 'Customer Calls', href: '/admin/calls', icon: Phone },
-        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
+        { name: 'Dashboard Confirmatrice', href: '/confirmatrice/dashboard', icon: LayoutDashboard },
+        { name: 'Commandes en Attente', href: '/confirmatrice/orders/pending', icon: ShoppingCart },
+        { name: 'Confirmer Commandes', href: '/confirmatrice/orders/confirm', icon: FileText },
+        { name: 'Historique', href: '/confirmatrice/orders/history', icon: BarChart3 },
       ]
-    case 'ORDER_CONFIRMATION':
+    case 'AGENT_LIVRAISON':
       return [
-        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/order_confirmation', icon: LayoutDashboard },
-        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: t?.admin?.orderProcessing || 'Order Processing', href: '/admin/processing', icon: FileText },
-        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
-      ]
-    case 'DELIVERY_COORDINATOR':
-      return [
-        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/delivery_coordinator', icon: LayoutDashboard },
-        { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
-        { name: t?.admin?.deliveryAreas || 'Delivery Areas', href: '/admin/shipping', icon: MapPin },
-        { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
+        { name: 'Dashboard Livraison', href: '/agent-livraison/dashboard', icon: LayoutDashboard },
+        { name: 'Commandes Prêtes', href: '/agent-livraison/orders/ready', icon: Package },
+        { name: 'En Transit', href: '/agent-livraison/orders/in-transit', icon: Truck },
+        { name: 'Statistiques par Ville', href: '/agent-livraison/stats/city', icon: MapPin },
       ]
     default:
       return [
-        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard/admin', icon: LayoutDashboard },
+        { name: t?.admin?.dashboard || 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
         { name: t?.admin?.orders || 'Orders', href: '/admin/orders', icon: ShoppingCart },
         { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
@@ -79,17 +71,13 @@ const getNavigationByRole = (role: string, t: any) => {
 const getRoleDisplayName = (role: string, t: any) => {
   switch (role) {
     case 'ADMIN':
-      return t?.admin?.roleNames?.ADMIN || 'Admin'
-    case 'SUPERADMIN':
-      return t?.admin?.roleNames?.SUPERADMIN || 'Super Admin'
-    case 'CALL_CENTER':
-      return t?.admin?.roleNames?.CALL_CENTER || 'Call Center'
-    case 'ORDER_CONFIRMATION':
-      return t?.admin?.roleNames?.ORDER_CONFIRMATION || 'Order Confirmation'
-    case 'DELIVERY_COORDINATOR':
-      return t?.admin?.roleNames?.DELIVERY_COORDINATOR || 'Delivery Coordinator'
+      return 'Administrateur'
+    case 'CONFIRMATRICE':
+      return 'Confirmatrice (Centre d\'Appel)'
+    case 'AGENT_LIVRAISON':
+      return 'Agent de Livraison'
     default:
-      return t?.admin?.roleNames?.USER || 'User'
+      return 'Utilisateur'
   }
 }
 

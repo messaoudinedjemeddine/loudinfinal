@@ -67,6 +67,21 @@ router.get('/status', (req, res) => {
   });
 });
 
+// Test Yalidine API connection and endpoints
+router.get('/test', async (req, res) => {
+  try {
+    if (!yalidineService.isConfigured()) {
+      return res.status(503).json({ error: 'Yalidine shipping not configured' });
+    }
+
+    const testResult = await yalidineService.testConnection();
+    res.json(testResult);
+  } catch (error) {
+    console.error('Error testing Yalidine connection:', error);
+    res.status(500).json({ error: 'Failed to test connection' });
+  }
+});
+
 // Get all wilayas (provinces)
 router.get('/wilayas', async (req, res) => {
   try {
@@ -415,25 +430,88 @@ router.delete('/shipment/:tracking', async (req, res) => {
   }
 });
 
-// Get all shipments from Yalidine
-router.get('/shipments', async (req, res) => {
+// Debug endpoint to test shipments without filters
+router.get('/shipments/debug', async (req, res) => {
   try {
-    console.log('🔍 Shipments request received');
+    console.log('🔍 Debug shipments request received');
     
     if (!yalidineService.isConfigured()) {
       console.log('❌ Yalidine service not configured');
       return res.status(503).json({ error: 'Yalidine shipping not configured' });
     }
 
-    // Check cache first
-    const cacheKey = 'yalidine_shipments';
+    console.log('🔍 Calling Yalidine service for debug shipments');
+    
+    // Try to get shipments without any filters
+    const shipments = await yalidineService.getAllParcels({});
+    
+            console.log('✅ Debug shipments result:', {
+          success: true,
+          count: shipments.data?.length || 0,
+          hasData: !!shipments.data,
+          dataType: typeof shipments.data,
+          sample: shipments.data?.[0] || 'No data'
+        });
+        
+        // Log detailed structure of first shipment
+        if (shipments.data && shipments.data.length > 0) {
+          console.log('🔍 Detailed shipment structure:');
+          console.log('Keys:', Object.keys(shipments.data[0]));
+          console.log('Full object:', JSON.stringify(shipments.data[0], null, 2));
+        }
+    
+    res.json({
+      success: true,
+      count: shipments.data?.length || 0,
+      data: shipments.data || [],
+      message: 'Debug shipments fetched'
+    });
+  } catch (error) {
+    console.error('❌ Error in debug shipments:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    res.status(500).json({ 
+      error: 'Failed to fetch debug shipments',
+      message: error.message,
+      details: error.response?.data || 'No response details'
+    });
+  }
+});
+
+// Get all shipments from Yalidine with filters
+router.get('/shipments', async (req, res) => {
+  try {
+    console.log('🔍 Shipments request received with filters:', req.query);
+    
+    if (!yalidineService.isConfigured()) {
+      console.log('❌ Yalidine service not configured');
+      return res.status(503).json({ error: 'Yalidine shipping not configured' });
+    }
+
+    // Extract filters from query parameters
+    const filters = {
+      status: req.query.status,
+      from_wilaya_name: req.query.from_wilaya_name,
+      to_wilaya_name: req.query.to_wilaya_name,
+      date_from: req.query.date_from,
+      date_to: req.query.date_to,
+      tracking: req.query.tracking,
+      customer_phone: req.query.customer_phone,
+      limit: req.query.limit ? parseInt(req.query.limit) : 50,
+      offset: req.query.offset ? parseInt(req.query.offset) : 0
+    };
+
+    // Create cache key based on filters
+    const cacheKey = `yalidine_shipments_${JSON.stringify(filters)}`;
     const cachedShipments = getCachedData(cacheKey);
     if (cachedShipments) {
       console.log('✅ Returning cached shipments data');
       return res.json(cachedShipments);
     }
 
-    console.log('🔍 Calling Yalidine service for all shipments');
+    console.log('🔍 Calling Yalidine service for shipments with filters');
     
     // Add retry logic for intermittent failures
     let shipments;
@@ -442,9 +520,7 @@ router.get('/shipments', async (req, res) => {
     
     while (retryCount < maxRetries) {
       try {
-        // This would need to be implemented in the Yalidine service
-        // For now, return empty array
-        shipments = { data: [] };
+        shipments = await yalidineService.getAllParcels(filters);
         console.log('✅ Shipments fetched successfully');
         break;
       } catch (retryError) {
@@ -460,7 +536,7 @@ router.get('/shipments', async (req, res) => {
       }
     }
     
-    // Cache the result
+    // Cache the result (shorter cache for filtered results)
     setCachedData(cacheKey, shipments);
     
     res.json(shipments);

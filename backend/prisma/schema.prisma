@@ -11,12 +11,9 @@ datasource db {
 }
 
 enum UserRole {
-  USER
   ADMIN
-  CALL_CENTER
-  ORDER_CONFIRMATION
-  DELIVERY_COORDINATOR
-  SUPERADMIN
+  CONFIRMATRICE
+  AGENT_LIVRAISON
 }
 
 enum CallCenterStatus {
@@ -24,6 +21,9 @@ enum CallCenterStatus {
   CONFIRMED
   CANCELED
   NO_RESPONSE
+  PENDING
+  DOUBLE_ORDER
+  DELAYED
 }
 
 enum DeliveryStatus {
@@ -44,7 +44,7 @@ model User {
   phone     String?
   firstName String
   lastName  String
-  role      UserRole @default(USER)
+  role      UserRole @default(ADMIN)
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -166,6 +166,8 @@ model Order {
   notes            String?
   callCenterStatus CallCenterStatus  @default(NEW)
   deliveryStatus   DeliveryStatus    @default(NOT_READY)
+  trackingNumber   String?           // Yalidine tracking number
+  yalidineShipmentId String?         // Yalidine shipment ID
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
