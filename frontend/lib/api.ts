@@ -444,6 +444,11 @@ export const api = {
     deleteBrand: (id: string) => apiClient.request(`/admin/brands/${id}`, {
       method: 'DELETE',
     }),
+    // Profit Analytics
+    getProfitAnalytics: (brandSlug?: string) => {
+      const params = brandSlug ? `?brandSlug=${brandSlug}` : '';
+      return apiClient.request(`/admin/analytics/profit-by-category${params}`);
+    },
   },
 
   // Shipping (Yalidine)

@@ -203,6 +203,7 @@ router.post('/products', async (req, res) => {
         description: productData.description,
         descriptionAr: productData.descriptionAr,
         price: parseFloat(productData.price),
+        costPrice: parseFloat(productData.costPrice || 0),
         oldPrice: productData.oldPrice ? parseFloat(productData.oldPrice) : null,
         stock: parseInt(productData.stock),
         reference: productData.reference,
@@ -292,6 +293,7 @@ router.put('/products/:id', async (req, res) => {
     if (productData.description !== undefined) updateData.description = productData.description;
     if (productData.descriptionAr !== undefined) updateData.descriptionAr = productData.descriptionAr;
     if (productData.price !== undefined) updateData.price = parseFloat(productData.price);
+    if (productData.costPrice !== undefined) updateData.costPrice = parseFloat(productData.costPrice || 0);
     if (productData.oldPrice !== undefined) updateData.oldPrice = productData.oldPrice ? parseFloat(productData.oldPrice) : null;
     if (productData.stock !== undefined) updateData.stock = parseInt(productData.stock);
     if (productData.reference !== undefined) updateData.reference = productData.reference;
@@ -1243,12 +1245,41 @@ router.get('/inventory/brand/:brandSlug', async (req, res) => {
       prisma.product.count({ where })
     ]);
 
-    res.json({
-      products: products.map(product => ({
+    // Calculate profit analytics
+    const productsWithProfit = products.map(product => {
+      const totalStock = product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0);
+      const profitPerUnit = product.price - product.costPrice;
+      const totalProfit = profitPerUnit * totalStock;
+      const profitMargin = product.price > 0 ? ((profitPerUnit / product.price) * 100) : 0;
+      
+      return {
         ...product,
         image: product.images[0]?.url || '/placeholder-product.jpg',
-        totalStock: product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0)
-      })),
+        totalStock,
+        profitPerUnit,
+        totalProfit,
+        profitMargin
+      };
+    });
+
+    // Calculate summary analytics
+    const totalProducts = productsWithProfit.length;
+    const totalStock = productsWithProfit.reduce((sum, p) => sum + p.totalStock, 0);
+    const totalValue = productsWithProfit.reduce((sum, p) => sum + (p.price * p.totalStock), 0);
+    const totalCost = productsWithProfit.reduce((sum, p) => sum + (p.costPrice * p.totalStock), 0);
+    const totalProfit = productsWithProfit.reduce((sum, p) => sum + p.totalProfit, 0);
+    const averageProfitMargin = totalValue > 0 ? ((totalProfit / totalValue) * 100) : 0;
+
+    res.json({
+      products: productsWithProfit,
+      analytics: {
+        totalProducts,
+        totalStock,
+        totalValue,
+        totalCost,
+        totalProfit,
+        averageProfitMargin
+      },
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -1295,10 +1326,14 @@ router.get('/inventory/brand/:brandSlug/export', async (req, res) => {
       'Category',
       'Brand',
       'Price (DA)',
+      'Cost Price (DA)',
+      'Profit Per Unit (DA)',
+      'Profit Margin (%)',
       'Old Price (DA)',
       'Main Stock',
       'Sizes & Quantities',
       'Total Stock',
+      'Total Profit (DA)',
       'Status',
       'On Sale',
       'Description',
@@ -1309,6 +1344,9 @@ router.get('/inventory/brand/:brandSlug/export', async (req, res) => {
 
     for (const product of products) {
       const totalStock = product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0);
+      const profitPerUnit = product.price - product.costPrice;
+      const totalProfit = profitPerUnit * totalStock;
+      const profitMargin = product.price > 0 ? ((profitPerUnit / product.price) * 100) : 0;
       const sizesString = product.sizes.map(size => `${size.size}:${size.stock}`).join(';');
       
       const row = [
@@ -1318,10 +1356,14 @@ router.get('/inventory/brand/:brandSlug/export', async (req, res) => {
         `"${product.category?.name || ''}"`,
         `"${brand.name}"`,
         product.price,
+        product.costPrice,
+        profitPerUnit,
+        profitMargin.toFixed(2),
         product.oldPrice || '',
         product.stock,
         `"${sizesString}"`,
         totalStock,
+        totalProfit,
         product.isActive ? 'Active' : 'Inactive',
         product.isOnSale ? 'Yes' : 'No',
         `"${product.description || ''}"`,
@@ -1642,6 +1684,112 @@ router.delete('/brands/:id', async (req, res) => {
   } catch (error) {
     console.error('Delete brand error:', error);
     res.status(500).json({ error: 'Failed to delete brand' });
+  }
+});
+
+// Profit Analytics by Category
+router.get('/analytics/profit-by-category', async (req, res) => {
+  try {
+    const { brandSlug } = req.query;
+
+    let where = {};
+    if (brandSlug) {
+      const brand = await prisma.brand.findUnique({
+        where: { slug: brandSlug }
+      });
+      if (!brand) {
+        return res.status(404).json({ error: 'Brand not found' });
+      }
+      where.brandId = brand.id;
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      include: {
+        category: true,
+        brand: true,
+        sizes: true
+      }
+    });
+
+    // Group products by category and calculate profit analytics
+    const categoryAnalytics = {};
+    
+    products.forEach(product => {
+      const totalStock = product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0);
+      const profitPerUnit = product.price - product.costPrice;
+      const totalProfit = profitPerUnit * totalStock;
+      const totalValue = product.price * totalStock;
+      const totalCost = product.costPrice * totalStock;
+      
+      const categoryKey = product.category.id;
+      
+      if (!categoryAnalytics[categoryKey]) {
+        categoryAnalytics[categoryKey] = {
+          categoryId: product.category.id,
+          categoryName: product.category.name,
+          categoryNameAr: product.category.nameAr,
+          brandName: product.brand.name,
+          totalProducts: 0,
+          totalStock: 0,
+          totalValue: 0,
+          totalCost: 0,
+          totalProfit: 0,
+          averageProfitMargin: 0,
+          products: []
+        };
+      }
+      
+      categoryAnalytics[categoryKey].totalProducts++;
+      categoryAnalytics[categoryKey].totalStock += totalStock;
+      categoryAnalytics[categoryKey].totalValue += totalValue;
+      categoryAnalytics[categoryKey].totalCost += totalCost;
+      categoryAnalytics[categoryKey].totalProfit += totalProfit;
+      
+      categoryAnalytics[categoryKey].products.push({
+        id: product.id,
+        name: product.name,
+        nameAr: product.nameAr,
+        price: product.price,
+        costPrice: product.costPrice,
+        stock: totalStock,
+        profitPerUnit,
+        totalProfit,
+        profitMargin: product.price > 0 ? ((profitPerUnit / product.price) * 100) : 0
+      });
+    });
+
+    // Calculate average profit margin for each category
+    Object.values(categoryAnalytics).forEach(category => {
+      category.averageProfitMargin = category.totalValue > 0 ? 
+        ((category.totalProfit / category.totalValue) * 100) : 0;
+    });
+
+    // Convert to array and sort by total profit
+    const categoryAnalyticsArray = Object.values(categoryAnalytics)
+      .sort((a, b) => b.totalProfit - a.totalProfit);
+
+    // Calculate global analytics
+    const globalAnalytics = {
+      totalCategories: categoryAnalyticsArray.length,
+      totalProducts: categoryAnalyticsArray.reduce((sum, cat) => sum + cat.totalProducts, 0),
+      totalStock: categoryAnalyticsArray.reduce((sum, cat) => sum + cat.totalStock, 0),
+      totalValue: categoryAnalyticsArray.reduce((sum, cat) => sum + cat.totalValue, 0),
+      totalCost: categoryAnalyticsArray.reduce((sum, cat) => sum + cat.totalCost, 0),
+      totalProfit: categoryAnalyticsArray.reduce((sum, cat) => sum + cat.totalProfit, 0),
+      averageProfitMargin: 0
+    };
+
+    globalAnalytics.averageProfitMargin = globalAnalytics.totalValue > 0 ? 
+      ((globalAnalytics.totalProfit / globalAnalytics.totalValue) * 100) : 0;
+
+    res.json({
+      globalAnalytics,
+      categoryAnalytics: categoryAnalyticsArray
+    });
+  } catch (error) {
+    console.error('Profit analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch profit analytics' });
   }
 });
 

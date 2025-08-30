@@ -56,6 +56,7 @@ interface Product {
   name: string
   nameAr: string
   price: number
+  costPrice: number
   oldPrice?: number
   stock: number
   category: {
@@ -79,6 +80,9 @@ interface Product {
     stock: number
   }>
   totalStock?: number
+  profitPerUnit?: number
+  totalProfit?: number
+  profitMargin?: number
   description?: string
   descriptionAr?: string
 }
@@ -88,6 +92,9 @@ interface InventoryStats {
   lowStockProducts: number
   outOfStockProducts: number
   totalValue: number
+  totalCost: number
+  totalProfit: number
+  averageProfitMargin: number
   totalStock: number
 }
 
@@ -105,6 +112,9 @@ export default function LoudimInventoryPage() {
     lowStockProducts: 0,
     outOfStockProducts: 0,
     totalValue: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    averageProfitMargin: 0,
     totalStock: 0
   })
 
@@ -121,19 +131,39 @@ export default function LoudimInventoryPage() {
       const productsList = response.products || []
       setProducts(productsList)
       
-      // Calculate stats
-      const totalValue = productsList.reduce((sum, product) => sum + (product.price * (product.totalStock || product.stock)), 0)
-      const lowStockProducts = productsList.filter(p => (p.totalStock || p.stock) <= 5 && (p.totalStock || p.stock) > 0).length
-      const outOfStockProducts = productsList.filter(p => (p.totalStock || p.stock) === 0).length
-      const totalStock = productsList.reduce((sum, product) => sum + (product.totalStock || product.stock), 0)
-      
-      setStats({
-        totalProducts: productsList.length,
-        lowStockProducts,
-        outOfStockProducts,
-        totalValue,
-        totalStock
-      })
+      // Calculate stats from analytics if available
+      if (response.analytics) {
+        setStats({
+          totalProducts: response.analytics.totalProducts,
+          lowStockProducts: productsList.filter(p => (p.totalStock || p.stock) <= 5 && (p.totalStock || p.stock) > 0).length,
+          outOfStockProducts: productsList.filter(p => (p.totalStock || p.stock) === 0).length,
+          totalValue: response.analytics.totalValue,
+          totalCost: response.analytics.totalCost,
+          totalProfit: response.analytics.totalProfit,
+          averageProfitMargin: response.analytics.averageProfitMargin,
+          totalStock: response.analytics.totalStock
+        })
+      } else {
+        // Fallback calculation
+        const totalValue = productsList.reduce((sum, product) => sum + (product.price * (product.totalStock || product.stock)), 0)
+        const totalCost = productsList.reduce((sum, product) => sum + (product.costPrice * (product.totalStock || product.stock)), 0)
+        const totalProfit = totalValue - totalCost
+        const averageProfitMargin = totalValue > 0 ? ((totalProfit / totalValue) * 100) : 0
+        const lowStockProducts = productsList.filter(p => (p.totalStock || p.stock) <= 5 && (p.totalStock || p.stock) > 0).length
+        const outOfStockProducts = productsList.filter(p => (p.totalStock || p.stock) === 0).length
+        const totalStock = productsList.reduce((sum, product) => sum + (product.totalStock || product.stock), 0)
+        
+        setStats({
+          totalProducts: productsList.length,
+          lowStockProducts,
+          outOfStockProducts,
+          totalValue,
+          totalCost,
+          totalProfit,
+          averageProfitMargin,
+          totalStock
+        })
+      }
     } catch (error) {
       console.error('Failed to fetch LOUDIM products:', error)
       toast.error('Failed to load LOUDIM inventory data')
@@ -248,7 +278,7 @@ export default function LoudimInventoryPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -321,25 +351,65 @@ export default function LoudimInventoryPage() {
             </Card>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-          >
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Value</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.totalValue.toLocaleString()} DA
-                    </p>
-                  </div>
-                  <FileSpreadsheet className="w-8 h-8 text-purple-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                     <motion.div
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.3, delay: 0.4 }}
+           >
+             <Card>
+               <CardContent className="p-6">
+                 <div className="flex items-center justify-between">
+                   <div>
+                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Cost</p>
+                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                       {stats.totalCost.toLocaleString()} DA
+                     </p>
+                   </div>
+                   <FileSpreadsheet className="w-8 h-8 text-orange-500" />
+                 </div>
+               </CardContent>
+             </Card>
+           </motion.div>
+
+           <motion.div
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.3, delay: 0.5 }}
+           >
+             <Card>
+               <CardContent className="p-6">
+                 <div className="flex items-center justify-between">
+                   <div>
+                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Profit</p>
+                     <p className="text-2xl font-bold text-green-600">
+                       {stats.totalProfit.toLocaleString()} DA
+                     </p>
+                   </div>
+                   <TrendingUp className="w-8 h-8 text-green-500" />
+                 </div>
+               </CardContent>
+             </Card>
+           </motion.div>
+
+           <motion.div
+             initial={{ opacity: 0, y: 20 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ duration: 0.3, delay: 0.6 }}
+           >
+             <Card>
+               <CardContent className="p-6">
+                 <div className="flex items-center justify-between">
+                   <div>
+                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Profit Margin</p>
+                     <p className="text-2xl font-bold text-blue-600">
+                       {stats.averageProfitMargin.toFixed(1)}%
+                     </p>
+                   </div>
+                   <FileSpreadsheet className="w-8 h-8 text-blue-500" />
+                 </div>
+               </CardContent>
+             </Card>
+           </motion.div>
         </div>
 
         {/* Filters */}
@@ -436,17 +506,20 @@ export default function LoudimInventoryPage() {
             ) : (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Reference</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Stock</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                                     <TableHeader>
+                     <TableRow>
+                       <TableHead>Product</TableHead>
+                       <TableHead>Reference</TableHead>
+                       <TableHead>Category</TableHead>
+                       <TableHead>Price</TableHead>
+                       <TableHead>Cost</TableHead>
+                       <TableHead>Profit/Unit</TableHead>
+                       <TableHead>Stock</TableHead>
+                       <TableHead>Total Profit</TableHead>
+                       <TableHead>Status</TableHead>
+                       <TableHead>Actions</TableHead>
+                     </TableRow>
+                   </TableHead>
                   <TableBody>
                     {filteredProducts.map((product) => (
                       <TableRow key={product.id}>
@@ -474,35 +547,49 @@ export default function LoudimInventoryPage() {
                         <TableCell>
                           <Badge variant="secondary">{product.category?.name}</Badge>
                         </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{product.price.toLocaleString()} DA</p>
-                            {product.oldPrice && (
-                              <p className="text-sm text-gray-500 line-through">
-                                {product.oldPrice.toLocaleString()} DA
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <span className={`font-medium ${
-                              (product.totalStock || product.stock) === 0 
-                                ? 'text-red-600' 
-                                : (product.totalStock || product.stock) <= 5 
-                                ? 'text-orange-600' 
-                                : 'text-green-600'
-                            }`}>
-                              {product.totalStock || product.stock}
-                            </span>
-                            {(product.totalStock || product.stock) <= 5 && (product.totalStock || product.stock) > 0 && (
-                              <Badge variant="destructive" className="text-xs">Low</Badge>
-                            )}
-                            {(product.totalStock || product.stock) === 0 && (
-                              <Badge variant="destructive" className="text-xs">Out</Badge>
-                            )}
-                          </div>
-                        </TableCell>
+                                                 <TableCell>
+                           <div>
+                             <p className="font-medium">{product.price.toLocaleString()} DA</p>
+                             {product.oldPrice && (
+                               <p className="text-sm text-gray-500 line-through">
+                                 {product.oldPrice.toLocaleString()} DA
+                               </p>
+                             )}
+                           </div>
+                         </TableCell>
+                         <TableCell>
+                           <p className="font-medium text-gray-600">{product.costPrice.toLocaleString()} DA</p>
+                         </TableCell>
+                         <TableCell>
+                           <p className={`font-medium ${product.profitPerUnit && product.profitPerUnit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                             {product.profitPerUnit ? product.profitPerUnit.toLocaleString() : (product.price - product.costPrice).toLocaleString()} DA
+                           </p>
+                         </TableCell>
+                                                 <TableCell>
+                           <div className="flex items-center space-x-2">
+                             <span className={`font-medium ${
+                               (product.totalStock || product.stock) === 0 
+                                 ? 'text-red-600' 
+                                 : (product.totalStock || product.stock) <= 5 
+                                 ? 'text-orange-600' 
+                                 : 'text-green-600'
+                             }`}>
+                               {product.totalStock || product.stock}
+                             </span>
+                             {(product.totalStock || product.stock) <= 5 && (product.totalStock || product.stock) > 0 && (
+                               <Badge variant="destructive" className="text-xs">Low</Badge>
+                             )}
+                             {(product.totalStock || product.stock) === 0 && (
+                               <Badge variant="destructive" className="text-xs">Out</Badge>
+                             )}
+                           </div>
+                         </TableCell>
+                         <TableCell>
+                           <p className={`font-medium ${product.totalProfit && product.totalProfit > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                             {product.totalProfit ? product.totalProfit.toLocaleString() : 
+                               ((product.price - product.costPrice) * (product.totalStock || product.stock)).toLocaleString()} DA
+                           </p>
+                         </TableCell>
                         <TableCell>
                           <Badge variant={product.isActive ? "default" : "secondary"}>
                             {product.isActive ? "Active" : "Inactive"}

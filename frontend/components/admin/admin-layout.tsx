@@ -42,6 +42,7 @@ const getNavigationByRole = (role: string, t: any) => {
         { name: t?.admin?.users || 'Users', href: '/admin/users', icon: Users },
         { name: t?.admin?.shipping || 'Shipping', href: '/admin/shipping', icon: Truck },
         { name: t?.admin?.analytics || 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+        { name: 'Profit Analytics', href: '/admin/analytics/profit', icon: BarChart3 },
         { name: t?.admin?.settings || 'Settings', href: '/admin/settings', icon: Settings },
       ]
     case 'CONFIRMATRICE':
