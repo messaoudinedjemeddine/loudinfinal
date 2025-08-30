@@ -70,8 +70,8 @@ export default function LoudimProductsPage() {
       try {
         setLoading(true)
         
-        // Fetch products
-        const productsRes = await fetch('/api/products')
+        // Fetch LOUDIM products
+        const productsRes = await fetch('/api/products?brand=loudim')
         if (!productsRes.ok) {
           throw new Error(`HTTP error! status: ${productsRes.status}`)
         }
@@ -177,7 +177,7 @@ export default function LoudimProductsPage() {
         <Card className="overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
           {/* Product Image */}
           <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
-            <Link href={`/loudim/products/${product.slug}`} className="block w-full h-full">
+                          <Link href={`/loudim/products/${product.slug}?brand=loudim`} className="block w-full h-full">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
@@ -239,7 +239,7 @@ export default function LoudimProductsPage() {
                   className="rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white shadow-lg"
                   asChild
                 >
-                  <Link href={`/loudim/products/${product.slug}`}>
+                  <Link href={`/loudim/products/${product.slug}?brand=loudim`}>
                     <Eye className="w-4 h-4" />
                   </Link>
                 </Button>
@@ -323,7 +323,7 @@ export default function LoudimProductsPage() {
               </div>
 
               {/* Product Name */}
-              <Link href={`/loudim/products/${product.slug}`} className="block flex-1 min-h-0">
+                             <Link href={`/loudim/products/${product.slug}?brand=loudim`} className="block flex-1 min-h-0">
                 <h3 className="font-semibold text-base leading-tight line-clamp-2 hover:text-primary transition-colors group-hover:text-primary text-center min-h-[2.5rem] flex items-center justify-center">
                   {isRTL ? product.nameAr || product.name : product.name}
                 </h3>

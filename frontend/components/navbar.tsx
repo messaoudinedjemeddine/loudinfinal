@@ -34,6 +34,7 @@ export function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   
   const router = useRouter()
@@ -51,6 +52,18 @@ export function Navbar() {
   const isLoudBrandsPage = pathname === '/'
   const isLoudimPage = pathname.startsWith('/loudim')
   const isLoudStylesPage = pathname.startsWith('/loud-styles')
+  const isProductsPage = pathname === '/products'
+  
+  // Pages that need visible navbar (light backgrounds)
+  const needsVisibleNavbar = isProductsPage || 
+    pathname.includes('/products/') || 
+    pathname.includes('/categories') ||
+    pathname.includes('/about') ||
+    pathname.includes('/contact') ||
+    pathname.includes('/faq') ||
+    pathname.includes('/wishlist') ||
+    pathname.includes('/checkout') ||
+    pathname.includes('/track-order')
   
   // Determine navigation based on current page
   let navigation = []
@@ -99,6 +112,20 @@ export function Navbar() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0)
+    }
+    
+    // If we're on a page that needs visible navbar, set scrolled to true immediately
+    if (needsVisibleNavbar) {
+      setIsScrolled(true)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [needsVisibleNavbar])
 
   if (!mounted) return null
 
@@ -155,20 +182,29 @@ export function Navbar() {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="w-full z-50 transition-all duration-300 arabic-font !bg-transparent"
-        style={{ backgroundColor: 'transparent !important' }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className={`w-full z-50 transition-all duration-300 h-16 ${
+        isScrolled || needsVisibleNavbar
+          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200 dark:bg-gray-900/95 dark:border-gray-700' 
+          : 'bg-transparent'
+      }`}
+        dir={isRTL ? 'rtl' : 'ltr'}
       >
-        <div className="container mx-auto px-4">
-          <div className={`flex items-center justify-between h-20 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`flex items-center justify-between h-16 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {/* Logo Section */}
             <div className="flex-shrink-0">
               <Link href={isLoudimPage ? "/loudim" : isLoudStylesPage ? "/loud-styles" : "/"} className="flex items-center group">
-                <div className="transition-transform duration-300 group-hover:scale-105">
-                  <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer">
+                <motion.div 
+                  className="transition-transform duration-300 group-hover:scale-105"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer font-semibold">
                     <span className="inline-block">
-                      <span className="text-primary transition-colors duration-300 group-hover:text-white font-bold">{logoText}</span>
+                      <span className={`transition-colors duration-300 group-hover:text-white font-bold ${isScrolled || needsVisibleNavbar ? 'text-gray-900 dark:text-white' : 'text-white'}`}>{logoText}</span>
                       <span className="relative inline-block ml-2">
-                        <span className="text-white transition-colors duration-300 group-hover:text-primary font-light">{logoSubtext}</span>
+                        <span className={`transition-colors duration-300 group-hover:text-primary font-light ${isScrolled || needsVisibleNavbar ? 'text-gray-600 dark:text-gray-300' : 'text-white'}`}>{logoSubtext}</span>
                         <motion.span
                           className="absolute inset-0 bg-primary origin-left"
                           initial={{ scaleX: 0 }}
@@ -177,24 +213,24 @@ export function Navbar() {
                           style={{ zIndex: -1 }}
                         />
                       </span>
-                      <span className="text-primary transition-colors duration-300 group-hover:text-white font-light text-xs ml-1">®</span>
+                                              <span className={`transition-colors duration-300 group-hover:text-white font-light text-xs ml-1 ${isScrolled || needsVisibleNavbar ? 'text-gray-600 dark:text-gray-300' : 'text-white'}`}>®</span>
                     </span>
                   </h1>
-                </div>
+                </motion.div>
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <div className={`hidden lg:flex items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''}`}>
+              <div className={`flex items-center space-x-6 ${isRTL ? 'space-x-reverse' : ''}`}>
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative px-6 py-3 rounded-lg font-bold text-lg transition-all duration-300 group
+                    className={`relative px-4 py-2 rounded-lg font-semibold text-base transition-all duration-300 group
                       ${pathname === item.href 
-                        ? 'text-white bg-primary/30' 
-                        : 'text-white hover:text-primary hover:bg-primary/20'
+                        ? `${isScrolled || needsVisibleNavbar ? 'text-primary bg-primary/10' : 'text-white bg-primary/30'}` 
+                        : `${isScrolled || needsVisibleNavbar ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' : 'text-white hover:text-primary hover:bg-primary/20'}`
                       }
                     `}
                   >
@@ -212,7 +248,11 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsSearchOpen(true)}
-                className="relative p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
+                className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                  isScrolled || needsVisibleNavbar
+                    ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                    : 'text-white hover:text-primary hover:bg-primary/20'
+                }`}
               >
                 <Search className="w-5 h-5" />
               </Button>
@@ -222,7 +262,11 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
+                className={`p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                  isScrolled || needsVisibleNavbar
+                    ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                    : 'text-white hover:text-primary hover:bg-primary/20'
+                }`}
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </Button>
@@ -232,7 +276,11 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={clearCache}
-                className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
+                className={`p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                  isScrolled || needsVisibleNavbar
+                    ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                    : 'text-white hover:text-primary hover:bg-primary/20'
+                }`}
                 title="Clear cache and reload fresh data"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -247,7 +295,11 @@ export function Navbar() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="relative p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300" 
+                className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                  isScrolled || needsVisibleNavbar
+                    ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                    : 'text-white hover:text-primary hover:bg-primary/20'
+                }`}
                 asChild
               >
                 <Link href="/wishlist">
@@ -267,7 +319,11 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
+                className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                  isScrolled || needsVisibleNavbar
+                    ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                    : 'text-white hover:text-primary hover:bg-primary/20'
+                }`}
               >
                 <ShoppingCart className="w-5 h-5" />
                 {totalItems > 0 && (
@@ -285,7 +341,11 @@ export function Navbar() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300" 
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                      isScrolled || needsVisibleNavbar
+                        ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                        : 'text-white hover:text-primary hover:bg-primary/20'
+                    }`}
                     asChild
                   >
                     <Link href="/admin">
@@ -296,7 +356,11 @@ export function Navbar() {
                     variant="ghost"
                     size="sm"
                     onClick={logout}
-                    className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
+                    className={`p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                      isScrolled || needsVisibleNavbar
+                        ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                        : 'text-white hover:text-primary hover:bg-primary/20'
+                    }`}
                   >
                     <X className="w-5 h-5" />
                   </Button>
@@ -305,7 +369,7 @@ export function Navbar() {
                 <Button
                   variant="default"
                   size="sm"
-                  className="bg-primary/30 hover:bg-primary/50 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg border border-primary/50"
+                  className="bg-primary/30 hover:bg-primary/50 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg border border-primary/50 hover:scale-105"
                   asChild
                 >
                   <Link href="/admin/login">
@@ -320,7 +384,11 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="lg:hidden p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
+                    className={`lg:hidden p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                      isScrolled || needsVisibleNavbar
+                        ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                        : 'text-white hover:text-primary hover:bg-primary/20'
+                    }`}
                   >
                     <Menu className="w-5 h-5" />
                   </Button>

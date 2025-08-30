@@ -67,6 +67,7 @@ router.get('/:slug', async (req, res) => {
             isActive: true
           },
           include: {
+            brand: true,
             images: {
               where: { isPrimary: true },
               take: 1

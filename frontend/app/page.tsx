@@ -80,8 +80,8 @@ export default function HomePage() {
         setLoading(true)
         setError(null)
 
-        // Fetch featured products (first 4 products)
-        const productsResponse = await fetch('/api/products')
+        // Fetch featured products from both brands (first 4 products)
+        const productsResponse = await fetch('/api/products?limit=8')
         if (!productsResponse.ok) {
           throw new Error('Failed to fetch products')
         }
@@ -98,7 +98,7 @@ export default function HomePage() {
         }))
         setFeaturedProducts(featured)
 
-        // Fetch categories (with cache busting)
+        // Fetch categories from both brands (with cache busting)
         const categoriesResponse = await fetch('/api/categories', {
           cache: 'no-store',
           headers: {
@@ -109,7 +109,8 @@ export default function HomePage() {
           throw new Error('Failed to fetch categories')
         }
         const categoriesData = await categoriesResponse.json()
-        const categoriesWithCount = categoriesData.map((category: any) => ({
+        const categories = categoriesData.categories || []
+        const categoriesWithCount = categories.map((category: any) => ({
           ...category,
           productCount: category.productCount || Math.floor(Math.random() * 50) + 10,
           slug: category.slug || category.name.toLowerCase().replace(/\s+/g, '-')
@@ -610,8 +611,10 @@ export default function HomePage() {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300">
-                    {isRTL ? 'استكشفي LOUDIM' : 'Explore LOUDIM'}
+                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Link href="/loudim">
+                      {isRTL ? 'استكشفي LOUDIM' : 'Explore LOUDIM'}
+                    </Link>
                   </Button>
                 </motion.div>
               </motion.div>
@@ -732,8 +735,10 @@ export default function HomePage() {
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300">
-                    {isRTL ? 'استكشفي LOUD STYLES' : 'Explore LOUD STYLES'}
+                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-8 py-3 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Link href="/loud-styles">
+                      {isRTL ? 'استكشفي LOUD STYLES' : 'Explore LOUD STYLES'}
+                    </Link>
                   </Button>
                 </motion.div>
               </motion.div>

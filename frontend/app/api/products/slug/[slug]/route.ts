@@ -1,0 +1,41 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { slug: string } }
+) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const brand = searchParams.get('brand')
+    const slug = params.slug
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000'
+    const url = brand 
+      ? `${backendUrl}/api/products/slug/${slug}?brand=${brand}`
+      : `${backendUrl}/api/products/slug/${slug}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      )
+    }
+
+    const data = await response.json()
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('Error fetching product:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch product' },
+      { status: 500 }
+    )
+  }
+}

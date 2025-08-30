@@ -12,7 +12,6 @@ import {
   ShoppingCart, 
   Menu, 
   Search, 
-  User, 
   Heart,
   X,
   Phone,
@@ -22,7 +21,7 @@ import {
   Settings,
   ChevronDown
 } from 'lucide-react'
-import { useCartStore, useAuthStore, useWishlistStore } from '@/lib/store'
+import { useCartStore, useWishlistStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
 import { CartSheet } from '@/components/cart-sheet'
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -34,11 +33,11 @@ export function LoudStylesNavbar() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   const router = useRouter()
   const pathname = usePathname()
   const { items, getTotalItems } = useCartStore()
-  const { user, logout } = useAuthStore()
   const { getWishlistCount } = useWishlistStore()
   const { t, isRTL } = useLocaleStore()
   const { theme, setTheme } = useTheme()
@@ -60,6 +59,15 @@ export function LoudStylesNavbar() {
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 0)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   if (!mounted) return null
@@ -105,54 +113,63 @@ export function LoudStylesNavbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="w-full z-50 transition-all duration-300 arabic-font"
-        style={{ backgroundColor: '#b6b8b2' }}
-      >
-        <div className="container mx-auto px-4">
-          <div className={`flex items-center justify-between h-20 ${isRTL ? 'flex-row-reverse' : ''}`}>
+             <motion.nav
+         initial={{ y: -100 }}
+         animate={{ y: 0 }}
+         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+         className={`w-full z-50 transition-all duration-300 h-16 ${
+           isScrolled 
+             ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200 dark:bg-gray-900/95 dark:border-gray-700' 
+             : 'bg-transparent'
+         }`}
+         dir={isRTL ? 'rtl' : 'ltr'}
+       >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`flex items-center justify-between h-16 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {/* Logo Section */}
             <div className="flex-shrink-0">
               <Link href="/loud-styles" className="flex items-center group">
-                <div className="transition-transform duration-300 group-hover:scale-105">
-                  <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer">
-                    <span className="inline-block">
-                      <span className="text-gray-800 transition-colors duration-300 group-hover:text-gray-900 font-bold">{logoText}</span>
-                      <span className="relative inline-block ml-2">
-                        <span className="text-gray-600 transition-colors duration-300 group-hover:text-gray-800 font-light">{logoSubtext}</span>
-                        <motion.span
-                          className="absolute inset-0 bg-gray-800 origin-left"
-                          initial={{ scaleX: 0 }}
-                          whileHover={{ scaleX: 1 }}
-                          transition={{ duration: 0.3, ease: "easeInOut" }}
-                          style={{ zIndex: -1 }}
-                        />
-                      </span>
-                      <span className="text-gray-600 transition-colors duration-300 group-hover:text-gray-800 font-light text-xs ml-1">®</span>
-                    </span>
-                  </h1>
-                </div>
+                <motion.div 
+                  className="transition-transform duration-300 group-hover:scale-105"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                                     <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer font-semibold">
+                     <span className="inline-block">
+                       <span className={`transition-colors duration-300 group-hover:text-white font-bold ${isScrolled ? 'text-gray-900 dark:text-white' : 'text-white'}`}>{logoText}</span>
+                       <span className="relative inline-block ml-2">
+                         <span className={`transition-colors duration-300 group-hover:text-primary font-light ${isScrolled ? 'text-gray-600 dark:text-gray-300' : 'text-white'}`}>{logoSubtext}</span>
+                         <motion.span
+                           className="absolute inset-0 bg-primary origin-left"
+                           initial={{ scaleX: 0 }}
+                           whileHover={{ scaleX: 1 }}
+                           transition={{ duration: 0.3, ease: "easeInOut" }}
+                           style={{ zIndex: -1 }}
+                         />
+                       </span>
+                       <span className={`transition-colors duration-300 group-hover:text-white font-light text-xs ml-1 ${isScrolled ? 'text-gray-600 dark:text-gray-300' : 'text-white'}`}>®</span>
+                     </span>
+                   </h1>
+                </motion.div>
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <div className={`hidden lg:flex items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''}`}>
+              <div className={`flex items-center space-x-6 ${isRTL ? 'space-x-reverse' : ''}`}>
                 {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`relative px-6 py-3 rounded-lg font-bold text-lg transition-all duration-300 group
-                      ${pathname === item.href 
-                        ? 'text-gray-900 bg-gray-200/50' 
-                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200/30'
-                      }
-                    `}
-                  >
+                                     <Link
+                     key={item.name}
+                     href={item.href}
+                     className={`relative px-4 py-2 rounded-lg font-semibold text-base transition-all duration-300 group
+                       ${pathname === item.href 
+                         ? `${isScrolled ? 'text-primary bg-primary/10' : 'text-white bg-primary/30'}` 
+                         : `${isScrolled ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' : 'text-white hover:text-primary hover:bg-primary/20'}`
+                       }
+                     `}
+                   >
                     {item.name}
-                    <div className="absolute inset-0 rounded-lg bg-gray-200/0 group-hover:bg-gray-200/30 transition-all duration-300" />
+                    <div className="absolute inset-0 rounded-lg bg-primary/0 group-hover:bg-primary/20 transition-all duration-300" />
                   </Link>
                 ))}
               </div>
@@ -161,33 +178,45 @@ export function LoudStylesNavbar() {
             {/* Right Section - Actions */}
             <div className={`flex items-center space-x-2 ${isRTL ? 'space-x-reverse' : ''}`}>
               {/* Search */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSearchOpen(true)}
-                className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300"
-              >
+                             <Button
+                 variant="ghost"
+                 size="sm"
+                 onClick={() => setIsSearchOpen(true)}
+                 className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                   isScrolled 
+                     ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                     : 'text-white hover:text-primary hover:bg-primary/20'
+                 }`}
+               >
                 <Search className="w-5 h-5" />
               </Button>
 
               {/* Theme Toggle */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleTheme}
-                className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300"
-              >
+                             <Button
+                 variant="ghost"
+                 size="sm"
+                 onClick={toggleTheme}
+                 className={`p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                   isScrolled 
+                     ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                     : 'text-white hover:text-primary hover:bg-primary/20'
+                 }`}
+               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </Button>
 
               {/* Cache Clear Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearCache}
-                className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300"
-                title="Clear cache and reload fresh data"
-              >
+                             <Button
+                 variant="ghost"
+                 size="sm"
+                 onClick={clearCache}
+                 className={`p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                   isScrolled 
+                     ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                     : 'text-white hover:text-primary hover:bg-primary/20'
+                 }`}
+                 title="Clear cache and reload fresh data"
+               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -197,12 +226,16 @@ export function LoudStylesNavbar() {
               <LanguageSwitcher isTransparent={false} />
 
               {/* Wishlist */}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300" 
-                onClick={() => router.push('/wishlist')}
-              >
+                             <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                   isScrolled 
+                     ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                     : 'text-white hover:text-primary hover:bg-primary/20'
+                 }`}
+                 onClick={() => router.push('/wishlist')}
+               >
                 <Heart className="w-5 h-5" />
                 {wishlistCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-red-500 hover:bg-red-600">
@@ -212,12 +245,16 @@ export function LoudStylesNavbar() {
               </Button>
 
               {/* Cart */}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="relative p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300" 
-                onClick={() => setIsCartOpen(true)}
-              >
+                             <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className={`relative p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                   isScrolled 
+                     ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                     : 'text-white hover:text-primary hover:bg-primary/20'
+                 }`}
+                 onClick={() => setIsCartOpen(true)}
+               >
                 <ShoppingCart className="w-5 h-5" />
                 {totalItems > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-primary hover:bg-primary/80">
@@ -226,53 +263,18 @@ export function LoudStylesNavbar() {
                 )}
               </Button>
 
-              {/* User Menu */}
-              {user ? (
-                <div className="relative">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300"
-                  >
-                    <User className="w-5 h-5" />
-                  </Button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <Link
-                      href="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      {isRTL ? 'الملف الشخصي' : 'Profile'}
-                    </Link>
-                    <button
-                      onClick={() => {
-                        logout()
-                        router.push('/')
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      {isRTL ? 'تسجيل الخروج' : 'Logout'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.push('/login')}
-                  className="p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300"
-                >
-                  <User className="w-5 h-5" />
-                </Button>
-              )}
-
               {/* Mobile Menu Button */}
               <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="lg:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200/30 rounded-lg transition-all duration-300"
-                  >
+                                     <Button
+                     variant="ghost"
+                     size="sm"
+                     className={`lg:hidden p-2 rounded-lg transition-all duration-300 hover:scale-105 ${
+                       isScrolled 
+                         ? 'text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10' 
+                         : 'text-white hover:text-primary hover:bg-primary/20'
+                     }`}
+                   >
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>

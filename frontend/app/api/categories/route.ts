@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const brand = searchParams.get('brand')
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000'
-    const response = await fetch(`${backendUrl}/api/categories`, {
+    
+    // Build the backend URL with brand parameter if provided
+    const backendUrlWithParams = brand 
+      ? `${backendUrl}/api/categories?brand=${brand}`
+      : `${backendUrl}/api/categories`
+    
+    const response = await fetch(backendUrlWithParams, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -18,12 +26,8 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json()
-    // Backend returns { categories: [...] }, but frontend expects just the array
-    // Ensure we always return an array
-    const categories = Array.isArray(data.categories) ? data.categories : 
-                      Array.isArray(data) ? data : []
-    
-    const result = NextResponse.json(categories)
+    // Return the backend response as-is to preserve the { categories: [...] } format
+    const result = NextResponse.json(data)
     
     // Add cache control headers to prevent caching
     result.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')

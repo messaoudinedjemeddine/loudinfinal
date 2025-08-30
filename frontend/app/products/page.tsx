@@ -69,11 +69,14 @@ export default function ProductsPage() {
       try {
         setLoading(true)
         
-        // Fetch products
+        // Fetch products from both brands
         const productsRes = await fetch('/api/products')
         const productsData = await productsRes.json()
         const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || [])
-        setProducts(productsArray)
+        
+        // Filter to only show products that have a brand
+        const productsWithBrand = productsArray.filter((product: any) => product.brand?.slug)
+        setProducts(productsWithBrand)
         
       } catch (error) {
         console.error('Failed to fetch data:', error)
@@ -161,10 +164,10 @@ export default function ProductsPage() {
         }}
         className="group relative h-full"
       >
-        <Card className="overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 h-full flex flex-col rounded-xl">
           {/* Product Image */}
           <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
-            <Link href={`/products/${product.slug}`} className="block w-full h-full">
+            <Link href={`/${product.brand?.slug || 'products'}/${product.slug}?brand=${product.brand?.slug || ''}`} className="block w-full h-full">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
@@ -226,7 +229,7 @@ export default function ProductsPage() {
                   className="rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white shadow-lg"
                   asChild
                 >
-                  <Link href={`/products/${product.slug}`}>
+                  <Link href={`/${product.brand?.slug || 'products'}/${product.slug}?brand=${product.brand?.slug || ''}`}>
                     <Eye className="w-4 h-4" />
                   </Link>
                 </Button>
@@ -310,7 +313,7 @@ export default function ProductsPage() {
               </div>
 
               {/* Product Name */}
-              <Link href={`/products/${product.slug}`} className="block flex-1 min-h-0">
+                              <Link href={`/${product.brand?.slug || 'products'}/products/${product.slug}?brand=${product.brand?.slug || ''}`} className="block flex-1 min-h-0">
                 <h3 className="font-semibold text-base leading-tight line-clamp-2 hover:text-primary transition-colors group-hover:text-primary text-center min-h-[2.5rem] flex items-center justify-center">
                   {isRTL ? product.nameAr || product.name : product.name}
                 </h3>
@@ -389,20 +392,25 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-warm-100 via-cream-50 to-warm-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Navbar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <Navbar />
+      </div>
+
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-camel-200 via-camel-300 to-camel-400 dark:from-camel-700 dark:via-camel-600 dark:to-camel-500">
+      <div className="relative overflow-hidden bg-gradient-to-r from-camel-200 via-camel-300 to-camel-400 dark:from-camel-700 dark:via-camel-600 dark:to-camel-500 pt-16">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div className="max-w-6xl mx-auto px-4 py-16 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="text-center"
           >
-            <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-secondary bg-clip-text text-transparent text-center leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-secondary bg-clip-text text-transparent text-center leading-[120%]">
               {isRTL ? 'أناقة الأزياء التقليدية الجزائرية' : 'Discover Our Collection'}
             </h1>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-center leading-relaxed">
+            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-center leading-[150%]">
               {isRTL 
                 ? 'تسوقي حسب المجموعة - المجموعة المميزة'
                 : 'A unique collection of premium products with the highest quality and best prices'
@@ -416,7 +424,7 @@ export default function ProductsPage() {
                 placeholder={isRTL ? 'البحث في المنتجات...' : 'Search products...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} h-12 text-lg bg-white/80 backdrop-blur-sm border-2 border-primary/20 focus:border-primary/50 transition-all duration-300 text-center`}
+                className={`${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} h-12 text-lg bg-white/80 backdrop-blur-sm border-2 border-primary/20 focus:border-primary/50 transition-all duration-300 text-center rounded-lg`}
                 dir={isRTL ? 'rtl' : 'ltr'}
               />
             </div>
@@ -424,7 +432,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Products Grid */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -455,7 +463,7 @@ export default function ProductsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filteredProducts.map((product, index) => (
               <ProductCard key={product.id} product={product} index={index} />
             ))}

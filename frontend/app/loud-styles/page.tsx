@@ -1,59 +1,78 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ShoppingCart, Star, Truck, Shield, Headphones, CreditCard, Play, Pause } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useCartStore } from '@/lib/store'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import { 
+  ShoppingCart, 
+  Heart, 
+  Star, 
+  Sparkles,
+  Truck,
+  Shield,
+  Headphones,
+  CreditCard
+} from 'lucide-react'
+import { useCartStore, useWishlistStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
 import { LoudStylesNavbar } from '@/components/loud-styles-navbar'
 
-// Define types
 interface Product {
-  id: string;
-  name: string;
-  nameAr?: string;
-  price: number;
-  oldPrice?: number;
-  image: string;
-  category: string;
-  categoryAr?: string;
-  rating?: number;
-  isOnSale?: boolean;
-  stock: number;
-  sizes: Array<{ id: string; size: string; stock: number }> | string[];
-  slug: string;
+  id: string
+  name: string
+  nameAr?: string
+  description?: string
+  price: number
+  oldPrice?: number
+  image: string
+  slug: string
+  rating?: number
+  isOnSale?: boolean
+  stock: number
+  sizes: any[]
+  category: {
+    id: string
+    name: string
+    nameAr?: string
+    slug: string
+  }
+  brand: {
+    id: string
+    name: string
+    slug: string
+  }
 }
 
 interface Category {
-  id: string;
-  name: string;
-  nameAr?: string;
-  image: string;
-  productCount: number;
-  slug: string;
+  id: string
+  name: string
+  nameAr?: string
+  slug: string
+  image?: string
+  productCount: number
 }
 
-export default function LoudStylesHomePage() {
+export default function LoudStylesPage() {
   const [mounted, setMounted] = useState(false)
-  const [isVideoPlaying, setIsVideoPlaying] = useState(true)
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  const addItem = useCartStore((state) => state.addItem)
-  const { t, isRTL } = useLocaleStore()
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
 
+  const addItem = useCartStore((state) => state.addItem)
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore()
+  const { isRTL } = useLocaleStore()
+
+  // Features for LOUD STYLES
   const features = [
     {
       icon: Truck,
-      title: isRTL ? 'توصيل مجاني' : 'Free Delivery',
-      description: isRTL ? 'توصيل مجاني في جميع أنحاء الجزائر' : 'Free delivery across Algeria'
+      title: isRTL ? 'شحن مجاني' : 'Free Shipping',
+      description: isRTL ? 'شحن مجاني لجميع الطلبات' : 'Free shipping on all orders'
     },
     {
       icon: Shield,
@@ -72,22 +91,22 @@ export default function LoudStylesHomePage() {
     }
   ]
 
-  // Fetch featured products and categories
+  // Fetch LOUD STYLES data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // Fetch featured products (first 4 products)
-        const productsResponse = await fetch('/api/products')
+        // Fetch LOUD STYLES products
+        const productsResponse = await fetch('/api/products?brand=loud-styles')
         if (!productsResponse.ok) {
           throw new Error('Failed to fetch products')
         }
         const productsData = await productsResponse.json()
         
-        // Handle different response formats
         const products = Array.isArray(productsData) ? productsData : (productsData.products || [])
+        
         const featured = products.slice(0, 4).map((product: any) => ({
           ...product,
           sizes: product.sizes || [],
@@ -97,26 +116,20 @@ export default function LoudStylesHomePage() {
         }))
         setFeaturedProducts(featured)
 
-        // Fetch categories (with cache busting)
-        const categoriesResponse = await fetch('/api/categories', {
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache',
-          }
-        })
+        // Fetch LOUD STYLES categories
+        const categoriesResponse = await fetch('/api/categories?brand=loud-styles')
         if (!categoriesResponse.ok) {
           throw new Error('Failed to fetch categories')
         }
         const categoriesData = await categoriesResponse.json()
-        const categoriesWithCount = categoriesData.map((category: any) => ({
+        
+        const categories = categoriesData.categories || []
+        
+        const categoriesWithCount = categories.map((category: any) => ({
           ...category,
-          productCount: category.productCount || Math.floor(Math.random() * 50) + 10, // Use actual count or mock
+          productCount: category.productCount || 0,
           slug: category.slug || category.name.toLowerCase().replace(/\s+/g, '-')
         }))
-        console.log('Categories loaded:', categoriesWithCount)
-        categoriesWithCount.forEach((cat: any) => {
-          console.log(`${cat.name}: ${cat.image || 'NO IMAGE'}`);
-        })
         setCategories(categoriesWithCount)
 
       } catch (err) {
@@ -145,58 +158,33 @@ export default function LoudStylesHomePage() {
     })
   }
 
-  const toggleVideo = () => {
-    const video = document.getElementById('hero-video') as HTMLVideoElement
-    if (video) {
-      if (isVideoPlaying) {
-        video.pause()
-      } else {
-        video.play()
-      }
-      setIsVideoPlaying(!isVideoPlaying)
-    }
-  }
-
-  // Helper function to get size strings
-  const getSizeStrings = (sizes: Product['sizes']): string[] => {
-    if (!Array.isArray(sizes) || sizes.length === 0) return []
-    
-    return typeof sizes[0] === 'string' 
-      ? sizes as string[]
-      : (sizes as Array<{id: string; size: string; stock: number}>).map(s => s.size)
+  const getSizeStrings = (sizes: any[]) => {
+    if (!Array.isArray(sizes)) return []
+    return sizes.map(size => typeof size === 'string' ? size : size.size)
   }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#b6b8b2' }} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Hero Section with Video */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#b6b8b2' }}>
-        {/* Navbar positioned over video */}
-        <div className="absolute top-0 left-0 right-0 z-50">
-          <LoudStylesNavbar />
-        </div>
+      {/* Navbar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <LoudStylesNavbar />
+      </div>
 
-        {/* Video Background */}
+      {/* Hero Section */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Video */}
         <video
           id="hero-video"
-          className="absolute inset-0 w-full h-full object-cover"
           autoPlay
           muted
           loop
           playsInline
-          poster="/images/hero-poster.jpg"
+          className="absolute inset-0 w-full h-full object-cover"
         >
-          {/* Multiple video formats for better browser compatibility */}
           <source src="/videos/hero-video.mp4" type="video/mp4" />
-          <source src="/videos/hero-video.webm" type="video/webm" />
-          <source src="/videos/hero-video.ogg" type="video/ogg" />
-          
-          {/* Fallback to external video if local files don't exist */}
-          <source src="https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=139&oauth2_token_id=57447761" type="video/mp4" />
-          
-          {/* Fallback image if video fails to load */}
           <Image
-            src="/images/hero-fallback.jpg"
-            alt="Traditional Algerian Fashion"
+            src="/placeholder.svg"
+            alt="LOUD STYLES Hero"
             fill
             className="video-fallback"
             priority
@@ -204,23 +192,23 @@ export default function LoudStylesHomePage() {
         </video>
         
         {/* Video Overlay */}
-        <div className="absolute inset-0 video-overlay" />
+        <div className="absolute inset-0 bg-black/40" />
         
         {/* Hero Content */}
-        <div className={`relative z-10 text-center text-white max-w-4xl mx-auto px-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <div className={`relative z-10 text-center text-white max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isRTL ? 'text-right' : 'text-left'}`}>
           <motion.h1
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-[120%]"
           >
             {isRTL ? 'أناقة الأزياء التقليدية الجزائرية' : 'Elegant Algerian Traditional Fashion'}
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl md:text-2xl mb-8 text-gray-200 font-light"
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="text-lg sm:text-xl md:text-2xl mb-8 text-gray-200 font-normal leading-[150%] max-w-3xl mx-auto"
           >
             {isRTL 
               ? 'اكتشفي مجموعتنا الفاخرة من الأزياء التقليدية الجزائرية المصممة خصيصاً للمرأة العصرية'
@@ -228,14 +216,14 @@ export default function LoudStylesHomePage() {
             }
           </motion.p>
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Button 
               size="lg" 
-              className="text-lg px-8 py-6 transition-all duration-300 font-medium" 
+              className="text-lg px-8 py-6 transition-all duration-300 font-semibold hover:scale-105 shadow-lg hover:shadow-xl" 
               style={{ backgroundColor: '#bfa36a', borderColor: '#bfa36a' }}
               asChild
             >
@@ -245,8 +233,8 @@ export default function LoudStylesHomePage() {
             </Button>
             <Button 
               size="lg" 
-              className="text-lg px-8 py-6 transition-all duration-300 font-medium" 
-              style={{ backgroundColor: '#bfa36a', borderColor: '#bfa36a' }}
+              variant="outline"
+              className="text-lg px-8 py-6 transition-all duration-300 font-semibold hover:scale-105 border-white text-white hover:bg-white hover:text-gray-900" 
               asChild
             >
               <Link href="/loud-styles/categories">
@@ -278,7 +266,7 @@ export default function LoudStylesHomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20" style={{ backgroundColor: '#bfa36a' }}>
+      <section className="py-20" style={{ backgroundColor: '#ede2d1' }}>
         <div className="container mx-auto px-4">
           <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 ${isRTL ? 'text-right' : 'text-left'}`}>
             {features.map((feature, index) => (
@@ -302,7 +290,7 @@ export default function LoudStylesHomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-20" style={{ backgroundColor: '#bfa36a' }}>
+      <section className="py-20" style={{ backgroundColor: '#f5f5f5' }}>
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -316,17 +304,17 @@ export default function LoudStylesHomePage() {
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               {isRTL 
-                ? 'استكشفي مجموعاتنا المتنوعة من الأزياء التقليدية الجزائرية المصممة بعناية فائقة'
-                : 'Explore our diverse collections of traditional Algerian fashion crafted with exceptional care'
+                ? 'اكتشفي مجموعاتنا المتنوعة من الأزياء التقليدية الجزائرية'
+                : 'Discover our diverse collections of traditional Algerian fashion'
               }
             </p>
           </motion.div>
 
           {loading ? (
-            <div className="flex justify-center items-center space-x-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(3)].map((_, index) => (
                 <div key={index} className="animate-pulse">
-                  <div className="w-48 h-48 bg-gray-200 rounded-full mb-4"></div>
+                  <div className="h-64 bg-gray-200 rounded-lg mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded mb-2"></div>
                   <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
@@ -337,81 +325,26 @@ export default function LoudStylesHomePage() {
               <p className="text-red-500">{error}</p>
             </div>
           ) : (
-            <div className="max-w-6xl mx-auto relative">
-              {/* Navigation Arrows */}
-              <motion.button
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className="absolute -left-16 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
-                style={{ backgroundColor: '#bfa36a' }}
-                onClick={() => {
-                  const container = document.getElementById('categories-container');
-                  if (container) {
-                    container.scrollBy({ left: -300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <motion.div
-                  className="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors"
-                  whileHover={{ x: -2 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </motion.div>
-              </motion.button>
-
-              <motion.button
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className="absolute -right-16 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
-                style={{ backgroundColor: '#bfa36a' }}
-                onClick={() => {
-                  const container = document.getElementById('categories-container');
-                  if (container) {
-                    container.scrollBy({ left: 300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <motion.div
-                  className="w-6 h-6 text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors"
-                  whileHover={{ x: 2 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </motion.div>
-              </motion.button>
-
-              {/* Categories Container */}
-              <div 
-                id="categories-container"
-                className="flex space-x-8 overflow-x-auto scrollbar-hide py-4"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {categories.map((category, index) => (
                   <motion.div
                     key={category.id}
-                    initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
-                    whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                    initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ 
-                      duration: 0.8, 
-                      delay: index * 0.2,
+                      duration: 0.6, 
+                      delay: index * 0.1,
                       ease: [0.25, 0.46, 0.45, 0.94]
                     }}
                     viewport={{ once: true }}
                     whileHover={{ 
-                      scale: 1.1,
-                      rotate: 5,
+                      scale: 1.05,
                       transition: { duration: 0.3, ease: "easeOut" }
                     }}
                     className="flex-shrink-0"
                   >
-                    <Link href={`/loud-styles/products?category=${category.slug}`}>
+                    <Link href={`/loud-styles/products?category=${category.slug}&brand=loud-styles`}>
                       <div className="group cursor-pointer relative">
                         {/* Circle Container */}
                         <div className="w-48 h-48 rounded-full overflow-hidden bg-gradient-to-br from-white via-cream-50 to-warm-50 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 relative">
@@ -421,7 +354,6 @@ export default function LoudStylesHomePage() {
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-700"
                             onError={(e) => {
-                              console.log('Category image failed to load:', category.image);
                               const target = e.target as HTMLImageElement;
                               target.src = '/placeholder.svg';
                             }}
@@ -460,33 +392,13 @@ export default function LoudStylesHomePage() {
                   </motion.div>
                 ))}
               </div>
-
-              {/* Dots Indicator */}
-              <div className="flex justify-center mt-8 space-x-2">
-                {Array.from({ length: Math.ceil(categories.length / 3) }, (_, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1 + index * 0.1, duration: 0.3 }}
-                    className="w-3 h-3 rounded-full transition-colors cursor-pointer"
-                    style={{ backgroundColor: '#bfa36a' }}
-                    onClick={() => {
-                      const container = document.getElementById('categories-container');
-                      if (container) {
-                        container.scrollTo({ left: index * 300, behavior: 'smooth' });
-                      }
-                    }}
-                  />
-                ))}
-              </div>
             </div>
           )}
         </div>
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-20" style={{ backgroundColor: '#bfa36a' }}>
+      <section className="py-20" style={{ backgroundColor: '#ede2d1' }}>
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -508,7 +420,7 @@ export default function LoudStylesHomePage() {
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, index) => (
+              {[...Array(4)].map((_, index) => (
                 <div key={index} className="animate-pulse">
                   <div className="h-80 bg-gray-200 rounded-lg mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -548,7 +460,7 @@ export default function LoudStylesHomePage() {
                       }}
                       className="h-full"
                     >
-                      <Link href={`/loud-styles/products/${product.slug}`} className="block h-full">
+                      <Link href={`/loud-styles/products/${product.slug}?brand=loud-styles`} className="block h-full">
                         <Card className="group cursor-pointer overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 relative h-full flex flex-col">
                           {/* Hover overlay effect */}
                           <motion.div
@@ -600,61 +512,94 @@ export default function LoudStylesHomePage() {
                               >
                                 <div className="flex items-center">
                                   {[...Array(5)].map((_, i) => (
-                                    <motion.div
+                                    <Star
                                       key={i}
-                                      initial={{ opacity: 0, scale: 0 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      transition={{ delay: 0.5 + index * 0.1 + i * 0.1, duration: 0.3 }}
-                                    >
-                                      <Star
-                                        className={`w-4 h-4 ${
-                                          i < Math.floor(product.rating || 0)
-                                            ? 'text-yellow-400 fill-current'
-                                            : 'text-gray-300'
-                                        }`}
-                                      />
-                                    </motion.div>
+                                      className={`w-4 h-4 ${i < (product.rating || 4) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                    />
                                   ))}
-                                  <span className="text-sm text-muted-foreground ml-2">
-                                    ({product.rating || 0})
-                                  </span>
                                 </div>
                               </motion.div>
                               
                               <motion.div 
-                                className="flex items-center justify-center mb-4"
+                                className="flex items-center justify-center gap-2 mb-4"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
+                              >
+                                {product.oldPrice && product.oldPrice > product.price && (
+                                  <span className="text-sm text-gray-500 line-through">
+                                    ${product.oldPrice}
+                                  </span>
+                                )}
+                                <span className="text-xl font-bold text-primary">
+                                  ${product.price}
+                                </span>
+                              </motion.div>
+                              
+                              <motion.div 
+                                className="flex items-center justify-center gap-2 mb-4"
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.6 + index * 0.1, duration: 0.4 }}
                               >
-                                <div className="flex items-center">
-                                  <span className="text-lg font-bold text-primary">
-                                    {product.price.toLocaleString('en-US')} {isRTL ? 'د.ج' : 'DA'}
+                                {sizeStrings.slice(0, 3).map((size, i) => (
+                                  <span
+                                    key={i}
+                                    className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded"
+                                  >
+                                    {size}
                                   </span>
-                                  {product.oldPrice && (
-                                    <span className="text-sm text-muted-foreground line-through ml-2">
-                                      {product.oldPrice.toLocaleString('en-US')} {isRTL ? 'د.ج' : 'DA'}
-                                    </span>
-                                  )}
-                                </div>
+                                ))}
+                                {sizeStrings.length > 3 && (
+                                  <span className="text-xs text-gray-500">
+                                    +{sizeStrings.length - 3}
+                                  </span>
+                                )}
                               </motion.div>
                               
                               <motion.div 
-                                className="mt-auto"
+                                className="flex items-center justify-center gap-2 mt-auto"
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
+                                transition={{ delay: 0.7 + index * 0.1, duration: 0.4 }}
                               >
-                                <Button 
-                                  className="w-full transition-all duration-300"
-                                  style={{ backgroundColor: '#bfa36a' }}
+                                <Button
+                                  size="sm"
+                                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
                                   onClick={(e) => {
-                                    e.preventDefault();
-                                    handleAddToCart(product);
+                                    e.preventDefault()
+                                    handleAddToCart(product)
                                   }}
                                 >
-                                  <ShoppingCart className="w-4 h-4 mr-2 group-hover:animate-bounce" />
-                                  {isRTL ? 'أضف إلى السلة' : 'Add to Cart'}
+                                  <ShoppingCart className="w-4 h-4 mr-2" />
+                                  {isRTL ? 'أضف للسلة' : 'Add to Cart'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-10 h-10 p-0"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    const isCurrentlyWishlisted = isInWishlist(product.id)
+                                    if (isCurrentlyWishlisted) {
+                                      removeFromWishlist(product.id)
+                                    } else {
+                                      addToWishlist({
+                                        id: product.id,
+                                        name: product.name,
+                                        nameAr: product.nameAr,
+                                        price: product.price,
+                                        oldPrice: product.oldPrice,
+                                        image: product.image,
+                                        rating: product.rating,
+                                        isOnSale: product.isOnSale,
+                                        stock: product.stock,
+                                        slug: product.slug
+                                      })
+                                    }
+                                  }}
+                                >
+                                  <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                                 </Button>
                               </motion.div>
                             </CardContent>
@@ -662,52 +607,30 @@ export default function LoudStylesHomePage() {
                         </Card>
                       </Link>
                     </motion.div>
-                  );
+                  )
                 })}
               </div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                viewport={{ once: true }}
+                className="text-center mt-12"
+              >
+                <Button 
+                  size="lg" 
+                  className="text-lg px-8 py-6 transition-all duration-300 font-medium" 
+                  style={{ backgroundColor: '#bfa36a', borderColor: '#bfa36a' }}
+                  asChild
+                >
+                  <Link href="/loud-styles/products" style={{ borderColor: '#bfa36a', color: '#bfa36a' }}>
+                    {isRTL ? 'عرض جميع المنتجات' : 'View All Products'}
+                  </Link>
+                </Button>
+              </motion.div>
             </div>
           )}
-
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg" className="elegant-hover border-2 font-medium" asChild>
-              <Link href="/loud-styles/products" style={{ borderColor: '#bfa36a', color: '#bfa36a' }}>
-                {isRTL ? 'عرض جميع المنتجات' : 'View All Products'}
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Section */}
-      <section className="py-20 text-white" style={{ backgroundColor: '#bfa36a' }}>
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              {isRTL ? 'ابقي على اطلاع' : 'Stay Updated'}
-            </h2>
-            <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-              {isRTL 
-                ? 'اشتركي في نشرتنا الإخبارية واحصلي على آخر أخبار الموضة والعروض الحصرية'
-                : 'Subscribe to our newsletter and get the latest fashion news and exclusive offers'
-              }
-            </p>
-            <div className={`flex flex-col sm:flex-row gap-4 max-w-md mx-auto ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-              <input
-                type="email"
-                placeholder={isRTL ? 'أدخلي بريدك الإلكتروني' : 'Enter your email'}
-                className={`flex-1 px-4 py-3 rounded-lg text-gray-800 placeholder-gray-500 ${isRTL ? 'text-right' : 'text-left'}`}
-                dir={isRTL ? 'rtl' : 'ltr'}
-              />
-              <Button variant="secondary" size="lg" className="bg-white hover:bg-gray-100 font-medium" style={{ color: '#bfa36a' }}>
-                {isRTL ? 'اشتراك' : 'Subscribe'}
-              </Button>
-            </div>
-          </motion.div>
         </div>
       </section>
     </div>

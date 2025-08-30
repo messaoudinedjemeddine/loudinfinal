@@ -40,15 +40,15 @@ export function Footer() {
               </div>
               <div className={`flex items-center space-x-3 ${isRTL ? 'space-x-reverse' : ''}`}>
                 <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>contact@eshop-algeria.com</span>
+                <span>contact@loudbrands.com</span>
               </div>
               <div className={`flex items-center space-x-3 ${isRTL ? 'space-x-reverse' : ''}`}>
                 <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>{isRTL ? 'الجزائر العاصمة، الجزائر' : 'Algiers, Algeria'}</span>
+                <span>{isRTL ? 'باتنة، الجزائر' : 'Batna, Algeria'}</span>
               </div>
               <div className={`flex items-center space-x-3 ${isRTL ? 'space-x-reverse' : ''}`}>
                 <Clock className="w-4 h-4 text-primary flex-shrink-0" />
-                <span>{isRTL ? 'الإثنين-الجمعة: 9ص-6م' : 'Mon-Fri: 9AM-6PM'}</span>
+                <span>{isRTL ? 'السبت-الخميس: 9ص-6م' : 'Sat-Thu: 9AM-6PM'}</span>
               </div>
             </div>
           </div>
@@ -56,10 +56,10 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">{t.footer.quickLinks}</h3>
             <ul className="space-y-3">
-              <li><Link href="/products" className="text-muted-foreground hover:text-primary transition-colors">{t.nav.products}</Link></li>
-              <li><Link href="/categories" className="text-muted-foreground hover:text-primary transition-colors">{t.nav.categories}</Link></li>
-              <li><Link href="/deals" className="text-muted-foreground hover:text-primary transition-colors">{isRTL ? 'عروض خاصة' : 'Special Deals'}</Link></li>
-              <li><Link href="/wishlist" className="text-muted-foreground hover:text-primary transition-colors">{t.nav.wishlist}</Link></li>
+              <li><Link href="/loudim/categories" className="text-muted-foreground hover:text-primary transition-colors">{isRTL ? 'فئات LOUDIM' : 'LOUDIM Categories'}</Link></li>
+              <li><Link href="/loud-styles/categories" className="text-muted-foreground hover:text-primary transition-colors">{isRTL ? 'فئات LOUD STYLES' : 'LOUD STYLES Categories'}</Link></li>
+              <li><Link href="/loudim/products" className="text-muted-foreground hover:text-primary transition-colors">{isRTL ? 'منتجات LOUDIM' : 'LOUDIM Products'}</Link></li>
+              <li><Link href="/loud-styles/products" className="text-muted-foreground hover:text-primary transition-colors">{isRTL ? 'منتجات LOUD STYLES' : 'LOUD STYLES Products'}</Link></li>
             </ul>
           </div>
           

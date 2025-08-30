@@ -49,22 +49,16 @@ class ApiClient {
     }
 
     try {
-      console.log(`🔍 Making API request to: ${url}`);
       const response = await fetch(url, config);
-      
-      console.log(`📊 Response status: ${response.status} for ${endpoint}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error(`❌ API error for ${endpoint}:`, errorData);
         throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log(`✅ API success for ${endpoint}:`, data);
       return data;
     } catch (error) {
-      console.error(`❌ API request failed: ${endpoint}`, error);
       throw error;
     }
   }

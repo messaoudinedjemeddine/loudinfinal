@@ -36,15 +36,10 @@ export default function LoudStylesCategoriesPage() {
     async function fetchCategories() {
       try {
         setLoading(true)
-        // TODO: Update to filter by LOUD STYLES brand
-        const response = await api.categories.getAll()
-        console.log('API Response:', response)
+        const response = await api.categories.getAll({ brand: 'loud-styles' })
         
         // Ensure we have an array of categories
-        const fetchedCategories = Array.isArray(response) 
-          ? response 
-          : ((response as any)?.categories || (response as any)?.data || [])
-        console.log('Processed categories:', fetchedCategories)
+        const fetchedCategories = response.categories || []
         
         setCategories(fetchedCategories)
         setFilteredCategories(fetchedCategories)
@@ -95,7 +90,7 @@ export default function LoudStylesCategoriesPage() {
         }}
         className="h-full"
       >
-        <Link href={`/loud-styles/products?category=${category.slug}`} className="block h-full">
+        <Link href={`/loud-styles/products?category=${category.slug}&brand=loud-styles`} className="block h-full">
           <Card className="group cursor-pointer transition-all duration-500 overflow-hidden h-full flex flex-col bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50 border-0 shadow-lg hover:shadow-2xl">
             <div className="relative h-64 overflow-hidden">
               <Image

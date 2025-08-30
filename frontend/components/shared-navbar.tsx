@@ -110,3 +110,4 @@ export default function SharedNavbar({ brandName, brandSlug, navigationLinks }: 
     </motion.nav>
   )
 }
+

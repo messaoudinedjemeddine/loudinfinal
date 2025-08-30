@@ -118,6 +118,104 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get single product by slug - MUST come before /:id route
+router.get('/slug/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { brand } = req.query;
+    
+    // Build where clause
+    const where = {
+      slug,
+      isActive: true
+    };
+    
+    // Add brand filter if provided
+    if (brand) {
+      where.brand = {
+        slug: brand
+      };
+    }
+    
+    const product = await prisma.product.findFirst({
+      where,
+      include: {
+        category: true,
+        brand: true,
+        images: true,
+        sizes: true
+      }
+    });
+    
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    // Add launch status and orderability
+    const now = new Date();
+    const isLaunchActive = product.isLaunch && product.launchAt && product.launchAt > now;
+    const isOrderable = !isLaunchActive;
+    
+    // Transform the product to match frontend expectations
+    const transformedProduct = {
+      ...product,
+      images: product.images.map(img => img.url), // Convert image objects to URL strings
+      isLaunchActive,
+      isOrderable,
+      timeUntilLaunch: isLaunchActive ? product.launchAt.getTime() - now.getTime() : null
+    };
+    
+    res.json({ product: transformedProduct });
+  } catch (error) {
+    console.error('Product fetch by slug error:', error);
+    res.status(500).json({ error: 'Failed to fetch product by slug' });
+  }
+});
+
+// Get featured products
+router.get('/featured/list', async (req, res) => {
+  try {
+    const { brand } = req.query;
+    
+    const where = {
+      isActive: true,
+      isOnSale: true
+    };
+    
+    if (brand) {
+      where.brand = {
+        slug: brand
+      };
+    }
+    
+    const products = await prisma.product.findMany({
+      where,
+      include: {
+        category: true,
+        brand: true,
+        images: {
+          where: { isPrimary: true },
+          take: 1
+        }
+      },
+      take: 8,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.json({
+      products: products.map(product => ({
+        ...product,
+        image: product.images[0]?.url || '/placeholder-product.jpg'
+      }))
+    });
+  } catch (error) {
+    console.error('Featured products error:', error);
+    res.status(500).json({ error: 'Failed to fetch featured products' });
+  }
+});
+
 // Get single product by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -127,6 +225,7 @@ router.get('/:id', async (req, res) => {
       where: { id },
       include: {
         category: true,
+        brand: true,
         images: true,
         sizes: true
       }
@@ -155,76 +254,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Get featured products
-router.get('/featured/list', async (req, res) => {
-  try {
-    const products = await prisma.product.findMany({
-      where: {
-        isActive: true,
-        isOnSale: true
-      },
-      include: {
-        category: true,
-        images: {
-          where: { isPrimary: true },
-          take: 1
-        }
-      },
-      take: 8,
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    res.json({
-      products: products.map(product => ({
-        ...product,
-        image: product.images[0]?.url || '/placeholder-product.jpg'
-      }))
-    });
-  } catch (error) {
-    console.error('Featured products error:', error);
-    res.status(500).json({ error: 'Failed to fetch featured products' });
-  }
-});
-
-// Get single product by slug
-router.get('/slug/:slug', async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const product = await prisma.product.findUnique({
-      where: { slug },
-      include: {
-        category: true,
-        images: true,
-        sizes: true
-      }
-    });
-    if (!product || !product.isActive) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    
-    // Add launch status and orderability
-    const now = new Date();
-    const isLaunchActive = product.isLaunch && product.launchAt && product.launchAt > now;
-    const isOrderable = !isLaunchActive;
-    
-    // Transform the product to match frontend expectations
-    const transformedProduct = {
-      ...product,
-      images: product.images.map(img => img.url), // Convert image objects to URL strings
-      isLaunchActive,
-      isOrderable,
-      timeUntilLaunch: isLaunchActive ? product.launchAt.getTime() - now.getTime() : null
-    };
-    
-    res.json({ product: transformedProduct });
-  } catch (error) {
-    console.error('Product fetch by slug error:', error);
-    res.status(500).json({ error: 'Failed to fetch product by slug' });
-  }
-});
-
 // Update product by ID
 router.put('/:id', async (req, res) => {
   try {
@@ -246,6 +275,7 @@ router.put('/:id', async (req, res) => {
       data: updateData,
       include: {
         category: true,
+        brand: true,
         images: true,
         sizes: true
       }
@@ -279,6 +309,7 @@ router.put('/slug/:slug', async (req, res) => {
       data: updateData,
       include: {
         category: true,
+        brand: true,
         images: true,
         sizes: true
       }
@@ -312,6 +343,7 @@ router.patch('/:id', async (req, res) => {
       data: updateData,
       include: {
         category: true,
+        brand: true,
         images: true,
         sizes: true
       }
@@ -358,9 +390,16 @@ router.get('/debug/list', async (req, res) => {
       select: {
         id: true,
         name: true,
+        slug: true,
         price: true,
         stock: true,
-        isActive: true
+        isActive: true,
+        brand: {
+          select: {
+            name: true,
+            slug: true
+          }
+        }
       },
       where: {
         isActive: true

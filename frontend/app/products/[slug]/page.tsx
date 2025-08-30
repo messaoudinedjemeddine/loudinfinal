@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import ProductDetailClient from './product-detail-client'
 
 interface Product {
@@ -10,6 +10,11 @@ interface Product {
   descriptionAr?: string;
   price: number;
   oldPrice?: number;
+  brand?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
   category: {
     id: string;
     name: string;
@@ -86,5 +91,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound()
   }
 
+  // Redirect to brand-specific product page
+  if (product.brand?.slug) {
+    redirect(`/${product.brand.slug}/products/${product.slug}?brand=${product.brand.slug}`)
+  }
+
+  // Fallback to generic product page if no brand is found
   return <ProductDetailClient product={product} />
 }
