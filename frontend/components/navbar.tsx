@@ -200,10 +200,10 @@ export function Navbar() {
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer font-semibold">
+                                    <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer font-semibold">
                     <span className="inline-block">
                       <span className={`transition-colors duration-300 group-hover:text-white font-bold ${isScrolled || needsVisibleNavbar ? 'text-gray-900 dark:text-white' : 'text-white'}`}>{logoText}</span>
-                      <span className="relative inline-block ml-2">
+                      <span className={`relative inline-block ${isLoudimPage ? '' : 'ml-2'}`}>
                         <span className={`transition-colors duration-300 group-hover:text-primary font-light ${isScrolled || needsVisibleNavbar ? 'text-gray-600 dark:text-gray-300' : 'text-white'}`}>{logoSubtext}</span>
                         <motion.span
                           className="absolute inset-0 bg-primary origin-left"
@@ -213,7 +213,7 @@ export function Navbar() {
                           style={{ zIndex: -1 }}
                         />
                       </span>
-                                              <span className={`transition-colors duration-300 group-hover:text-white font-light text-xs ml-1 ${isScrolled || needsVisibleNavbar ? 'text-gray-600 dark:text-gray-300' : 'text-white'}`}>®</span>
+                      <span className={`transition-colors duration-300 group-hover:text-white font-light text-xs ml-1 ${isScrolled || needsVisibleNavbar ? 'text-gray-600 dark:text-gray-300' : 'text-white'}`}>®</span>
                     </span>
                   </h1>
                 </motion.div>
