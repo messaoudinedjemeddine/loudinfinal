@@ -134,9 +134,11 @@ export default function CheckoutPage() {
         declaredValue: getTotalPrice()
       })
       
+      console.log('Shipping fees calculated:', fees)
       setShippingFees(fees)
     } catch (error) {
       console.error('Failed to calculate shipping fees:', error)
+      toast.error('Failed to calculate shipping fees. Please try again.')
       setShippingFees(null)
     }
   }
@@ -169,10 +171,15 @@ export default function CheckoutPage() {
   const getDeliveryFee = () => {
     if (!shippingFees) return 0
     
-    if (formData.deliveryType === 'HOME_DELIVERY') {
-      return shippingFees.deliveryOptions.express.home
-    } else {
-      return shippingFees.deliveryOptions.express.desk
+    try {
+      if (formData.deliveryType === 'HOME_DELIVERY') {
+        return shippingFees.deliveryOptions?.express?.home || 0
+      } else {
+        return shippingFees.deliveryOptions?.express?.desk || 0
+      }
+    } catch (error) {
+      console.error('Error calculating delivery fee:', error)
+      return 0
     }
   }
   
@@ -257,10 +264,38 @@ export default function CheckoutPage() {
       // Create order via API
       const response = await api.orders.create(orderData) as { order: { orderNumber: string } }
       
+      // Prepare order details for success page
+      const orderDetails = {
+        orderNumber: response.order.orderNumber,
+        customerName: formData.customerName,
+        customerPhone: formData.customerPhone,
+        customerEmail: formData.customerEmail || '',
+        deliveryType: formData.deliveryType,
+        deliveryAddress: formData.deliveryType === 'HOME_DELIVERY' ? formData.deliveryAddress : '',
+        wilayaId: parseInt(formData.wilayaId),
+        deliveryDeskName: formData.deliveryType === 'PICKUP' && selectedCenter ? selectedCenter.name : '',
+        notes: formData.notes || '',
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          size: item.size,
+          image: item.image
+        })),
+        subtotal: getTotalPrice(),
+        deliveryFee: getDeliveryFee(),
+        total: getTotalPrice() + getDeliveryFee(),
+        orderDate: new Date().toISOString()
+      }
+      
+      // Store order details in localStorage for the success page
+      localStorage.setItem('lastOrderDetails', JSON.stringify(orderDetails))
+      
       // Clear cart
       clearCart()
       
-      // Redirect to success page with real order number
+      // Redirect to success page with order number
       router.push(`/order-success?orderNumber=${response.order.orderNumber}`)
       
       toast.success('Order placed successfully!')
@@ -535,19 +570,19 @@ export default function CheckoutPage() {
                                   <Separator />
                                   <div className="flex justify-between text-sm">
                                     <span>Home Delivery:</span>
-                                    <span className="font-medium">{shippingFees.deliveryOptions.express.home.toLocaleString()} DA</span>
+                                    <span className="font-medium">{(shippingFees.deliveryOptions?.express?.home || 0).toLocaleString()} DA</span>
                                   </div>
                                   <div className="flex justify-between text-sm">
                                     <span>Pickup from Center:</span>
-                                    <span className="font-medium">{shippingFees.deliveryOptions.express.desk.toLocaleString()} DA</span>
+                                    <span className="font-medium">{(shippingFees.deliveryOptions?.express?.desk || 0).toLocaleString()} DA</span>
                                   </div>
-                                  {shippingFees.deliveryOptions.economic.home && (
+                                  {shippingFees.deliveryOptions?.economic?.home && (
                                     <div className="flex justify-between text-sm text-muted-foreground">
                                       <span>Economic Home Delivery:</span>
                                       <span>{shippingFees.deliveryOptions.economic.home.toLocaleString()} DA</span>
                                     </div>
                                   )}
-                                  {shippingFees.deliveryOptions.economic.desk && (
+                                  {shippingFees.deliveryOptions?.economic?.desk && (
                                     <div className="flex justify-between text-sm text-muted-foreground">
                                       <span>Economic Pickup:</span>
                                       <span>{shippingFees.deliveryOptions.economic.desk.toLocaleString()} DA</span>

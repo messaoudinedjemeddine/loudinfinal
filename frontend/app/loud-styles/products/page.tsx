@@ -2,22 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
-import { Checkbox } from '@/components/ui/checkbox'
 import { 
   ShoppingCart, 
   Star, 
-  Filter, 
-  Grid, 
-  List, 
   Search, 
-  X,
   Sparkles,
   TrendingUp,
   Heart,
@@ -29,6 +22,7 @@ import { useCartStore, useWishlistStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
 import { toast } from 'sonner'
 import { LaunchCountdown } from '@/components/launch-countdown'
+import { LoudStylesNavbar } from '@/components/loud-styles-navbar'
 
 // Define Product type
 interface Product {
@@ -56,40 +50,19 @@ interface Product {
   sizes: Array<{ id: string; size: string; stock: number }> | string[];
 }
 
-interface Category {
-  id: string;
-  name: string;
-  nameAr?: string;
-  slug: string;
-}
-
-const availableSizes = ['36', '38', '40', '42', '44', '46', '48', '50']
-
 export default function LoudStylesProductsPage() {
   const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([])
-  const [priceRange, setPriceRange] = useState([0, 50000])
-  const [sortBy, setSortBy] = useState('featured')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [selectedFilters, setSelectedFilters] = useState({
-    inStock: false,
-    onSale: false,
-    highRated: false
-  })
 
   const addItem = useCartStore((state) => state.addItem)
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore()
-  const { t, isRTL } = useLocaleStore()
+  const { isRTL } = useLocaleStore()
 
-  // Fetch products and categories
+  // Fetch products
   useEffect(() => {
     setMounted(true)
     
@@ -97,20 +70,26 @@ export default function LoudStylesProductsPage() {
       try {
         setLoading(true)
         
-        // Fetch products - TODO: Update to filter by LOUD STYLES brand
-        const productsResponse = await fetch('/api/products')
-        const productsData = await productsResponse.json()
+        // Fetch products
+        const productsRes = await fetch('/api/products')
+        if (!productsRes.ok) {
+          throw new Error(`HTTP error! status: ${productsRes.status}`)
+        }
+        const productsData = await productsRes.json()
         
-        // Fetch categories - TODO: Update to filter by LOUD STYLES brand
-        const categoriesResponse = await fetch('/api/categories')
-        const categoriesData = await categoriesResponse.json()
+        if (productsData.error) {
+          throw new Error(productsData.error)
+        }
         
-        setProducts(productsData.products || [])
-        setCategories(categoriesData.categories || [])
-        setFilteredProducts(productsData.products || [])
+        const productsArray = Array.isArray(productsData) ? productsData : (productsData.products || [])
+        setProducts(productsArray)
+        setFilteredProducts(productsArray)
+        
       } catch (error) {
-        console.error('Error fetching data:', error)
-        toast.error('Failed to load products')
+        console.error('Failed to fetch data:', error)
+        // Set empty arrays to prevent the page from crashing
+        setProducts([])
+        setFilteredProducts([])
       } finally {
         setLoading(false)
       }
@@ -119,472 +98,385 @@ export default function LoudStylesProductsPage() {
     fetchData()
   }, [])
 
-  // Filter products based on search, category, and other filters
+  // Handle URL parameters for category filtering
   useEffect(() => {
-    let filtered = [...products]
-    
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(product => 
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.nameAr && product.nameAr.includes(searchQuery))
-      )
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      // Filter products by category
+      const filtered = products.filter(product => {
+        const categoryName = typeof product.category === 'string' 
+          ? product.category 
+          : product.category.name;
+        return categoryName.toLowerCase().includes(categoryParam.toLowerCase());
+      });
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
     }
-    
-    // Category filter
-    if (selectedCategory !== 'All') {
-      filtered = filtered.filter(product => {
-        if (typeof product.category === 'string') {
-          return product.category === selectedCategory
-        }
-        return product.category.name === selectedCategory
-      })
+  }, [searchParams, products])
+
+  // Filter products based on search query
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredProducts(products);
+      return;
     }
+
+    const filtered = products.filter(product => {
+      const productName = (isRTL ? (product.nameAr ?? '') : (product.name ?? '')).toLowerCase();
+      const categoryName = (isRTL 
+        ? (typeof product.category === 'string' 
+            ? (product.categoryAr ?? '') 
+            : (product.category.nameAr ?? ''))
+        : (typeof product.category === 'string' 
+            ? product.category 
+            : product.category.name)
+      ).toLowerCase();
+      
+      return productName.includes(searchQuery.toLowerCase()) ||
+             categoryName.includes(searchQuery.toLowerCase());
+    });
     
-    // Price range filter
-    filtered = filtered.filter(product => 
-      product.price >= priceRange[0] && product.price <= priceRange[1]
-    )
-    
-    // Size filter
-    if (selectedSizes.length > 0) {
-      filtered = filtered.filter(product => {
-        const productSizes = Array.isArray(product.sizes) 
-          ? product.sizes.map(s => typeof s === 'string' ? s : s.size)
-          : []
-        return selectedSizes.some(size => productSizes.includes(size))
-      })
-    }
-    
-    // Additional filters
-    if (selectedFilters.inStock) {
-      filtered = filtered.filter(product => product.stock > 0)
-    }
-    
-    if (selectedFilters.onSale) {
-      filtered = filtered.filter(product => product.isOnSale)
-    }
-    
-    if (selectedFilters.highRated) {
-      filtered = filtered.filter(product => (product.rating || 0) >= 4)
-    }
-    
-    // Sort products
-    switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price)
-        break
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price)
-        break
-      case 'rating':
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-        break
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
-        break
-      default:
-        // Featured - keep original order
-        break
-    }
-    
-    setFilteredProducts(filtered)
-  }, [products, searchQuery, selectedCategory, selectedSizes, priceRange, sortBy, selectedFilters])
+    setFilteredProducts(filtered);
+  }, [searchQuery, products, isRTL])
+
+  if (!mounted) return null
 
   const handleAddToCart = (product: Product) => {
     addItem({
       id: product.id,
-      name: isRTL ? product.nameAr || product.name : product.name,
+      name: isRTL ? (product.nameAr || product.name) : product.name,
       price: product.price,
-      image: product.image
+      image: product.image || '/placeholder.svg'
     })
-    toast.success(isRTL ? 'تمت الإضافة إلى السلة' : 'Added to cart')
   }
 
-  const handleWishlistToggle = (product: Product) => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id)
-      toast.success(isRTL ? 'تم الإزالة من المفضلة' : 'Removed from wishlist')
-    } else {
-      addToWishlist({
-        id: product.id,
-        name: isRTL ? product.nameAr || product.name : product.name,
-        price: product.price,
-        image: product.image
-      })
-      toast.success(isRTL ? 'تمت الإضافة إلى المفضلة' : 'Added to wishlist')
-    }
-  }
+  const ProductCard = ({ product, index }: { product: Product, index: number }) => {
+    // Convert sizes to string array for rendering
+    const sizeStrings = Array.isArray(product.sizes) && product.sizes.length > 0
+      ? typeof product.sizes[0] === 'string' 
+        ? product.sizes as string[]
+        : (product.sizes as Array<{id: string; size: string; stock: number}>).map(s => s.size)
+      : [];
 
-  if (!mounted) return null
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ 
+          duration: 0.6, 
+          delay: index * 0.1,
+          ease: [0.25, 0.46, 0.45, 0.94]
+        }}
+        whileHover={{ 
+          y: -8,
+          transition: { duration: 0.3, ease: "easeOut" }
+        }}
+        className="group relative h-full"
+      >
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-beige-100 via-beige-200 to-beige-300 dark:from-gray-800 dark:to-gray-900 shadow-lg hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
+          {/* Product Image */}
+          <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
+            <Link href={`/loud-styles/products/${product.slug}`} className="block w-full h-full">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="relative w-full h-full"
+              >
+                <Image
+                  src={product.image && product.image.trim() !== '' ? product.image : '/placeholder.svg'}
+                  alt={isRTL ? product.nameAr || product.name : product.name}
+                  fill
+                  className="object-cover transition-transform duration-500"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder.svg';
+                  }}
+                />
+              </motion.div>
+            </Link>
+            
+            {/* Overlay with actions */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300">
+              <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} opacity-0 group-hover:opacity-100 transition-all duration-300`}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white shadow-lg"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    const isCurrentlyWishlisted = isInWishlist(product.id)
+                    
+                    if (isCurrentlyWishlisted) {
+                      removeFromWishlist(product.id)
+                      toast.success(isRTL ? 'تم إزالة من المفضلة' : 'Removed from wishlist')
+                    } else {
+                      addToWishlist({
+                        id: product.id,
+                        name: product.name,
+                        nameAr: product.nameAr,
+                        price: product.price,
+                        oldPrice: product.oldPrice,
+                        image: product.image,
+                        rating: product.rating,
+                        isOnSale: product.isOnSale,
+                        stock: product.stock,
+                        slug: product.slug
+                      })
+                      toast.success(isRTL ? 'تم الإضافة للمفضلة' : 'Added to wishlist')
+                    }
+                  }}
+                >
+                  <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                </Button>
+              </div>
+              
+              <div className={`absolute top-4 ${isRTL ? 'right-4' : 'left-4'} opacity-0 group-hover:opacity-100 transition-all duration-300`}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-full w-10 h-10 p-0 bg-white/90 hover:bg-white shadow-lg"
+                  asChild
+                >
+                  <Link href={`/loud-styles/products/${product.slug}`}>
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+            {/* Badges */}
+            <div className={`absolute top-4 ${isRTL ? 'right-4' : 'left-4'} space-y-2`}>
+              {product.isOnSale && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, x: isRTL ? 20 : -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
+                >
+                  <Badge className="bg-gradient-to-r from-red-500 to-pink-500 text-white border-0 shadow-lg text-center">
+                    <Sparkles className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    {isRTL ? 'تخفيض' : 'Sale'}
+                  </Badge>
+                </motion.div>
+              )}
+              {product.isLaunch && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, x: isRTL ? 20 : -20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ delay: 0.25 + index * 0.1, duration: 0.4 }}
+                >
+                  <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-lg text-center">
+                    Coming Soon
+                  </Badge>
+                </motion.div>
+              )}
+            </div>
+            
+            <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'}`}>
+              {product.stock <= 5 && product.stock > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, x: isRTL ? -20 : 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+                >
+                  <Badge className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white border-0 shadow-lg text-center">
+                    {isRTL ? 'مخزون قليل' : 'Low Stock'}
+                  </Badge>
+                </motion.div>
+              )}
+              {product.stock === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, x: isRTL ? -20 : 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
+                >
+                  <Badge className="bg-gradient-to-r from-gray-500 to-gray-600 text-white border-0 shadow-lg text-center">
+                    {isRTL ? 'غير متوفر' : 'Out of Stock'}
+                  </Badge>
+                </motion.div>
+              )}
+            </div>
+          </div>
+          
+          {/* Product Info */}
+          <CardContent className="p-4 flex-1 flex flex-col min-h-0">
+            <div className="space-y-3 flex-1 flex flex-col">
+              {/* Category */}
+              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                <Badge variant="outline" className="text-xs font-medium text-center">
+                  {isRTL 
+                    ? (typeof product.category === 'string' 
+                        ? (product.categoryAr || product.category) 
+                        : (product.category.nameAr || product.category.name))
+                    : (typeof product.category === 'string' 
+                        ? product.category 
+                        : product.category.name)
+                  }
+                </Badge>
+                <div className={`flex items-center space-x-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span className="text-sm text-gray-600 dark:text-muted-foreground">
+                    {product.rating?.toFixed(1) || '0.0'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Product Name */}
+              <Link href={`/loud-styles/products/${product.slug}`} className="block flex-1 min-h-0">
+                <h3 className="font-semibold text-base leading-tight line-clamp-2 hover:text-primary transition-colors group-hover:text-primary text-center min-h-[2.5rem] flex items-center justify-center">
+                  {isRTL ? product.nameAr || product.name : product.name}
+                </h3>
+              </Link>
+
+              {/* Sizes Preview */}
+              {sizeStrings.length > 0 && (
+                <div className="flex flex-wrap gap-1 justify-center min-h-[1.5rem]">
+                  {sizeStrings.slice(0, 3).map((size: string, sizeIndex: number) => (
+                    <span 
+                      key={size || sizeIndex} 
+                      className="text-xs bg-muted px-2 py-1 rounded-full font-medium text-center"
+                    >
+                      {size || '-'}
+                    </span>
+                  ))}
+                  {sizeStrings.length > 3 && (
+                    <span className="text-xs text-gray-500 dark:text-muted-foreground">
+                      +{sizeStrings.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Price */}
+              <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : 'flex-row'} mt-auto`}>
+                <div className="space-y-1 text-center flex-1">
+                  <div className={`flex items-center space-x-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-center`}>
+                    <span className="text-lg font-bold text-primary">
+                      {product.price.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
+                    </span>
+                    {product.oldPrice && (
+                      <span className="text-sm text-muted-foreground line-through">
+                        {product.oldPrice.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
+                      </span>
+                    )}
+                  </div>
+                  {product.oldPrice && (
+                    <div className={`flex items-center space-x-1 ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-center`}>
+                      <TrendingUp className="w-3 h-3 text-green-500" />
+                      <span className="text-xs text-green-600 font-medium">
+                        {Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}% {isRTL ? 'توفير' : 'off'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Launch Countdown */}
+              {product.isLaunch && product.launchAt && (
+                <div className="mt-3">
+                  <LaunchCountdown launchAt={product.launchAt} />
+                </div>
+              )}
+
+              {/* Add to Cart Button */}
+              <Button
+                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 text-center mt-3 h-10"
+                onClick={() => handleAddToCart(product)}
+                disabled={product.stock === 0 || (product.isLaunch && product.isLaunchActive)}
+              >
+                <ShoppingCart className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {product.stock === 0 
+                  ? (isRTL ? 'غير متوفر' : 'Out of Stock')
+                  : (product.isLaunch && product.isLaunchActive)
+                    ? 'Coming Soon'
+                    : (isRTL ? 'أضيفي للسلة' : 'Add to Cart')
+                }
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-warm-50 to-cream-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen" style={{ backgroundColor: '#b6b8b2' }} dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Navbar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <LoudStylesNavbar />
+      </div>
+      
+      {/* Hero Section */}
+      <div className="relative overflow-hidden pt-20" style={{ backgroundColor: '#b6b8b2' }}>
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="max-w-6xl mx-auto px-4 py-16 relative">
+          
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-              {isRTL ? 'منتجات LOUD STYLES' : 'LOUD STYLES Products'}
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-secondary bg-clip-text text-transparent text-center leading-tight">
+              {isRTL ? 'أناقة الأزياء التقليدية الجزائرية' : 'LOUD STYLES Collection'}
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-center leading-relaxed">
               {isRTL 
-                ? 'اكتشفي مجموعتنا المميزة من الأزياء التقليدية الجزائرية'
-                : 'Discover our exclusive collection of traditional Algerian fashion'
+                ? 'تسوقي حسب المجموعة - المجموعة المميزة'
+                : 'A unique collection of premium products with the highest quality and best prices'
               }
             </p>
+            
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto relative">
+              <Search className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5`} />
+              <Input
+                placeholder={isRTL ? 'البحث في المنتجات...' : 'Search products...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} h-12 text-lg bg-white/80 backdrop-blur-sm border-2 border-primary/20 focus:border-primary/50 transition-all duration-300 text-center`}
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+            </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Search and Sort */}
-          <div className="flex-1 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                type="text"
-                placeholder={isRTL ? 'البحث في المنتجات...' : 'Search products...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="featured">{isRTL ? 'مميز' : 'Featured'}</SelectItem>
-                <SelectItem value="price-low">{isRTL ? 'السعر: من الأقل' : 'Price: Low to High'}</SelectItem>
-                <SelectItem value="price-high">{isRTL ? 'السعر: من الأعلى' : 'Price: High to Low'}</SelectItem>
-                <SelectItem value="rating">{isRTL ? 'التقييم' : 'Rating'}</SelectItem>
-                <SelectItem value="newest">{isRTL ? 'الأحدث' : 'Newest'}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* View Mode and Filters Toggle */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="h-8 w-8 p-0"
-              >
-                <Grid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="h-8 w-8 p-0"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2"
-            >
-              <Filter className="w-4 h-4" />
-              {isRTL ? 'المرشحات' : 'Filters'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Filters Panel */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mt-6 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Category Filter */}
-                <div>
-                  <h3 className="font-semibold mb-3">{isRTL ? 'الفئة' : 'Category'}</h3>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">{isRTL ? 'جميع الفئات' : 'All Categories'}</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
-                          {isRTL ? category.nameAr || category.name : category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <h3 className="font-semibold mb-3">{isRTL ? 'نطاق السعر' : 'Price Range'}</h3>
-                  <div className="space-y-4">
-                    <Slider
-                      value={priceRange}
-                      onValueChange={setPriceRange}
-                      max={50000}
-                      min={0}
-                      step={1000}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                      <span>{priceRange[0].toLocaleString()} {isRTL ? 'د.ج' : 'DA'}</span>
-                      <span>{priceRange[1].toLocaleString()} {isRTL ? 'د.ج' : 'DA'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Size Filter */}
-                <div>
-                  <h3 className="font-semibold mb-3">{isRTL ? 'المقاس' : 'Size'}</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {availableSizes.map((size) => (
-                      <div key={size} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={size}
-                          checked={selectedSizes.includes(size)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedSizes([...selectedSizes, size])
-                            } else {
-                              setSelectedSizes(selectedSizes.filter(s => s !== size))
-                            }
-                          }}
-                        />
-                        <label htmlFor={size} className="text-sm">{size}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Additional Filters */}
-                <div>
-                  <h3 className="font-semibold mb-3">{isRTL ? 'مرشحات إضافية' : 'Additional Filters'}</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="inStock"
-                        checked={selectedFilters.inStock}
-                        onCheckedChange={(checked) => 
-                          setSelectedFilters({...selectedFilters, inStock: !!checked})
-                        }
-                      />
-                      <label htmlFor="inStock" className="text-sm">{isRTL ? 'متوفر في المخزون' : 'In Stock'}</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="onSale"
-                        checked={selectedFilters.onSale}
-                        onCheckedChange={(checked) => 
-                          setSelectedFilters({...selectedFilters, onSale: !!checked})
-                        }
-                      />
-                      <label htmlFor="onSale" className="text-sm">{isRTL ? 'في التخفيض' : 'On Sale'}</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="highRated"
-                        checked={selectedFilters.highRated}
-                        onCheckedChange={(checked) => 
-                          setSelectedFilters({...selectedFilters, highRated: !!checked})
-                        }
-                      />
-                      <label htmlFor="highRated" className="text-sm">{isRTL ? 'تقييم عالي' : 'High Rated'}</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Products Grid */}
-      <div className="container mx-auto px-4 pb-12">
+      <div className="max-w-6xl mx-auto px-4 py-8" style={{ backgroundColor: '#b6b8b2' }}>
+        {/* Products Grid */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, index) => (
               <div key={index} className="animate-pulse">
-                <div className="h-80 bg-gray-200 rounded-lg mb-4"></div>
+                <div className="aspect-[4/5] bg-gray-200 rounded-lg mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
               </div>
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Search className="w-16 h-16 mx-auto" />
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+              <Search className="w-12 h-12 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">
+            <h3 className="text-xl font-semibold mb-2 text-center">
               {isRTL ? 'لا توجد منتجات' : 'No products found'}
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-muted-foreground mb-6 text-center">
               {isRTL 
-                ? 'جربي تغيير المرشحات أو البحث عن شيء آخر'
-                : 'Try adjusting your filters or search for something else'
+                ? 'لا توجد منتجات تطابق معايير البحث. جربي تعديل المرشحات.'
+                : 'No products match your search criteria. Try adjusting your filters.'
               }
             </p>
+            <Button onClick={() => setSearchQuery('')} variant="outline" className="text-center">
+              {isRTL ? 'مسح البحث' : 'Clear Search'}
+            </Button>
           </div>
         ) : (
-          <div className={`grid gap-6 ${
-            viewMode === 'grid' 
-              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-              : 'grid-cols-1'
-          }`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="group"
-              >
-                <Link href={`/loud-styles/products/${product.slug}`}>
-                  <Card className="overflow-hidden border-0 bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
-                    <div className="relative">
-                      <div className="aspect-square overflow-hidden">
-                        <Image
-                          src={product.image}
-                          alt={isRTL ? product.nameAr || product.name : product.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      
-                      {/* Badges */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        {product.isOnSale && (
-                          <Badge className="bg-red-500 hover:bg-red-600">
-                            {isRTL ? 'تخفيض' : 'Sale'}
-                          </Badge>
-                        )}
-                        {product.isLaunchActive && (
-                          <Badge className="bg-purple-500 hover:bg-purple-600">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            {isRTL ? 'قريباً' : 'Coming Soon'}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Wishlist Button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute top-4 right-4 bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          handleWishlistToggle(product)
-                        }}
-                      >
-                        <Heart 
-                          className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} 
-                        />
-                      </Button>
-
-                      {/* Quick Actions */}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              handleAddToCart(product)
-                            }}
-                            disabled={!product.isOrderable}
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            {isRTL ? 'أضف للسلة' : 'Add to Cart'}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="bg-white dark:bg-gray-800"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            {isRTL ? 'عرض' : 'View'}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <CardContent className="p-4">
-                      <div className="mb-2">
-                        <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
-                          {isRTL ? product.nameAr || product.name : product.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {typeof product.category === 'string' 
-                            ? product.category 
-                            : (isRTL ? product.category.nameAr || product.category.name : product.category.name)
-                          }
-                        </p>
-                      </div>
-
-                      {/* Rating */}
-                      <div className="flex items-center mb-3">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < Math.floor(product.rating || 0)
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">
-                          ({product.rating || 0})
-                        </span>
-                      </div>
-
-                      {/* Price */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-primary">
-                            {product.price.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
-                          </span>
-                          {product.oldPrice && (
-                            <span className="text-sm text-gray-500 line-through">
-                              {product.oldPrice.toLocaleString()} {isRTL ? 'د.ج' : 'DA'}
-                            </span>
-                          )}
-                        </div>
-                        {product.stock <= 0 && (
-                          <Badge variant="destructive" className="text-xs">
-                            {isRTL ? 'نفذ المخزون' : 'Out of Stock'}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Launch Countdown */}
-                      {product.isLaunchActive && (
-                        <LaunchCountdown launchAt={product.launchAt} />
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
+              <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
         )}

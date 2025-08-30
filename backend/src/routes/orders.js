@@ -1,8 +1,11 @@
 const express = require('express');
 const { z } = require('zod');
-const prisma = require('../config/database');
+const { PrismaClient } = require('@prisma/client');
+const { getWilayaById, getWilayaName } = require('../utils/wilaya-mapper');
 const DeliveryDeskMapper = require('../utils/delivery-desk-mapper');
 const router = express.Router();
+
+const prisma = new PrismaClient();
 
 const createOrderSchema = z.object({
   customerName: z.string().min(1, 'Customer name is required'),
@@ -26,83 +29,47 @@ router.post('/', async (req, res) => {
   try {
     const orderData = createOrderSchema.parse(req.body);
 
-    // Map wilaya ID to city ID - Complete mapping for all 58 Algerian wilayas
-    const wilayaToCityMap = {
-      1: 'Adrar',
-      2: 'Chlef',
-      3: 'Laghouat',
-      4: 'Oum El Bouaghi',
-      5: 'Batna',
-      6: 'Béjaïa',
-      7: 'Biskra',
-      8: 'Béchar',
-      9: 'Blida',
-      10: 'Bouira',
-      11: 'Tamanrasset',
-      12: 'Tébessa',
-      13: 'Tlemcen',
-      14: 'Tiaret',
-      15: 'Tizi Ouzou',
-      16: 'Algiers',
-      17: 'Djelfa',
-      18: 'Jijel',
-      19: 'Sétif',
-      20: 'Saïda',
-      21: 'Skikda',
-      22: 'Sidi Bel Abbès',
-      23: 'Annaba',
-      24: 'Guelma',
-      25: 'Constantine',
-      26: 'Médéa',
-      27: 'Mostaganem',
-      28: "M'Sila",
-      29: 'Mascara',
-      30: 'Ouargla',
-      31: 'Oran',
-      32: 'El Bayadh',
-      33: 'Illizi',
-      34: 'Bordj Bou Arréridj',
-      35: 'Boumerdès',
-      36: 'El Tarf',
-      37: 'Tindouf',
-      38: 'Tissemsilt',
-      39: 'El Oued',
-      40: 'Khenchela',
-      41: 'Souk Ahras',
-      42: 'Tipaza',
-      43: 'Mila',
-      44: 'Aïn Defla',
-      45: 'Naâma',
-      46: 'Aïn Témouchent',
-      47: 'Ghardaïa',
-      48: 'Relizane',
-      49: 'Timimoun',
-      50: 'Bordj Badji Mokhtar',
-      51: 'Ouled Djellal',
-      52: 'Béni Abbès',
-      53: 'In Salah',
-      54: 'In Guezzam',
-      55: 'Touggourt',
-      56: 'Djanet',
-      57: "M'Sila",
-      58: 'El M\'Ghair'
-    };
-
-    const cityName = wilayaToCityMap[orderData.wilayaId];
-    if (!cityName) {
+    // Get wilaya information using the mapper utility
+    const wilayaInfo = getWilayaById(orderData.wilayaId);
+    if (!wilayaInfo) {
       return res.status(400).json({ 
         error: `Unsupported wilaya ID: ${orderData.wilayaId}` 
       });
     }
 
-    // Find the city by name
-    const city = await prisma.city.findFirst({
+    const cityName = wilayaInfo.name;
+
+    // Find the city by name with fallback options
+    let city = await prisma.city.findFirst({
       where: { name: cityName }
     });
 
+    // If not found, try alternative name formats
     if (!city) {
+      // Try with different case variations and alternative names
+      city = await prisma.city.findFirst({
+        where: {
+          OR: [
+            { name: { equals: cityName, mode: 'insensitive' } },
+            { name: { contains: cityName, mode: 'insensitive' } },
+            { nameAr: { contains: cityName, mode: 'insensitive' } },
+            // Try with alternative names from the mapper
+            ...wilayaInfo.alternatives.map(alt => ({ 
+              name: { equals: alt, mode: 'insensitive' } 
+            })),
+            ...wilayaInfo.alternatives.map(alt => ({ 
+              nameAr: { contains: alt, mode: 'insensitive' } 
+            }))
+          ]
+        }
+      });
+    }
+
+    if (!city) {
+      console.error(`City not found for wilaya ID ${orderData.wilayaId} with name: ${cityName}`);
+      console.error('Available cities in database:', await prisma.city.findMany({ select: { name: true, nameAr: true } }));
       return res.status(400).json({ 
-        error: `City not found for wilaya: ${cityName}` 
+        error: `City not found for wilaya: ${cityName}. Please contact support.` 
       });
     }
 

@@ -10,6 +10,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useCartStore } from '@/lib/store'
 import { useLocaleStore } from '@/lib/locale-store'
+import { LoudStylesNavbar } from '@/components/loud-styles-navbar'
 
 // Define types
 interface Product {
@@ -166,76 +167,14 @@ export default function LoudStylesHomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-warm-50 to-cream-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 dark:bg-gray-900/90 dark:border-gray-700">
-        <div className="container mx-auto px-4">
-          <div className={`flex items-center justify-between h-16 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Link href="/loud-styles" className="flex items-center group">
-                <div className="transition-transform duration-300 group-hover:scale-105">
-                  <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer">
-                    <span className="inline-block">
-                      <span className="text-primary transition-colors duration-300 group-hover:text-primary/80 font-bold">LOUD</span>
-                      <span className="relative inline-block ml-2">
-                        <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300 group-hover:text-primary font-light">STYLES</span>
-                      </span>
-                    </span>
-                  </h1>
-                </div>
-              </Link>
-            </div>
-
-            {/* Navigation Links */}
-            <div className={`hidden md:flex items-center space-x-8 ${isRTL ? 'space-x-reverse' : ''}`}>
-              <Link
-                href="/"
-                className={`relative px-4 py-2 rounded-lg font-medium text-lg transition-all duration-300 group
-                  text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10
-                `}
-              >
-                {isRTL ? 'الرئيسية' : 'Home'}
-                <div className="absolute inset-0 rounded-lg bg-primary/0 group-hover:bg-primary/10 transition-all duration-300" />
-              </Link>
-              <Link
-                href="/loud-styles/products"
-                className={`relative px-4 py-2 rounded-lg font-medium text-lg transition-all duration-300 group
-                  text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10
-                `}
-              >
-                {isRTL ? 'المنتجات' : 'Products'}
-                <div className="absolute inset-0 rounded-lg bg-primary/0 group-hover:bg-primary/10 transition-all duration-300" />
-              </Link>
-              <Link
-                href="/loud-styles/categories"
-                className={`relative px-4 py-2 rounded-lg font-medium text-lg transition-all duration-300 group
-                  text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10
-                `}
-              >
-                {isRTL ? 'الفئات' : 'Categories'}
-                <div className="absolute inset-0 rounded-lg bg-primary/0 group-hover:bg-primary/10 transition-all duration-300" />
-              </Link>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 text-gray-700 dark:text-gray-300 hover:text-primary hover:bg-primary/10"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-screen" style={{ backgroundColor: '#b6b8b2' }} dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Hero Section with Video */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gradient-to-r from-camel-100 via-camel-200 to-camel-300 dark:from-camel-800 dark:via-camel-700 dark:to-camel-600">
+      <section className="relative h-screen flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#b6b8b2' }}>
+        {/* Navbar positioned over video */}
+        <div className="absolute top-0 left-0 right-0 z-50">
+          <LoudStylesNavbar />
+        </div>
+
         {/* Video Background */}
         <video
           id="hero-video"

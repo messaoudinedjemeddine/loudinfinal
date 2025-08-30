@@ -35,7 +35,7 @@ const algerianPhoneNumbers = [
   '051123456', '051234567', '051345678', '051456789', '051567890'
 ];
 
-// Algerian cities with their wilaya codes
+// Algerian cities with their wilaya codes - Updated to match Yalidine API names
 const algerianCities = [
   { name: 'Algiers', nameAr: 'الجزائر', code: '16', wilayaId: 16 },
   { name: 'Oran', nameAr: 'وهران', code: '31', wilayaId: 31 },
@@ -46,7 +46,53 @@ const algerianCities = [
   { name: 'Setif', nameAr: 'سطيف', code: '19', wilayaId: 19 },
   { name: 'Tlemcen', nameAr: 'تلمسان', code: '13', wilayaId: 13 },
   { name: 'Bejaia', nameAr: 'بجاية', code: '06', wilayaId: 6 },
-  { name: 'Tebessa', nameAr: 'تبسة', code: '12', wilayaId: 12 }
+  { name: 'Tebessa', nameAr: 'تبسة', code: '12', wilayaId: 12 },
+  { name: 'Laghouat', nameAr: 'الأغواط', code: '03', wilayaId: 3 },
+  { name: 'Chlef', nameAr: 'الشلف', code: '02', wilayaId: 2 },
+  { name: 'Oum El Bouaghi', nameAr: 'أم البواقي', code: '04', wilayaId: 4 },
+  { name: 'Biskra', nameAr: 'بسكرة', code: '07', wilayaId: 7 },
+  { name: 'Bechar', nameAr: 'بشار', code: '08', wilayaId: 8 },
+  { name: 'Bouira', nameAr: 'البويرة', code: '10', wilayaId: 10 },
+  { name: 'Tamanrasset', nameAr: 'تمنراست', code: '11', wilayaId: 11 },
+  { name: 'Tiaret', nameAr: 'تيارت', code: '14', wilayaId: 14 },
+  { name: 'Tizi Ouzou', nameAr: 'تيزي وزو', code: '15', wilayaId: 15 },
+  { name: 'Djelfa', nameAr: 'الجلفة', code: '17', wilayaId: 17 },
+  { name: 'Jijel', nameAr: 'جيجل', code: '18', wilayaId: 18 },
+  { name: 'Saida', nameAr: 'سعيدة', code: '20', wilayaId: 20 },
+  { name: 'Skikda', nameAr: 'سكيكدة', code: '21', wilayaId: 21 },
+  { name: 'Sidi Bel Abbes', nameAr: 'سيدي بلعباس', code: '22', wilayaId: 22 },
+  { name: 'Guelma', nameAr: 'قالمة', code: '24', wilayaId: 24 },
+  { name: 'Medea', nameAr: 'المدية', code: '26', wilayaId: 26 },
+  { name: 'Mostaganem', nameAr: 'مستغانم', code: '27', wilayaId: 27 },
+  { name: 'Msila', nameAr: 'المسيلة', code: '28', wilayaId: 28 },
+  { name: 'Mascara', nameAr: 'معسكر', code: '29', wilayaId: 29 },
+  { name: 'Ouargla', nameAr: 'ورقلة', code: '30', wilayaId: 30 },
+  { name: 'El Bayadh', nameAr: 'البيض', code: '32', wilayaId: 32 },
+  { name: 'Illizi', nameAr: 'إليزي', code: '33', wilayaId: 33 },
+  { name: 'Bordj Bou Arreridj', nameAr: 'برج بوعريريج', code: '34', wilayaId: 34 },
+  { name: 'Boumerdes', nameAr: 'بومرداس', code: '35', wilayaId: 35 },
+  { name: 'El Tarf', nameAr: 'الطارف', code: '36', wilayaId: 36 },
+  { name: 'Tindouf', nameAr: 'تندوف', code: '37', wilayaId: 37 },
+  { name: 'Tissemsilt', nameAr: 'تيسمسيلت', code: '38', wilayaId: 38 },
+  { name: 'El Oued', nameAr: 'الوادي', code: '39', wilayaId: 39 },
+  { name: 'Khenchela', nameAr: 'خنشلة', code: '40', wilayaId: 40 },
+  { name: 'Souk Ahras', nameAr: 'سوق أهراس', code: '41', wilayaId: 41 },
+  { name: 'Tipaza', nameAr: 'تيبازة', code: '42', wilayaId: 42 },
+  { name: 'Mila', nameAr: 'ميلة', code: '43', wilayaId: 43 },
+  { name: 'Ain Defla', nameAr: 'عين الدفلى', code: '44', wilayaId: 44 },
+  { name: 'Naama', nameAr: 'النعامة', code: '45', wilayaId: 45 },
+  { name: 'Ain Temouchent', nameAr: 'عين تموشنت', code: '46', wilayaId: 46 },
+  { name: 'Ghardaia', nameAr: 'غرداية', code: '47', wilayaId: 47 },
+  { name: 'Relizane', nameAr: 'غليزان', code: '48', wilayaId: 48 },
+  { name: 'Timimoun', nameAr: 'تيميمون', code: '49', wilayaId: 49 },
+  { name: 'Bordj Badji Mokhtar', nameAr: 'برج باجي مختار', code: '50', wilayaId: 50 },
+  { name: 'Ouled Djellal', nameAr: 'أولاد جلال', code: '51', wilayaId: 51 },
+  { name: 'Beni Abbes', nameAr: 'بني عباس', code: '52', wilayaId: 52 },
+  { name: 'In Salah', nameAr: 'عين صالح', code: '53', wilayaId: 53 },
+  { name: 'In Guezzam', nameAr: 'عين قزام', code: '54', wilayaId: 54 },
+  { name: 'Touggourt', nameAr: 'تقرت', code: '55', wilayaId: 55 },
+  { name: 'Djanet', nameAr: 'جانت', code: '56', wilayaId: 56 },
+  { name: 'El M\'Ghair', nameAr: 'المغير', code: '58', wilayaId: 58 }
 ];
 
 // Yalidine delivery desks for each city

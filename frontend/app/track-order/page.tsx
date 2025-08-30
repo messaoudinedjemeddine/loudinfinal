@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { Navbar } from '@/components/navbar'
-import { Footer } from '@/components/footer'
 import { TrackingComponent } from '@/components/tracking-component'
 
 export default function TrackOrderPage() {
@@ -41,8 +40,6 @@ export default function TrackOrderPage() {
           </div>
         </section>
       </div>
-
-      <Footer />
     </div>
   )
 }

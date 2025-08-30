@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const yalidineService = require('../services/yalidine');
+const { getWilayaById, getWilayaName } = require('../utils/wilaya-mapper');
 const { z } = require('zod');
 
 // Simple in-memory cache for API responses
@@ -285,14 +286,18 @@ router.post('/calculate-fees', async (req, res) => {
     // Get delivery options for the first commune (you might want to get specific commune)
     const firstCommune = Object.values(feesData.per_commune)[0];
     
+    // Add proper null checks and fallback values for desk delivery
+    const homeDeliveryFee = (firstCommune.express_home || 0) + weightFees;
+    const deskDeliveryFee = (firstCommune.express_desk || firstCommune.express_home || 0) + weightFees;
+    
     const deliveryOptions = {
       express: {
-        home: firstCommune.express_home + weightFees,
-        desk: firstCommune.express_desk + weightFees
+        home: homeDeliveryFee,
+        desk: deskDeliveryFee
       },
       economic: {
-        home: firstCommune.economic_home ? firstCommune.economic_home + weightFees : null,
-        desk: firstCommune.economic_desk ? firstCommune.economic_desk + weightFees : null
+        home: firstCommune.economic_home + weightFees,
+        desk: firstCommune.economic_desk + weightFees
       }
     };
 
@@ -313,7 +318,7 @@ router.post('/calculate-fees', async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid input data', details: error.errors });
     }
-    console.error('Error calculating fees:', error);
+    console.error('Error calculating shipping fees:', error);
     res.status(500).json({ error: 'Failed to calculate shipping fees' });
   }
 });

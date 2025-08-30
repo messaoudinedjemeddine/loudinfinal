@@ -47,31 +47,72 @@ export function Navbar() {
   const totalItems = getTotalItems()
   const wishlistCount = getWishlistCount()
 
-  // Check if we're on the Loud Brands page (root page)
+  // Check which page we're on to determine navigation
   const isLoudBrandsPage = pathname === '/'
+  const isLoudimPage = pathname.startsWith('/loudim')
+  const isLoudStylesPage = pathname.startsWith('/loud-styles')
   
-  const navigation = isLoudBrandsPage ? [
-    { name: 'LOUDIM', href: '/loudim' },
-    { name: 'LOUD STYLES', href: '/loud-styles' },
-  ] : [
-    { name: isRTL ? 'الرئيسية' : 'Home', href: '/' },
-    { name: isRTL ? 'المنتجات' : 'Products', href: '/products' },
-    { name: isRTL ? 'من نحن' : 'About', href: '/about' },
-    { name: isRTL ? 'اتصلي بنا' : 'Contact', href: '/contact' },
-  ]
+  // Determine navigation based on current page
+  let navigation = []
+  let logoText = ''
+  let logoSubtext = ''
+  
+  if (isLoudBrandsPage) {
+    navigation = [
+      { name: 'LOUDIM', href: '/loudim' },
+      { name: 'LOUD STYLES', href: '/loud-styles' },
+    ]
+    logoText = 'LOUD'
+    logoSubtext = 'BRANDS'
+  } else if (isLoudimPage) {
+    navigation = [
+      { name: isRTL ? 'الرئيسية' : 'Home', href: '/' },
+      { name: isRTL ? 'المنتجات' : 'Products', href: '/loudim/products' },
+      { name: isRTL ? 'الفئات' : 'Categories', href: '/loudim/categories' },
+      { name: isRTL ? 'من نحن' : 'About', href: '/about' },
+      { name: isRTL ? 'اتصلي بنا' : 'Contact', href: '/contact' },
+    ]
+    logoText = 'LOUD'
+    logoSubtext = 'IM'
+  } else if (isLoudStylesPage) {
+    navigation = [
+      { name: isRTL ? 'الرئيسية' : 'Home', href: '/' },
+      { name: isRTL ? 'المنتجات' : 'Products', href: '/loud-styles/products' },
+      { name: isRTL ? 'الفئات' : 'Categories', href: '/loud-styles/categories' },
+      { name: isRTL ? 'من نحن' : 'About', href: '/about' },
+      { name: isRTL ? 'اتصلي بنا' : 'Contact', href: '/contact' },
+    ]
+    logoText = 'LOUD'
+    logoSubtext = 'STYLES'
+  } else {
+    // Default navigation for other pages
+    navigation = [
+      { name: isRTL ? 'الرئيسية' : 'Home', href: '/' },
+      { name: isRTL ? 'المنتجات' : 'Products', href: '/products' },
+      { name: isRTL ? 'من نحن' : 'About', href: '/about' },
+      { name: isRTL ? 'اتصلي بنا' : 'Contact', href: '/contact' },
+    ]
+    logoText = 'LOUD'
+    logoSubtext = 'BRANDS'
+  }
 
   useEffect(() => {
     setMounted(true)
   }, [])
-
-
 
   if (!mounted) return null
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery)}`)
+      // Determine search URL based on current page
+      let searchUrl = '/products'
+      if (isLoudimPage) {
+        searchUrl = '/loudim/products'
+      } else if (isLoudStylesPage) {
+        searchUrl = '/loud-styles/products'
+      }
+      router.push(`${searchUrl}?search=${encodeURIComponent(searchQuery)}`)
       setIsSearchOpen(false)
       setSearchQuery('')
     }
@@ -121,13 +162,13 @@ export function Navbar() {
           <div className={`flex items-center justify-between h-20 ${isRTL ? 'flex-row-reverse' : ''}`}>
             {/* Logo Section */}
             <div className="flex-shrink-0">
-              <Link href="/" className="flex items-center group">
+              <Link href={isLoudimPage ? "/loudim" : isLoudStylesPage ? "/loud-styles" : "/"} className="flex items-center group">
                 <div className="transition-transform duration-300 group-hover:scale-105">
                   <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer">
                     <span className="inline-block">
-                      <span className="text-primary transition-colors duration-300 group-hover:text-white font-bold">LOUD</span>
+                      <span className="text-primary transition-colors duration-300 group-hover:text-white font-bold">{logoText}</span>
                       <span className="relative inline-block ml-2">
-                        <span className="text-white transition-colors duration-300 group-hover:text-primary font-light">BRANDS</span>
+                        <span className="text-white transition-colors duration-300 group-hover:text-primary font-light">{logoSubtext}</span>
                         <motion.span
                           className="absolute inset-0 bg-primary origin-left"
                           initial={{ scaleX: 0 }}
