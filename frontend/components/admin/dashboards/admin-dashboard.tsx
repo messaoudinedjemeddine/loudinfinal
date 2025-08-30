@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -18,13 +19,15 @@ import {
   Clock,
   Loader2,
   DollarSign,
-  BarChart3,
-  Truck
+  BarChart3
 } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { useLocaleStore } from '@/lib/locale-store'
-import { ShippingDashboard } from '@/components/admin/shipping-dashboard'
+import { DeliveryAgentDashboard } from './delivery-agent-dashboard'
+import { OrderConfirmationDashboard } from './order-confirmation-dashboard'
+import { ShippingRoleDashboard } from './shipping-role-dashboard'
+
 
 // Types for dashboard data
 interface DashboardStats {
@@ -72,17 +75,15 @@ const statusColors = {
   NEW: 'bg-blue-100 text-blue-800',
   CONFIRMED: 'bg-green-100 text-green-800',
   CANCELED: 'bg-red-100 text-red-800',
-  NO_RESPONSE: 'bg-gray-100 text-gray-800',
-  NOT_READY: 'bg-gray-100 text-gray-800',
-  READY: 'bg-yellow-100 text-yellow-800',
-  IN_TRANSIT: 'bg-blue-100 text-blue-800',
-  DONE: 'bg-green-100 text-green-800'
+  NO_RESPONSE: 'bg-gray-100 text-gray-800'
 }
 
 export function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { t, isRTL, direction } = useLocaleStore()
+  const searchParams = useSearchParams()
+  const defaultTab = searchParams.get('tab') || 'orders'
   
   // Dashboard data state
   const [stats, setStats] = useState<DashboardStats>({
@@ -245,12 +246,14 @@ export function AdminDashboard() {
         </motion.div>
       </div>
 
-      {/* Tabs for Recent Orders, Low Stock, and Shipping */}
-      <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList>
+              {/* Tabs for Recent Orders, Low Stock, Order Confirmation, Delivery Agent, and Shipping */}
+      <Tabs defaultValue={defaultTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="orders">Recent Orders</TabsTrigger>
           <TabsTrigger value="low-stock">Low Stock Alert</TabsTrigger>
-          <TabsTrigger value="shipping">Shipping Management</TabsTrigger>
+          <TabsTrigger value="order-confirmation">Order Confirmation</TabsTrigger>
+          <TabsTrigger value="delivery-agent">Delivery Agent</TabsTrigger>
+          <TabsTrigger value="shipping">Shipping</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders" className="space-y-4">
@@ -339,9 +342,18 @@ export function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="shipping" className="space-y-4">
-          <ShippingDashboard />
+        <TabsContent value="order-confirmation" className="space-y-4">
+          <OrderConfirmationDashboard />
         </TabsContent>
+
+        <TabsContent value="delivery-agent" className="space-y-4">
+          <DeliveryAgentDashboard />
+        </TabsContent>
+
+        <TabsContent value="shipping" className="space-y-4">
+          <ShippingRoleDashboard />
+        </TabsContent>
+
       </Tabs>
     </div>
   )

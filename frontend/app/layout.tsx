@@ -22,32 +22,32 @@ const notoSansArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: 'Loudim Brands - Premium Fashion Collection',
-  description: 'Discover our premium collection of fashion brands including Loudim and Loud Styles. Quality clothing for the modern lifestyle.',
-  keywords: 'Loudim, Loud Styles, fashion, clothing, premium brands, modern fashion',
-  authors: [{ name: 'Loudim Brands' }],
-  creator: 'Loudim Brands',
-  publisher: 'Loudim Brands',
+  title: 'Algerian Elegance - Traditional Modern Fashion',
+  description: 'Discover our exquisite collection of traditional Algerian fashion designed for the modern woman. Free delivery across Algeria.',
+  keywords: 'Algerian fashion, traditional clothing, modern fashion, women clothing, Algeria, traditional dress',
+  authors: [{ name: 'Algerian Elegance' }],
+  creator: 'Algerian Elegance',
+  publisher: 'Algerian Elegance',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://loudim-brands.com'),
+  metadataBase: new URL('https://algerian-elegance.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Loudim Brands - Premium Fashion Collection',
-    description: 'Discover our premium collection of fashion brands including Loudim and Loud Styles.',
-    url: 'https://loudim-brands.com',
-    siteName: 'Loudim Brands',
+    title: 'Algerian Elegance - Traditional Modern Fashion',
+    description: 'Discover our exquisite collection of traditional Algerian fashion designed for the modern woman.',
+    url: 'https://algerian-elegance.com',
+    siteName: 'Algerian Elegance',
     images: [
       {
         url: '/logos/logo-light.png',
         width: 1200,
         height: 630,
-        alt: 'Loudim Brands Logo',
+        alt: 'Algerian Elegance Logo',
       },
     ],
     locale: 'en_US',
@@ -55,8 +55,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Loudim Brands - Premium Fashion Collection',
-    description: 'Discover our premium collection of fashion brands including Loudim and Loud Styles.',
+    title: 'Algerian Elegance - Traditional Modern Fashion',
+    description: 'Discover our exquisite collection of traditional Algerian fashion designed for the modern woman.',
     images: ['/logos/logo-light.png'],
   },
   icons: {

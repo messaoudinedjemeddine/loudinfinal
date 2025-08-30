@@ -33,7 +33,7 @@ export function LanguageSwitcher({ isTransparent = false }: { isTransparent?: bo
         <Button 
           variant="ghost" 
           size="sm" 
-          className="p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
+          className="p-2 text-white hover:text-amber-300 hover:bg-amber-500/20 rounded-lg transition-all duration-300"
         >
           <Globe className="w-5 h-5" />
         </Button>

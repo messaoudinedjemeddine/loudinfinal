@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,10 +58,10 @@ interface ShippingStats {
 }
 
 const statusColors = {
-  NOT_READY: 'bg-gray-100 text-gray-800',
-  READY: 'bg-yellow-100 text-yellow-800',
-  IN_TRANSIT: 'bg-blue-100 text-blue-800',
-  DONE: 'bg-green-100 text-green-800'
+  NOT_READY: 'bg-slate-100 text-slate-800 border border-slate-200',
+  READY: 'bg-amber-100 text-amber-800 border border-amber-200',
+  IN_TRANSIT: 'bg-sky-100 text-sky-800 border border-sky-200',
+  DONE: 'bg-emerald-100 text-emerald-800 border border-emerald-200'
 };
 
 const statusLabels = {
@@ -114,7 +114,9 @@ export function ShippingDashboard() {
   const [shipmentPagination, setShipmentPagination] = useState({
     has_more: false,
     total_data: 0,
-    current_page: 1
+    current_page: 1,
+    total_pages: 0,
+    per_page: 25
   });
 
   // Yalidine data
@@ -131,8 +133,26 @@ export function ShippingDashboard() {
     to_commune_name: '',
     date_creation: '',
     date_last_status: '',
-    payment_status: ''
+    payment_status: '',
+    month: '' // New month filter
   });
+
+  // Month filter options
+  const monthOptions = [
+    { value: '', label: 'All Months' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' }
+  ];
 
   // Yalidine status options (exact values from API)
   const yalidineStatuses = [
@@ -191,11 +211,56 @@ export function ShippingDashboard() {
     hasExchange: false,
   });
 
+  const fetchYalidineShipments = useCallback(async (filters: any = {}) => {
+    try {
+      setLoadingShipments(true);
+      
+      // Add pagination parameters
+      const page = filters.page || 1;
+      const limit = shipmentPagination.per_page;
+      const offset = (page - 1) * limit;
+      
+      const requestFilters = {
+        ...filters,
+        limit,
+        offset
+      };
+      
+      const response = await yalidineAPI.getAllShipments(requestFilters);
+      
+      // Handle pagination data
+      if (response.has_more !== undefined) {
+        const totalPages = Math.ceil((response.total_data || 0) / limit);
+        setShipmentPagination({
+          has_more: response.has_more,
+          total_data: response.total_data || 0,
+          current_page: page,
+          total_pages: totalPages,
+          per_page: limit
+        });
+      }
+      
+      setYalidineShipments(response.data || []);
+    } catch (error) {
+      console.error('Error fetching Yalidine shipments:', error);
+      setYalidineShipments([]);
+      setShipmentPagination({
+        has_more: false,
+        total_data: 0,
+        current_page: 1,
+        total_pages: 0,
+        per_page: shipmentPagination.per_page
+      });
+    } finally {
+      setLoadingShipments(false);
+    }
+  }, [shipmentPagination.per_page]);
+
   useEffect(() => {
     fetchShippingData();
     loadYalidineData();
     fetchYalidineShipments();
-  }, []);
+  }, [fetchYalidineShipments]);
 
   const fetchShippingData = async () => {
     try {
@@ -240,33 +305,7 @@ export function ShippingDashboard() {
     }
   };
 
-  const fetchYalidineShipments = async (filters = {}) => {
-    try {
-      setLoadingShipments(true);
-      const response = await yalidineAPI.getAllShipments(filters);
-      
-      // Handle pagination data
-      if (response.has_more !== undefined) {
-        setShipmentPagination({
-          has_more: response.has_more,
-          total_data: response.total_data || 0,
-          current_page: 1
-        });
-      }
-      
-      setYalidineShipments(response.data || []);
-    } catch (error) {
-      console.error('Error fetching Yalidine shipments:', error);
-      setYalidineShipments([]);
-      setShipmentPagination({
-        has_more: false,
-        total_data: 0,
-        current_page: 1
-      });
-    } finally {
-      setLoadingShipments(false);
-    }
-  };
+
 
   const handleFilterChange = (key: string, value: string) => {
     setShipmentFilters(prev => ({ ...prev, [key]: value }));
@@ -287,9 +326,32 @@ export function ShippingDashboard() {
       to_commune_name: '',
       date_creation: '',
       date_last_status: '',
-      payment_status: ''
+      payment_status: '',
+      month: ''
     });
     fetchYalidineShipments();
+  };
+
+  // Pagination functions
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= shipmentPagination.total_pages) {
+      const activeFilters = Object.fromEntries(
+        Object.entries(shipmentFilters).filter(([_, value]) => value !== '')
+      );
+      fetchYalidineShipments({ ...activeFilters, page });
+    }
+  };
+
+  const nextPage = () => {
+    if (shipmentPagination.current_page < shipmentPagination.total_pages) {
+      goToPage(shipmentPagination.current_page + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (shipmentPagination.current_page > 1) {
+      goToPage(shipmentPagination.current_page - 1);
+    }
   };
 
   const handleCreateShipment = async (order: Order) => {
@@ -302,14 +364,14 @@ export function ShippingDashboard() {
 
     // Get the exact wilaya ID for the order's city
     const orderWilaya = wilayas.find(w => w.name === order.city.name);
-    const orderWilayaId = orderWilaya?.id || '5'; // Default to Batna if not found
+    const orderWilayaId = orderWilaya?.id || 5; // Default to Batna if not found
 
     // Load communes for the order's wilaya
     if (orderWilayaId) {
       try {
-        const communesData = await yalidineAPI.getCommunes(parseInt(orderWilayaId));
+        const communesData = await yalidineAPI.getCommunes(orderWilayaId);
         setCommunes(communesData.data || []);
-        setSelectedWilaya(orderWilayaId);
+        setSelectedWilaya(orderWilayaId.toString());
       } catch (error) {
         console.error('Error loading communes for order wilaya:', error);
       }
@@ -421,10 +483,10 @@ export function ShippingDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Confirmed Orders</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Clock className="h-4 w-4 text-slate-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.confirmedOrders}</div>
+            <div className="text-2xl font-bold text-slate-600">{stats.confirmedOrders}</div>
             <p className="text-xs text-muted-foreground">Ready for shipping</p>
           </CardContent>
         </Card>
@@ -432,10 +494,10 @@ export function ShippingDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ready Orders</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.readyOrders}</div>
+            <div className="text-2xl font-bold text-amber-600">{stats.readyOrders}</div>
             <p className="text-xs text-muted-foreground">Shipment created</p>
           </CardContent>
         </Card>
@@ -443,10 +505,10 @@ export function ShippingDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-            <Truck className="h-4 w-4 text-muted-foreground" />
+            <Truck className="h-4 w-4 text-sky-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.inTransitOrders}</div>
+            <div className="text-2xl font-bold text-sky-600">{stats.inTransitOrders}</div>
             <p className="text-xs text-muted-foreground">On the way</p>
           </CardContent>
         </Card>
@@ -454,10 +516,10 @@ export function ShippingDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Delivered</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CheckCircle className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.deliveredOrders}</div>
+            <div className="text-2xl font-bold text-emerald-600">{stats.deliveredOrders}</div>
             <p className="text-xs text-muted-foreground">Completed</p>
           </CardContent>
         </Card>
@@ -669,6 +731,21 @@ export function ShippingDashboard() {
                       onChange={(e) => handleFilterChange('date_last_status', e.target.value)}
                     />
                   </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Month</label>
+                    <select
+                      className="w-full p-2 border rounded mt-1"
+                      value={shipmentFilters.month}
+                      onChange={(e) => handleFilterChange('month', e.target.value)}
+                    >
+                      {monthOptions.map((month) => (
+                        <option key={month.value} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex justify-end mt-4">
@@ -690,7 +767,7 @@ export function ShippingDashboard() {
               <CardContent>
                 <div className="text-2xl font-bold">{shipmentPagination.total_data || yalidineShipments.length}</div>
                 <p className="text-xs text-muted-foreground">
-                  {shipmentPagination.total_data > 0 ? `All shipments in Yalidine (showing ${yalidineShipments.length})` : 'All shipments in Yalidine'}
+                  {shipmentPagination.total_data > 0 ? `All shipments in Yalidine (page ${shipmentPagination.current_page} of ${shipmentPagination.total_pages})` : 'All shipments in Yalidine'}
                 </p>
               </CardContent>
             </Card>
@@ -698,10 +775,10 @@ export function ShippingDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">En Préparation</CardTitle>
-                <Clock className="h-4 w-4 text-yellow-500" />
+                <Clock className="h-4 w-4 text-amber-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
+                <div className="text-2xl font-bold text-amber-600">
                   {yalidineShipments.filter(s => s.last_status === 'En préparation').length}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -713,10 +790,10 @@ export function ShippingDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">En Livraison</CardTitle>
-                <Truck className="h-4 w-4 text-blue-500" />
+                <Truck className="h-4 w-4 text-sky-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-sky-600">
                   {yalidineShipments.filter(s => s.last_status === 'Sorti en livraison').length}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -728,10 +805,10 @@ export function ShippingDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Livré</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-emerald-600">
                   {yalidineShipments.filter(s => s.last_status === 'Livré').length}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -750,6 +827,7 @@ export function ShippingDashboard() {
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     View all shipments from your Yalidine account ({shipmentPagination.total_data || yalidineShipments.length} total)
+                    {shipmentPagination.total_pages > 1 && ` • Page ${shipmentPagination.current_page} of ${shipmentPagination.total_pages}`}
                   </p>
                 </div>
                 <Button 
@@ -786,13 +864,37 @@ export function ShippingDashboard() {
                               <div className="flex items-center space-x-2 mb-1">
                                 <p className="font-medium text-lg">#{shipment.tracking}</p>
                                 <Badge className={`${
-                                  shipment.last_status === 'Livré' ? 'bg-green-100 text-green-800' :
-                                  shipment.last_status === 'Sorti en livraison' ? 'bg-blue-100 text-blue-800' :
-                                  shipment.last_status === 'En préparation' ? 'bg-yellow-100 text-yellow-800' :
-                                  shipment.last_status === 'Echèc livraison' ? 'bg-red-100 text-red-800' :
-                                  shipment.last_status === 'Retourné au vendeur' ? 'bg-orange-100 text-orange-800' :
-                                  shipment.last_status === 'Echange échoué' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
+                                  shipment.last_status === 'Livré' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                  shipment.last_status === 'Sorti en livraison' ? 'bg-sky-100 text-sky-800 border border-sky-200' :
+                                  shipment.last_status === 'En préparation' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                  shipment.last_status === 'Echèc livraison' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                  shipment.last_status === 'Retourné au vendeur' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                  shipment.last_status === 'Echange échoué' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                  shipment.last_status === 'Pas encore expédié' ? 'bg-slate-100 text-slate-800 border border-slate-200' :
+                                  shipment.last_status === 'A vérifier' ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                                  shipment.last_status === 'Pas encore ramassé' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
+                                  shipment.last_status === 'Prêt à expédier' ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' :
+                                  shipment.last_status === 'Ramassé' ? 'bg-teal-100 text-teal-800 border border-teal-200' :
+                                  shipment.last_status === 'Bloqué' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                                  shipment.last_status === 'Débloqué' ? 'bg-lime-100 text-lime-800 border border-lime-200' :
+                                  shipment.last_status === 'Transfert' ? 'bg-violet-100 text-violet-800 border border-violet-200' :
+                                  shipment.last_status === 'Expédié' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                  shipment.last_status === 'Centre' ? 'bg-fuchsia-100 text-fuchsia-800 border border-fuchsia-200' :
+                                  shipment.last_status === 'En localisation' ? 'bg-pink-100 text-pink-800 border border-pink-200' :
+                                  shipment.last_status === 'Vers Wilaya' ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' :
+                                  shipment.last_status === 'Reçu à Wilaya' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                  shipment.last_status === 'En attente du client' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                  shipment.last_status === 'Prêt pour livreur' ? 'bg-green-100 text-green-800 border border-green-200' :
+                                  shipment.last_status === 'En attente' ? 'bg-gray-100 text-gray-800 border border-gray-200' :
+                                  shipment.last_status === 'En alerte' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                  shipment.last_status === 'Tentative échouée' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                  shipment.last_status === 'Retour vers centre' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                  shipment.last_status === 'Retourné au centre' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                  shipment.last_status === 'Retour transfert' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                  shipment.last_status === 'Retour groupé' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                  shipment.last_status === 'Retour à retirer' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                  shipment.last_status === 'Retour vers vendeur' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                                  'bg-slate-100 text-slate-800 border border-slate-200'
                                 }`}>
                                   {shipment.last_status || 'Active'}
                                 </Badge>
@@ -843,6 +945,90 @@ export function ShippingDashboard() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+              
+              {/* Pagination Controls */}
+              {yalidineShipments.length > 0 && shipmentPagination.total_pages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {((shipmentPagination.current_page - 1) * shipmentPagination.per_page) + 1} to{' '}
+                    {Math.min(shipmentPagination.current_page * shipmentPagination.per_page, shipmentPagination.total_data)} of{' '}
+                    {shipmentPagination.total_data} shipments
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={prevPage}
+                      disabled={shipmentPagination.current_page === 1}
+                    >
+                      Previous
+                    </Button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, shipmentPagination.total_pages) }, (_, i) => {
+                        const pageNum = i + 1;
+                        const isCurrentPage = pageNum === shipmentPagination.current_page;
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={isCurrentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => goToPage(pageNum)}
+                            className="w-8 h-8 p-0"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                      
+                      {shipmentPagination.total_pages > 5 && (
+                        <>
+                          {shipmentPagination.current_page > 3 && (
+                            <span className="px-2 text-muted-foreground">...</span>
+                          )}
+                          
+                          {shipmentPagination.current_page > 3 && shipmentPagination.current_page < shipmentPagination.total_pages - 2 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => goToPage(shipmentPagination.current_page)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {shipmentPagination.current_page}
+                            </Button>
+                          )}
+                          
+                          {shipmentPagination.current_page < shipmentPagination.total_pages - 2 && (
+                            <span className="px-2 text-muted-foreground">...</span>
+                          )}
+                          
+                          {shipmentPagination.total_pages > 5 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => goToPage(shipmentPagination.total_pages)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {shipmentPagination.total_pages}
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={nextPage}
+                      disabled={shipmentPagination.current_page === shipmentPagination.total_pages}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

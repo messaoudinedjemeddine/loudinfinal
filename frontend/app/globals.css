@@ -85,7 +85,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
@@ -562,6 +562,17 @@
 /* Navbar layout improvements */
 .navbar-container {
   position: relative;
+}
+
+/* Force navbar transparency */
+nav {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+nav * {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 .navbar-center-nav {

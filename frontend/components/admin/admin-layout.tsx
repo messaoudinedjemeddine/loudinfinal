@@ -47,16 +47,10 @@ const getNavigationByRole = (role: string, t: any) => {
     case 'CONFIRMATRICE':
       return [
         { name: 'Dashboard Confirmatrice', href: '/confirmatrice/dashboard', icon: LayoutDashboard },
-        { name: 'Commandes en Attente', href: '/confirmatrice/orders/pending', icon: ShoppingCart },
-        { name: 'Confirmer Commandes', href: '/confirmatrice/orders/confirm', icon: FileText },
-        { name: 'Historique', href: '/confirmatrice/orders/history', icon: BarChart3 },
       ]
     case 'AGENT_LIVRAISON':
       return [
         { name: 'Dashboard Livraison', href: '/agent-livraison/dashboard', icon: LayoutDashboard },
-        { name: 'Commandes Prêtes', href: '/agent-livraison/orders/ready', icon: Package },
-        { name: 'En Transit', href: '/agent-livraison/orders/in-transit', icon: Truck },
-        { name: 'Statistiques par Ville', href: '/agent-livraison/stats/city', icon: MapPin },
       ]
     default:
       return [

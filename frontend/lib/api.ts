@@ -430,6 +430,7 @@ export const api = {
       date_creation?: string;
       date_last_status?: string;
       payment_status?: string;
+      month?: string;
       page?: number;
     }) => {
       const searchParams = new URLSearchParams();

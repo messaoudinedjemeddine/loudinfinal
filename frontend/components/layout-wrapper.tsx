@@ -1,7 +1,6 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { ScrollToTopButton } from '@/components/scroll-to-top-button'
 
@@ -14,8 +13,7 @@ export function LayoutWrapper({ children }: LayoutWrapperProps) {
   const isAdminRoute = pathname?.startsWith('/admin')
 
   return (
-    <div className="min-h-screen bg-background">
-      {!isAdminRoute && <Navbar />}
+    <div className="min-h-screen">
       <main>
         {children}
       </main>

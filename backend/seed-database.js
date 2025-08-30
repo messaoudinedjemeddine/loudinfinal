@@ -15,9 +15,9 @@ async function seedDatabase() {
       create: {
         email: 'admin@example.com',
         password: hashedPassword,
-        name: 'Admin User',
-        role: 'ADMIN',
-        isActive: true
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'ADMIN'
       }
     });
     console.log('✅ Admin user created:', admin.email);
@@ -25,7 +25,7 @@ async function seedDatabase() {
     // Create sample categories
     const categories = await Promise.all([
       prisma.category.upsert({
-        where: { name: 'Electronics' },
+        where: { slug: 'electronics' },
         update: {},
         create: {
           name: 'Electronics',
@@ -33,11 +33,11 @@ async function seedDatabase() {
           description: 'Latest electronic devices and gadgets',
           descriptionAr: 'أحدث الأجهزة الإلكترونية والأدوات',
           image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=500',
-          isActive: true
+          slug: 'electronics'
         }
       }),
       prisma.category.upsert({
-        where: { name: 'Fashion' },
+        where: { slug: 'fashion' },
         update: {},
         create: {
           name: 'Fashion',
@@ -45,11 +45,11 @@ async function seedDatabase() {
           description: 'Trendy fashion items and accessories',
           descriptionAr: 'عناصر الأزياء والإكسسوارات العصرية',
           image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=500',
-          isActive: true
+          slug: 'fashion'
         }
       }),
       prisma.category.upsert({
-        where: { name: 'Home & Garden' },
+        where: { slug: 'home-garden' },
         update: {},
         create: {
           name: 'Home & Garden',
@@ -57,7 +57,7 @@ async function seedDatabase() {
           description: 'Home improvement and garden supplies',
           descriptionAr: 'مستلزمات تحسين المنزل والحديقة',
           image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500',
-          isActive: true
+          slug: 'home-garden'
         }
       })
     ]);
@@ -66,7 +66,7 @@ async function seedDatabase() {
     // Create sample products
     const products = await Promise.all([
       prisma.product.upsert({
-        where: { name: 'iPhone 15 Pro' },
+        where: { slug: 'iphone-15-pro' },
         update: {},
         create: {
           name: 'iPhone 15 Pro',
@@ -75,6 +75,8 @@ async function seedDatabase() {
           descriptionAr: 'أحدث آيفون مع ميزات متقدمة',
           price: 150000,
           stock: 50,
+          reference: 'IPHONE15PRO',
+          slug: 'iphone-15-pro',
           categoryId: categories[0].id,
           images: {
             create: [
@@ -88,7 +90,7 @@ async function seedDatabase() {
         }
       }),
       prisma.product.upsert({
-        where: { name: 'Samsung Galaxy S24' },
+        where: { slug: 'samsung-galaxy-s24' },
         update: {},
         create: {
           name: 'Samsung Galaxy S24',
@@ -97,6 +99,8 @@ async function seedDatabase() {
           descriptionAr: 'هاتف أندرويد فاخر',
           price: 120000,
           stock: 30,
+          reference: 'SAMSUNGS24',
+          slug: 'samsung-galaxy-s24',
           categoryId: categories[0].id,
           images: {
             create: [
@@ -110,7 +114,7 @@ async function seedDatabase() {
         }
       }),
       prisma.product.upsert({
-        where: { name: 'Designer Watch' },
+        where: { slug: 'designer-watch' },
         update: {},
         create: {
           name: 'Designer Watch',
@@ -119,6 +123,8 @@ async function seedDatabase() {
           descriptionAr: 'ساعة فاخرة من مصمم',
           price: 25000,
           stock: 20,
+          reference: 'DESIGNERWATCH',
+          slug: 'designer-watch',
           categoryId: categories[1].id,
           images: {
             create: [
@@ -137,29 +143,32 @@ async function seedDatabase() {
     // Create sample cities (Algerian cities)
     const cities = await Promise.all([
       prisma.city.upsert({
-        where: { name: 'Algiers' },
+        where: { code: '16' },
         update: {},
         create: {
           name: 'Algiers',
           nameAr: 'الجزائر',
+          code: '16',
           isActive: true
         }
       }),
       prisma.city.upsert({
-        where: { name: 'Oran' },
+        where: { code: '31' },
         update: {},
         create: {
           name: 'Oran',
           nameAr: 'وهران',
+          code: '31',
           isActive: true
         }
       }),
       prisma.city.upsert({
-        where: { name: 'Constantine' },
+        where: { code: '25' },
         update: {},
         create: {
           name: 'Constantine',
           nameAr: 'قسنطينة',
+          code: '25',
           isActive: true
         }
       })
@@ -168,10 +177,8 @@ async function seedDatabase() {
 
     // Create sample delivery desks
     const deliveryDesks = await Promise.all([
-      prisma.deliveryDesk.upsert({
-        where: { name: 'Algiers Central Desk' },
-        update: {},
-        create: {
+      prisma.deliveryDesk.create({
+        data: {
           name: 'Algiers Central Desk',
           nameAr: 'مكتب الجزائر المركزي',
           address: 'Downtown Algiers, Rue de la Liberté',
@@ -180,10 +187,8 @@ async function seedDatabase() {
           isActive: true
         }
       }),
-      prisma.deliveryDesk.upsert({
-        where: { name: 'Oran Main Office' },
-        update: {},
-        create: {
+      prisma.deliveryDesk.create({
+        data: {
           name: 'Oran Main Office',
           nameAr: 'المكتب الرئيسي لوهران',
           address: 'City Center Oran, Place du 1er Novembre',

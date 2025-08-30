@@ -503,6 +503,19 @@ router.get('/shipments', async (req, res) => {
       offset: req.query.offset ? parseInt(req.query.offset) : 0
     };
 
+    // Handle month filtering
+    if (req.query.month) {
+      const month = parseInt(req.query.month);
+      const currentYear = new Date().getFullYear();
+      
+      // Create date range for the specified month
+      const startDate = new Date(currentYear, month - 1, 1);
+      const endDate = new Date(currentYear, month, 0); // Last day of the month
+      
+      filters.date_from = startDate.toISOString().split('T')[0];
+      filters.date_to = endDate.toISOString().split('T')[0];
+    }
+
     // Create cache key based on filters
     const cacheKey = `yalidine_shipments_${JSON.stringify(filters)}`;
     const cachedShipments = getCachedData(cacheKey);

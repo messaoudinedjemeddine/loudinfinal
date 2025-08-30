@@ -164,8 +164,21 @@ class YalidineAPI {
   }
 
   // Get all shipments
-  async getAllShipments(): Promise<{ data: any[]; has_more: boolean; total_data: number }> {
-    return api.shipping.getAllShipments() as Promise<{ data: any[]; has_more: boolean; total_data: number }>;
+  async getAllShipments(filters?: {
+    status?: string;
+    tracking?: string;
+    order_id?: string;
+    to_wilaya_id?: number;
+    to_commune_name?: string;
+    is_stopdesk?: boolean;
+    freeshipping?: boolean;
+    date_creation?: string;
+    date_last_status?: string;
+    payment_status?: string;
+    month?: string;
+    page?: number;
+  }): Promise<{ data: any[]; has_more: boolean; total_data: number }> {
+    return api.shipping.getAllShipments(filters) as Promise<{ data: any[]; has_more: boolean; total_data: number }>;
   }
 
   // Utility methods

@@ -11,7 +11,9 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "node seed-database.js"
+    "db:seed": "node seed-database.js",
+    "db:seed:orders": "node seed-orders.js",
+    "db:seed:all": "node seed-database.js && node seed-orders.js"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",

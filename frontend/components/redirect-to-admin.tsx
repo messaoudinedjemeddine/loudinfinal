@@ -1,25 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 
-interface ConfirmatriceLayoutProps {
-  children: React.ReactNode
+interface RedirectToAdminProps {
+  tab: string
+  role: 'CONFIRMATRICE' | 'AGENT_LIVRAISON'
+  title: string
 }
 
-export function ConfirmatriceLayout({ children }: ConfirmatriceLayoutProps) {
+export function RedirectToAdmin({ tab, role, title }: RedirectToAdminProps) {
   const { user } = useAuthStore()
   const router = useRouter()
 
   useEffect(() => {
-    if (user && user.role !== 'CONFIRMATRICE' && user.role !== 'ADMIN') {
+    if (user && user.role !== role && user.role !== 'ADMIN') {
       router.push('/admin/login')
     } else if (user) {
-      // Redirect to main admin dashboard with order-confirmation tab
-      router.push('/admin?tab=order-confirmation')
+      // Redirect to main admin dashboard with specified tab
+      router.push(`/admin?tab=${tab}`)
     }
-  }, [user, router])
+  }, [user, router, role, tab])
 
   // Show loading while redirecting
   return (
@@ -27,7 +29,9 @@ export function ConfirmatriceLayout({ children }: ConfirmatriceLayoutProps) {
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
         <p className="text-muted-foreground">Redirecting to Admin Dashboard...</p>
+        <p className="text-sm text-muted-foreground mt-2">You will be redirected to the {title} section</p>
       </div>
     </div>
   )
 }
+

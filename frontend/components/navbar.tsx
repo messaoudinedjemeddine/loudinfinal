@@ -34,7 +34,7 @@ export function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
+
   
   const router = useRouter()
   const pathname = usePathname()
@@ -47,24 +47,24 @@ export function Navbar() {
   const totalItems = getTotalItems()
   const wishlistCount = getWishlistCount()
 
-  const navigation = [
-    { name: 'Loudim', href: '/loudim' },
-    { name: 'Loud Styles', href: '/loud-styles' },
+  // Check if we're on the Loud Brands page (root page)
+  const isLoudBrandsPage = pathname === '/'
+  
+  const navigation = isLoudBrandsPage ? [
+    { name: 'LOUDIM', href: '/loudim' },
+    { name: 'LOUD STYLES', href: '/loud-styles' },
+  ] : [
+    { name: isRTL ? 'الرئيسية' : 'Home', href: '/' },
+    { name: isRTL ? 'المنتجات' : 'Products', href: '/products' },
+    { name: isRTL ? 'من نحن' : 'About', href: '/about' },
+    { name: isRTL ? 'اتصلي بنا' : 'Contact', href: '/contact' },
   ]
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY
-      setIsScrolled(scrollTop > 50)
-    }
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   if (!mounted) return null
 
@@ -106,7 +106,7 @@ export function Navbar() {
     alert('Cache cleared successfully! The page will now reload with fresh data.');
     
     // Force page reload to get fresh data
-    window.location.reload(true);
+    window.location.reload();
   };
 
   return (
@@ -114,11 +114,8 @@ export function Navbar() {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`w-full z-50 transition-all duration-300 arabic-font ${
-          isScrolled 
-            ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-camel-200/20 dark:border-gray-700/20 shadow-lg' 
-            : 'bg-gradient-to-r from-camel-50/90 to-warm-50/90 dark:from-gray-900/90 dark:to-gray-800/90 backdrop-blur-sm'
-        }`}
+        className="w-full z-50 transition-all duration-300 arabic-font !bg-transparent"
+        style={{ backgroundColor: 'transparent !important' }}
       >
         <div className="container mx-auto px-4">
           <div className={`flex items-center justify-between h-20 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -126,8 +123,21 @@ export function Navbar() {
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center group">
                 <div className="transition-transform duration-300 group-hover:scale-105">
-                  <h1 className="text-2xl font-bold text-camel-800 dark:text-camel-200">
-                    Loudim Brands
+                  <h1 className="text-xl md:text-2xl tracking-wider cursor-pointer">
+                    <span className="inline-block">
+                      <span className="text-primary transition-colors duration-300 group-hover:text-white font-bold">LOUD</span>
+                      <span className="relative inline-block ml-2">
+                        <span className="text-white transition-colors duration-300 group-hover:text-primary font-light">BRANDS</span>
+                        <motion.span
+                          className="absolute inset-0 bg-primary origin-left"
+                          initial={{ scaleX: 0 }}
+                          whileHover={{ scaleX: 1 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          style={{ zIndex: -1 }}
+                        />
+                      </span>
+                      <span className="text-primary transition-colors duration-300 group-hover:text-white font-light text-xs ml-1">®</span>
+                    </span>
                   </h1>
                 </div>
               </Link>
@@ -135,15 +145,15 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <div className={`hidden lg:flex items-center justify-center flex-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className={`flex items-center space-x-1 ${isRTL ? 'space-x-reverse' : ''}`}>
+              <div className={`flex items-center space-x-4 ${isRTL ? 'space-x-reverse' : ''}`}>
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`relative px-4 py-2 rounded-lg font-medium transition-all duration-300 group
+                    className={`relative px-6 py-3 rounded-lg font-bold text-lg transition-all duration-300 group
                       ${pathname === item.href 
-                        ? 'text-camel-800 dark:text-camel-200 bg-camel-100/50 dark:bg-camel-900/30' 
-                        : 'text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20'
+                        ? 'text-white bg-primary/30' 
+                        : 'text-white hover:text-primary hover:bg-primary/20'
                       }
                     `}
                   >
@@ -161,7 +171,7 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsSearchOpen(true)}
-                className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
+                className="relative p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
               >
                 <Search className="w-5 h-5" />
               </Button>
@@ -171,7 +181,7 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className="p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
+                className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </Button>
@@ -181,7 +191,7 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={clearCache}
-                className="p-2 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-300"
+                className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
                 title="Clear cache and reload fresh data"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,7 +206,7 @@ export function Navbar() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300" 
+                className="relative p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300" 
                 asChild
               >
                 <Link href="/wishlist">
@@ -216,7 +226,7 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
+                className="relative p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
               >
                 <ShoppingCart className="w-5 h-5" />
                 {totalItems > 0 && (
@@ -234,7 +244,7 @@ export function Navbar() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300" 
+                    className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300" 
                     asChild
                   >
                     <Link href="/admin">
@@ -245,7 +255,7 @@ export function Navbar() {
                     variant="ghost"
                     size="sm"
                     onClick={logout}
-                    className="p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
+                    className="p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
                   >
                     <X className="w-5 h-5" />
                   </Button>
@@ -254,7 +264,7 @@ export function Navbar() {
                 <Button
                   variant="default"
                   size="sm"
-                  className="bg-gradient-to-r from-camel-500 to-camel-700 hover:from-camel-600 hover:to-camel-800 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+                  className="bg-primary/30 hover:bg-primary/50 text-white font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg border border-primary/50"
                   asChild
                 >
                   <Link href="/admin/login">
@@ -269,12 +279,12 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="lg:hidden p-2 text-gray-700 dark:text-gray-300 hover:text-camel-700 dark:hover:text-camel-200 hover:bg-camel-50/50 dark:hover:bg-camel-900/20 rounded-lg transition-all duration-300"
+                    className="lg:hidden p-2 text-white hover:text-primary hover:bg-primary/20 rounded-lg transition-all duration-300"
                   >
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side={isRTL ? 'right' : 'left'} className="w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-camel-200/20 dark:border-gray-700/20">
+                <SheetContent side={isRTL ? 'right' : 'left'} className="w-80 backdrop-blur-md border-camel-200/20 dark:border-gray-700/20">
                   <div className="flex flex-col h-full">
                     {/* Mobile Navigation */}
                     <div className="flex-1 py-8">
