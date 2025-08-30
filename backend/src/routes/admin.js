@@ -830,6 +830,45 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
+// Get categories by brand
+router.get('/categories/brand/:brandSlug', async (req, res) => {
+  try {
+    const { brandSlug } = req.params;
+
+    // Find the brand
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug }
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    const categories = await prisma.category.findMany({
+      where: { brandId: brand.id },
+      include: {
+        _count: {
+          select: {
+            products: true
+          }
+        },
+        brand: true
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    res.json({
+      categories: categories.map(category => ({
+        ...category,
+        productCount: category._count.products
+      }))
+    });
+  } catch (error) {
+    console.error('Admin brand categories error:', error);
+    res.status(500).json({ error: 'Failed to fetch brand categories' });
+  }
+});
+
 // Get categories
 router.get('/categories', async (req, res) => {
   try {
@@ -1134,6 +1173,176 @@ router.get('/inventory/export', async (req, res) => {
   } catch (error) {
     console.error('Export inventory error:', error);
     res.status(500).json({ error: 'Failed to export inventory' });
+  }
+});
+
+// Brand-specific inventory management
+router.get('/inventory/brand/:brandSlug', async (req, res) => {
+  try {
+    const { brandSlug } = req.params;
+    const { page = 1, limit = 50, search, category, stockFilter, status } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Find the brand
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug }
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    const where = {
+      brandId: brand.id
+    };
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { nameAr: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    if (category) {
+      where.category = { slug: category };
+    }
+
+    if (stockFilter === 'low') {
+      where.stock = { lte: 5, gt: 0 };
+    } else if (stockFilter === 'out') {
+      where.stock = 0;
+    } else if (stockFilter === 'in') {
+      where.stock = { gt: 5 };
+    }
+
+    if (status === 'active') {
+      where.isActive = true;
+    } else if (status === 'inactive') {
+      where.isActive = false;
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: true,
+          brand: true,
+          images: {
+            where: { isPrimary: true },
+            take: 1
+          },
+          sizes: {
+            orderBy: { size: 'asc' }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.product.count({ where })
+    ]);
+
+    res.json({
+      products: products.map(product => ({
+        ...product,
+        image: product.images[0]?.url || '/placeholder-product.jpg',
+        totalStock: product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0)
+      })),
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Brand inventory error:', error);
+    res.status(500).json({ error: 'Failed to fetch brand inventory' });
+  }
+});
+
+// Export brand-specific inventory to Excel/CSV
+router.get('/inventory/brand/:brandSlug/export', async (req, res) => {
+  try {
+    const { brandSlug } = req.params;
+
+    // Find the brand
+    const brand = await prisma.brand.findUnique({
+      where: { slug: brandSlug }
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    const products = await prisma.product.findMany({
+      where: { brandId: brand.id },
+      include: {
+        category: true,
+        sizes: {
+          orderBy: { size: 'asc' }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Create CSV content
+    const headers = [
+      'Reference',
+      'Name',
+      'Name (Arabic)',
+      'Category',
+      'Brand',
+      'Price (DA)',
+      'Old Price (DA)',
+      'Main Stock',
+      'Sizes & Quantities',
+      'Total Stock',
+      'Status',
+      'On Sale',
+      'Description',
+      'Description (Arabic)'
+    ];
+
+    const csvRows = [headers.join(',')];
+
+    for (const product of products) {
+      const totalStock = product.stock + product.sizes.reduce((sum, size) => sum + size.stock, 0);
+      const sizesString = product.sizes.map(size => `${size.size}:${size.stock}`).join(';');
+      
+      const row = [
+        `"${product.reference}"`,
+        `"${product.name}"`,
+        `"${product.nameAr || ''}"`,
+        `"${product.category?.name || ''}"`,
+        `"${brand.name}"`,
+        product.price,
+        product.oldPrice || '',
+        product.stock,
+        `"${sizesString}"`,
+        totalStock,
+        product.isActive ? 'Active' : 'Inactive',
+        product.isOnSale ? 'Yes' : 'No',
+        `"${product.description || ''}"`,
+        `"${product.descriptionAr || ''}"`
+      ];
+      
+      csvRows.push(row.join(','));
+    }
+
+    const csvContent = csvRows.join('\n');
+
+    // Set headers for CSV download
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${brandSlug}-inventory-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    // Send the CSV content
+    res.status(200).send(csvContent);
+  } catch (error) {
+    console.error('Export brand inventory error:', error);
+    res.status(500).json({ error: 'Failed to export brand inventory' });
   }
 });
 

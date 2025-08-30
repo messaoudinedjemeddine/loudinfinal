@@ -145,12 +145,28 @@ export default function AdminCategoriesPage() {
               Manage product categories and organization
             </p>
           </div>
-          <Button className="elegant-gradient" asChild>
-            <Link href="/admin/categories/new">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Category
+          
+          {/* Brand-specific Category Links */}
+          <div className="flex items-center space-x-3">
+            <Link href="/admin/categories/loudim">
+              <Button variant="outline" className="flex items-center space-x-2">
+                <Tag className="w-4 h-4" />
+                <span>LOUDIM Categories</span>
+              </Button>
             </Link>
-          </Button>
+            <Link href="/admin/categories/loud-styles">
+              <Button variant="outline" className="flex items-center space-x-2">
+                <Tag className="w-4 h-4" />
+                <span>LOUD STYLES Categories</span>
+              </Button>
+            </Link>
+            <Button className="elegant-gradient" asChild>
+              <Link href="/admin/categories/new">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Category
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

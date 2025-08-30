@@ -363,6 +363,42 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+    // Brand-specific inventory management
+    getInventoryByBrand: (brandSlug: string, params?: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      category?: string;
+      stockFilter?: string;
+      status?: string;
+    }) => {
+      const searchParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            searchParams.append(key, value.toString());
+          }
+        });
+      }
+      const query = searchParams.toString();
+      return apiClient.request(`/admin/inventory/brand/${brandSlug}${query ? `?${query}` : ''}`);
+    },
+    exportInventoryByBrand: async (brandSlug: string) => {
+      const response = await fetch(`${API_BASE_URL}/admin/inventory/brand/${brandSlug}/export`, {
+        headers: {
+          'Content-Type': 'text/csv',
+          ...(typeof window !== 'undefined' ? {
+            Authorization: `Bearer ${getAuthToken()}`
+          } : {})
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.status}`);
+      }
+      
+      return await response.text();
+    },
     // Orders export
     exportOrders: async () => {
       const response = await fetch(`${API_BASE_URL}/admin/orders/export`, {
@@ -382,6 +418,7 @@ export const api = {
     },
     // Categories management
     getCategories: () => apiClient.request('/admin/categories'),
+    getCategoriesByBrand: (brandSlug: string) => apiClient.request(`/admin/categories/brand/${brandSlug}`),
     createCategory: (data: any) => apiClient.request('/admin/categories', {
       method: 'POST',
       body: JSON.stringify(data),

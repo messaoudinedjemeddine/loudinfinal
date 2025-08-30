@@ -303,6 +303,22 @@ export default function AdminInventoryPage() {
               Manage your product inventory, track stock levels, and import/export data
             </p>
           </div>
+          
+          {/* Brand-specific Inventory Links */}
+          <div className="flex items-center space-x-3">
+            <Link href="/admin/inventory/loudim">
+              <Button variant="outline" className="flex items-center space-x-2">
+                <Package className="w-4 h-4" />
+                <span>LOUDIM Inventory</span>
+              </Button>
+            </Link>
+            <Link href="/admin/inventory/loud-styles">
+              <Button variant="outline" className="flex items-center space-x-2">
+                <Package className="w-4 h-4" />
+                <span>LOUD STYLES Inventory</span>
+              </Button>
+            </Link>
+          </div>
           <div className="flex items-center space-x-2">
             <Dialog>
               <DialogTrigger asChild>
