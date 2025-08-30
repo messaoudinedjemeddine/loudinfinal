@@ -378,10 +378,10 @@ export default function LoudStylesProductPage() {
                       {isRTL 
                         ? (typeof product.category === 'string' 
                             ? (product.categoryAr || product.category) 
-                            : (product.category.nameAr || product.category.name))
+                            : (product.category?.nameAr || product.category?.name || 'Uncategorized'))
                         : (typeof product.category === 'string' 
                             ? product.category 
-                            : product.category.name)
+                            : (product.category?.name || 'Uncategorized'))
                       }
                     </Badge>
                     {product.isLaunch && (
