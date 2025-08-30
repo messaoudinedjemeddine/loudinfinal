@@ -5,8 +5,19 @@ const router = express.Router();
 // Get all categories
 router.get('/', async (req, res) => {
   try {
+    const { brand } = req.query;
+    
+    const whereClause = {};
+    if (brand) {
+      whereClause.brand = {
+        slug: brand
+      };
+    }
+
     const categories = await prisma.category.findMany({
+      where: whereClause,
       include: {
+        brand: true,
         _count: {
           select: {
             products: {
@@ -38,10 +49,19 @@ router.get('/', async (req, res) => {
 router.get('/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
+    const { brand } = req.query;
 
-    const category = await prisma.category.findUnique({
-      where: { slug },
+    const whereClause = { slug };
+    if (brand) {
+      whereClause.brand = {
+        slug: brand
+      };
+    }
+
+    const category = await prisma.category.findFirst({
+      where: whereClause,
       include: {
+        brand: true,
         products: {
           where: {
             isActive: true

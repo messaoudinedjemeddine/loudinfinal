@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { SingleImageUpload } from '@/components/ui/single-image-upload'
 import { 
   ArrowLeft,
@@ -27,12 +28,26 @@ export default function NewCategoryPage() {
     description: '',
     descriptionAr: '',
     image: undefined as string | undefined,
-    slug: ''
+    slug: '',
+    brandId: ''
   })
+
+  const [brands, setBrands] = useState<Array<{ id: string; name: string; slug: string }>>([])
 
   useEffect(() => {
     setMounted(true)
+    fetchBrands()
   }, [])
+
+  const fetchBrands = async () => {
+    try {
+      const response = await api.admin.getBrands()
+      setBrands(response)
+    } catch (error) {
+      console.error('Failed to fetch brands:', error)
+      toast.error('Failed to load brands')
+    }
+  }
 
   if (!mounted) return null
 
@@ -55,6 +70,11 @@ export default function NewCategoryPage() {
         return
       }
 
+      if (!categoryData.brandId) {
+        toast.error('Please select a brand')
+        return
+      }
+
       // Generate slug from name if not provided
       const slug = categoryData.slug || categoryData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
@@ -65,7 +85,8 @@ export default function NewCategoryPage() {
         description: categoryData.description,
         descriptionAr: categoryData.descriptionAr,
         image: categoryData.image,
-        slug: slug
+        slug: slug,
+        brandId: categoryData.brandId
       })
 
       toast.success('Category created successfully!')
@@ -148,6 +169,22 @@ export default function NewCategoryPage() {
                   rows={4}
                   dir="rtl"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="brandId">Brand *</Label>
+                <Select value={categoryData.brandId} onValueChange={(value) => handleInputChange('brandId', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

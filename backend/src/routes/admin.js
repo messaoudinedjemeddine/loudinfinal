@@ -181,6 +181,20 @@ router.post('/products', async (req, res) => {
   try {
     const productData = req.body;
     
+    // Validate brandId is provided
+    if (!productData.brandId) {
+      return res.status(400).json({ error: 'Brand ID is required' });
+    }
+
+    // Check if brand exists
+    const brand = await prisma.brand.findUnique({
+      where: { id: productData.brandId }
+    });
+
+    if (!brand) {
+      return res.status(400).json({ error: 'Brand not found' });
+    }
+    
     // First create the product
     const product = await prisma.product.create({
       data: {
@@ -196,6 +210,7 @@ router.post('/products', async (req, res) => {
         isActive: productData.isActive !== false,
         isLaunch: productData.isLaunch || false,
         launchAt: productData.launchAt ? new Date(productData.launchAt) : null,
+        brandId: productData.brandId,
         categoryId: productData.categoryId,
         slug: productData.slug
       }
@@ -880,8 +895,21 @@ router.post('/categories', async (req, res) => {
   try {
     const categoryData = req.body;
     
-    // Create category with provided data
+    // Validate brandId is provided
+    if (!categoryData.brandId) {
+      return res.status(400).json({ error: 'Brand ID is required' });
+    }
+
+    // Check if brand exists
+    const brand = await prisma.brand.findUnique({
+      where: { id: categoryData.brandId }
+    });
+
+    if (!brand) {
+      return res.status(400).json({ error: 'Brand not found' });
+    }
     
+    // Create category with provided data
     const category = await prisma.category.create({
       data: {
         name: categoryData.name,
@@ -889,7 +917,11 @@ router.post('/categories', async (req, res) => {
         description: categoryData.description,
         descriptionAr: categoryData.descriptionAr,
         image: categoryData.image,
-        slug: categoryData.slug
+        slug: categoryData.slug,
+        brandId: categoryData.brandId
+      },
+      include: {
+        brand: true
       }
     });
 
@@ -1223,6 +1255,184 @@ router.post('/inventory/import', async (req, res) => {
   } catch (error) {
     console.error('Import inventory error:', error);
     res.status(500).json({ error: 'Failed to import inventory' });
+  }
+});
+
+// Brand management routes
+// Get all brands
+router.get('/brands', async (req, res) => {
+  try {
+    const brands = await prisma.brand.findMany({
+      orderBy: {
+        name: 'asc'
+      }
+    });
+
+    res.json(brands);
+  } catch (error) {
+    console.error('Get brands error:', error);
+    res.status(500).json({ error: 'Failed to fetch brands' });
+  }
+});
+
+// Get brand by ID
+router.get('/brands/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const brand = await prisma.brand.findUnique({
+      where: { id },
+      include: {
+        categories: true,
+        products: true
+      }
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    res.json(brand);
+  } catch (error) {
+    console.error('Get brand error:', error);
+    res.status(500).json({ error: 'Failed to fetch brand' });
+  }
+});
+
+// Create brand
+router.post('/brands', async (req, res) => {
+  try {
+    const brandData = req.body;
+    
+    // Validate required fields
+    if (!brandData.name || !brandData.slug) {
+      return res.status(400).json({ error: 'Name and slug are required' });
+    }
+
+    // Check if brand with same name or slug already exists
+    const existingBrand = await prisma.brand.findFirst({
+      where: {
+        OR: [
+          { name: brandData.name },
+          { slug: brandData.slug }
+        ]
+      }
+    });
+
+    if (existingBrand) {
+      return res.status(400).json({ error: 'Brand with this name or slug already exists' });
+    }
+
+    const brand = await prisma.brand.create({
+      data: {
+        name: brandData.name,
+        nameAr: brandData.nameAr,
+        description: brandData.description,
+        descriptionAr: brandData.descriptionAr,
+        logo: brandData.logo,
+        slug: brandData.slug,
+        isActive: brandData.isActive !== false
+      }
+    });
+
+    res.status(201).json(brand);
+  } catch (error) {
+    console.error('Create brand error:', error);
+    res.status(500).json({ error: 'Failed to create brand' });
+  }
+});
+
+// Update brand
+router.put('/brands/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const brandData = req.body;
+
+    // Check if brand exists
+    const existingBrand = await prisma.brand.findUnique({
+      where: { id }
+    });
+
+    if (!existingBrand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    // Check if name or slug conflicts with other brands
+    if (brandData.name || brandData.slug) {
+      const conflictingBrand = await prisma.brand.findFirst({
+        where: {
+          OR: [
+            { name: brandData.name || existingBrand.name },
+            { slug: brandData.slug || existingBrand.slug }
+          ],
+          NOT: {
+            id
+          }
+        }
+      });
+
+      if (conflictingBrand) {
+        return res.status(400).json({ error: 'Brand with this name or slug already exists' });
+      }
+    }
+
+    const brand = await prisma.brand.update({
+      where: { id },
+      data: {
+        name: brandData.name,
+        nameAr: brandData.nameAr,
+        description: brandData.description,
+        descriptionAr: brandData.descriptionAr,
+        logo: brandData.logo,
+        slug: brandData.slug,
+        isActive: brandData.isActive
+      }
+    });
+
+    res.json(brand);
+  } catch (error) {
+    console.error('Update brand error:', error);
+    res.status(500).json({ error: 'Failed to update brand' });
+  }
+});
+
+// Delete brand
+router.delete('/brands/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if brand exists
+    const existingBrand = await prisma.brand.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            categories: true,
+            products: true
+          }
+        }
+      }
+    });
+
+    if (!existingBrand) {
+      return res.status(404).json({ error: 'Brand not found' });
+    }
+
+    // Check if brand has categories or products
+    if (existingBrand._count.categories > 0 || existingBrand._count.products > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete brand with existing categories or products. Please reassign or delete them first.' 
+      });
+    }
+
+    await prisma.brand.delete({
+      where: { id }
+    });
+
+    res.json({ message: 'Brand deleted successfully' });
+  } catch (error) {
+    console.error('Delete brand error:', error);
+    res.status(500).json({ error: 'Failed to delete brand' });
   }
 });
 

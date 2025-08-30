@@ -75,6 +75,7 @@ class ApiClient {
     limit?: number;
     search?: string;
     category?: string;
+    brand?: string;
     minPrice?: number;
     maxPrice?: number;
     sortBy?: string;
@@ -105,12 +106,22 @@ class ApiClient {
   }
 
   // Categories
-  async getCategories() {
-    return this.request('/categories');
+  async getCategories(params?: { brand?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.brand) {
+      searchParams.append('brand', params.brand);
+    }
+    const query = searchParams.toString();
+    return this.request(`/categories${query ? `?${query}` : ''}`);
   }
 
-  async getCategory(slug: string) {
-    return this.request(`/categories/${slug}`);
+  async getCategory(slug: string, params?: { brand?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.brand) {
+      searchParams.append('brand', params.brand);
+    }
+    const query = searchParams.toString();
+    return this.request(`/categories/${slug}${query ? `?${query}` : ''}`);
   }
 
   // Orders
@@ -246,8 +257,8 @@ export const api = {
 
   // Categories
   categories: {
-    getAll: () => apiClient.getCategories(),
-    getBySlug: (slug: string) => apiClient.getCategory(slug),
+    getAll: (params?: { brand?: string }) => apiClient.getCategories(params),
+    getBySlug: (slug: string, params?: { brand?: string }) => apiClient.getCategory(slug, params),
   },
 
   // Orders
@@ -386,6 +397,20 @@ export const api = {
       body: JSON.stringify(data),
     }),
     deleteCategory: (id: string) => apiClient.request(`/admin/categories/${id}`, {
+      method: 'DELETE',
+    }),
+    // Brands management
+    getBrands: () => apiClient.request('/admin/brands'),
+    getBrand: (id: string) => apiClient.request(`/admin/brands/${id}`),
+    createBrand: (data: any) => apiClient.request('/admin/brands', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    updateBrand: (id: string, data: any) => apiClient.request(`/admin/brands/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+    deleteBrand: (id: string) => apiClient.request(`/admin/brands/${id}`, {
       method: 'DELETE',
     }),
   },

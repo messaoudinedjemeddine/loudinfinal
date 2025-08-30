@@ -54,6 +54,24 @@ model User {
   @@map("users")
 }
 
+model Brand {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  nameAr      String?
+  description String?
+  descriptionAr String?
+  logo        String?
+  slug        String    @unique
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  categories Category[]
+  products   Product[]
+
+  @@map("brands")
+}
+
 model Category {
   id          String    @id @default(cuid())
   name        String
@@ -61,11 +79,15 @@ model Category {
   description String?
   descriptionAr String?
   image       String?
-  slug        String    @unique
+  slug        String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  
+  brandId     String
+  brand       Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
   products    Product[]
 
+  @@unique([brandId, slug])
   @@map("categories")
 }
 
@@ -80,7 +102,7 @@ model Product {
   oldPrice    Float?
   stock       Int      @default(0)
   reference   String?  @unique
-  slug        String   @unique
+  slug        String
   isOnSale    Boolean  @default(false)
   isActive    Boolean  @default(true)
   isLaunch    Boolean  @default(false)
@@ -88,13 +110,16 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  brandId     String
+  brand       Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  images     ProductImage[]
-  sizes      ProductSize[]
-  orderItems OrderItem[]
+  images      ProductImage[]
+  sizes       ProductSize[]
+  orderItems  OrderItem[]
 
+  @@unique([brandId, slug])
   @@map("products")
 }
 

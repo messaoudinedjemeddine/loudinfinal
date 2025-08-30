@@ -8,6 +8,7 @@ const querySchema = z.object({
   limit: z.string().optional().default('12'),
   search: z.string().optional(),
   category: z.string().optional(),
+  brand: z.string().optional(),
   minPrice: z.string().optional(),
   maxPrice: z.string().optional(),
   sortBy: z.enum(['price', 'rating', 'createdAt', 'name']).optional().default('createdAt'),
@@ -43,6 +44,12 @@ router.get('/', async (req, res) => {
       };
     }
 
+    if (query.brand) {
+      where.brand = {
+        slug: query.brand
+      };
+    }
+
     if (query.minPrice || query.maxPrice) {
       where.price = {};
       if (query.minPrice) where.price.gte = parseFloat(query.minPrice);
@@ -67,6 +74,7 @@ router.get('/', async (req, res) => {
         where,
         include: {
           category: true,
+          brand: true,
           images: {
             where: { isPrimary: true },
             take: 1

@@ -48,6 +48,7 @@ export default function NewProductPage() {
     descriptionAr: '',
     price: '',
     oldPrice: '',
+    brandId: '',
     category: '',
     reference: '',
     stock: '',
@@ -61,6 +62,8 @@ export default function NewProductPage() {
     specifications: {} as Record<string, string>
   })
 
+  const [brands, setBrands] = useState<Array<{ id: string; name: string; slug: string }>>([])
+
   const [newFeature, setNewFeature] = useState('')
   const [newSpecKey, setNewSpecKey] = useState('')
   const [newSpecValue, setNewSpecValue] = useState('')
@@ -68,7 +71,18 @@ export default function NewProductPage() {
   useEffect(() => {
     setMounted(true)
     fetchCategories()
+    fetchBrands()
   }, [])
+
+  const fetchBrands = async () => {
+    try {
+      const response = await api.admin.getBrands()
+      setBrands(response)
+    } catch (error) {
+      console.error('Failed to fetch brands:', error)
+      toast.error('Failed to load brands')
+    }
+  }
 
   const fetchCategories = async () => {
     try {
@@ -159,7 +173,7 @@ export default function NewProductPage() {
 
     try {
       // Validate required fields
-      if (!productData.name || !productData.price || !productData.category) {
+      if (!productData.name || !productData.price || !productData.category || !productData.brandId) {
         toast.error('Please fill in all required fields')
         return
       }
@@ -175,6 +189,7 @@ export default function NewProductPage() {
         descriptionAr: productData.descriptionAr,
         price: parseFloat(productData.price),
         oldPrice: productData.oldPrice ? parseFloat(productData.oldPrice) : undefined,
+        brandId: productData.brandId,
         categoryId: productData.category, // Now this should be a valid UUID
         reference: productData.reference,
         stock: parseInt(productData.stock) || 0,
@@ -278,7 +293,22 @@ export default function NewProductPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="brandId">Brand *</Label>
+                  <Select value={productData.brandId} onValueChange={(value) => handleInputChange('brandId', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select brand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brands.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.id}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Category *</Label>
                   <Select value={productData.category} onValueChange={(value) => handleInputChange('category', value)}>
