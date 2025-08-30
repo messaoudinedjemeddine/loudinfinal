@@ -376,7 +376,7 @@ export default function LoudimInventoryPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Stock Levels</SelectItem>
-                  <SelectItem value="in">In Stock (>5)</SelectItem>
+                  <SelectItem value="in">In Stock (&gt;5)</SelectItem>
                   <SelectItem value="low">Low Stock (≤5)</SelectItem>
                   <SelectItem value="out">Out of Stock</SelectItem>
                 </SelectContent>
